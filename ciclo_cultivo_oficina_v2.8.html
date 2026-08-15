@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <title>Untitled</title>
+    
+
+  </head>
+    
+  <body>
+  <!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ciclo Cultivo Oficina v2.8 - Notas sin fecha</title>
+    <style>
+        :root { 
+            --bg-color: #121212; 
+            --card-bg: #1e1e1e; 
+            --text-color: #ffffff; 
+            --accent: #4caf50; 
+            --alert: #ff5252; 
+            --notes-color: #ffb74d; 
+        }
+        body { 
+            font-family: sans-serif; 
+            background-color: var(--bg-color); 
+            color: var(--text-color); 
+            padding: 10px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            margin: 0; 
+        }
+        
+        .header-container { text-align: center; margin-bottom: 15px; margin-top: 10px; }
+        .logo-cultivo { font-size: 2.5rem; margin: 0; padding: 0; line-height: 1; }
+        h1 { font-size: 1.3rem; color: var(--accent); margin: 5px 0 0 0; font-weight: bold; }
+        
+        .top-controls {
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 15px;
+        }
+
+        .audio-status { 
+            background: #333; 
+            padding: 10px; 
+            border-radius: 20px; 
+            font-size: 0.85rem; 
+            cursor: pointer; 
+            border: 1px solid #555; 
+            transition: all 0.3s; 
+            text-align: center; 
+            box-sizing: border-box; 
+        }
+        .audio-status.activo { border-color: var(--accent); color: var(--accent); background: #1b3a22; }
+
+        .bottom-controls {
+            width: 100%;
+            max-width: 600px;
+            margin-top: 25px; 
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .report-btn-main {
+            background-color: #009688;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 12px 20px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            border: 1px solid #00796b;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .report-btn-main:hover { background-color: #00796b; }
+
+        /* Contenedor principal adaptativo */
+        .panel-container { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); 
+            gap: 12px; 
+            width: 100%; 
+            max-width: 600px; 
+        }
+        .columna-lado { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+
+        .vegeta-container { width: 100%; max-width: 600px; margin-top: 15px; }
+
+        .columna-titulo { text-align: center; font-weight: bold; margin-bottom: 5px; color: #aaaaaa; font-size: 1rem; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        .mesa-card { background-color: var(--card-bg); border-radius: 12px; padding: 12px; text-align: center; border: 2px solid transparent; box-shadow: 0 4px 6px rgba(0,0,0,0.2); position: relative; box-sizing: border-box; }
+        .mesa-card.alerta { border-color: var(--alert); animation: parpadeo 2s infinite; }
+        .mesa-card.alerta-poda { border-color: #ffeb3b; animation: parpadeo 1.5s infinite; }
+
+        @keyframes parpadeo { 0% { opacity: 1; } 50% { opacity: 0.75; } 100% { opacity: 1; } }
+        .semana-info { font-size: 1.1rem; font-weight: bold; margin-top: 5px; }
+        .dia-info { font-size: 0.85rem; color: #ffffff; font-weight: 500; margin-bottom: 5px; background: rgba(0,0,0,0.2); display: inline-block; padding: 4px 8px; border-radius: 4px; margin-top: 5px; }
+        .objetivo-info { font-size: 0.75rem; color: #bbbbbb; margin-top: 8px; font-style: italic; }
+        
+        .notes-display { font-size: 0.8rem; background: rgba(255, 183, 77, 0.15); border: 1px dashed var(--notes-color); color: var(--notes-color); padding: 6px; border-radius: 6px; margin-top: 8px; text-align: left; word-break: break-word; font-style: italic; white-space: pre-line; max-height: 80px; overflow-y: auto; }
+        .atencion-display { font-size: 0.8rem; background: rgba(255, 82, 82, 0.2); border: 1px solid var(--alert); color: #ff8a80; padding: 6px; border-radius: 6px; margin-top: 8px; text-align: center; font-weight: bold; }
+
+        .poda-tag { background: #ffeb3b; color: #000; font-weight: bold; font-size: 0.8rem; padding: 4px 8px; border-radius: 4px; margin-top: 8px; display: inline-block; }
+
+        .btn-group { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 6px; 
+            margin-top: 10px; 
+        }
+        
+        button { 
+            background-color: var(--accent); 
+            color: white; 
+            border: none; 
+            border-radius: 6px; 
+            padding: 8px 4px; 
+            cursor: pointer; 
+            width: 100%; 
+            font-weight: bold; 
+            font-size: 0.8rem; 
+            box-sizing: border-box; 
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 34px;
+        }
+        button.notes-btn { background-color: #2196f3; } 
+        button.atencion-btn { background-color: #e65100; color: white; }
+        button.atencion-btn.con-enfermedad { background-color: var(--alert); }
+        
+        button.reset-btn { 
+            background-color: #cf6679; 
+            grid-column: span 1; 
+        }
+        
+        button.whatsapp-btn { background-color: #25D366; color: black; font-size: 0.9rem; margin-bottom: 6px; border: 1px solid #1ebd59; }
+        button.whatsapp-btn:hover { background-color: #1ebd59; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 1000; padding: 10px; box-sizing: border-box; }
+        .modal-content { background: #222; padding: 20px; border-radius: 12px; width: 100%; max-width: 320px; text-align: center; box-sizing: border-box; }
+        input, textarea { width: 100%; padding: 10px; margin: 5px 0 15px 0; background: #333; border: 1px solid #555; color: white; box-sizing: border-box; border-radius: 6px; font-family: sans-serif; }
+        textarea { resize: vertical; min-height: 80px; }
+        label { display: block; text-align: left; font-size: 0.9rem; color: #aaa; margin-top: 10px; }
+        
+        .report-textarea { font-family: monospace; font-size: 0.85rem; height: 180px; background: #111; color: #4caf50; border: 1px solid #333; }
+
+        /* Ajustes específicos para pantallas chicas */
+        @media (max-width: 480px) {
+            .panel-container {
+                grid-template-columns: 1fr 1fr; /* Mantiene ambos lados uno al lado del otro en celulares */
+                gap: 8px;
+            }
+            .logo-cultivo { font-size: 2rem; }
+            h1 { font-size: 1.1rem; }
+            .mesa-card { padding: 8px 6px; }
+            .semana-info { font-size: 0.95rem; }
+            .dia-info { font-size: 0.75rem; padding: 2px 4px; }
+            button { font-size: 0.75rem; padding: 6px 2px; min-height: 30px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-container">
+        <div class="logo-cultivo">🌱</div>
+        <h1>Ciclo Cultivo Oficina</h1>
+    </div>
+
+    <div class="top-controls">
+        <div id="audio-btn" class="audio-status" onclick="activarAudio()">🔈 Audio Desactivado (Hacé clic acá para activar alarmas de voz)</div>
+    </div>
+    
+    <div class="panel-container">
+        <div class="columna-lado" id="col-lado-a"></div>
+        <div class="columna-lado" id="col-lado-b"></div>
+    </div>
+
+    <div class="vegeta-container" id="col-vegeta"></div>
+
+    <div class="bottom-controls">
+        <button class="report-btn-main" onclick="abrirModalReporte()">📋 Generar Reporte de Tiempos</button>
+    </div>
+
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <h3 id="modal-title" style="margin-top:0; color:var(--accent);">Configurar Mesa</h3>
+            <label>Fecha de inicio:</label>
+            <input type="date" id="fecha-input">
+            <label>¿En qué semana avisar?:</label>
+            <input type="number" id="objetivo-input" value="8" min="1">
+            <button onclick="guardarFecha()">Guardar</button>
+            <button style="background:#555; margin-top: 4px;" onclick="cerrarModal()">Cancelar</button>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-notes">
+        <div class="modal-content">
+            <h3 id="modal-notas-title" style="margin-top:0; color:#2196f3;">Notas de la Mesa</h3>
+            <label>Escribí tus anotaciones:</label>
+            <textarea id="notas-input" placeholder="Ej: Agregar nutrientes&#10;Revisar pH los martes..."></textarea>
+            <button style="background:#2196f3;" onclick="guardarNota()">Guardar Nota</button>
+            <button style="background:#555; margin-top: 4px;" onclick="cerrarModalNotas()">Cancelar</button>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-report">
+        <div class="modal-content" style="width: 100%; max-width: 340px;">
+            <h3 style="margin-top:0; color:#009688;">Reporte de Producción</h3>
+            <textarea id="report-text-output" class="report-textarea" readonly></textarea>
+            <button class="whatsapp-btn" onclick="compartirWhatsApp()">💬 Enviar por WhatsApp</button>
+            <button style="background:#555;" onclick="cerrarModalReporte()">Cerrar</button>
+        </div>
+    </div>
+
+    <script>
+        let datos = {};
+        try {
+            const datosLocales = localStorage.getItem('datosCultivoV3_Final');
+            datos = datosLocales ? JSON.parse(datosLocales) : {};
+        } catch (e) {
+            console.error("Error crítico al leer localStorage, re-inicializando almacenamiento vacío.", e);
+            datos = {};
+        }
+
+        let audioPermitido = false;
+        let mesasGritadas = new Set(); 
+        let textoReporteGlobal = ""; 
+
+        function escaparHTML(texto) {
+            if (!texto) return '';
+            return texto
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function activarAudio() {
+            audioPermitido = true;
+            const btn = document.getElementById('audio-btn');
+            btn.innerText = "🔊 Alarmas de voz activadas correctamente";
+            btn.classList.add('activo');
+            
+            // Forzar desbloqueo del contexto de audio nativo en móviles/iOS
+            if (window.speechSynthesis) {
+                const desbloqueo = new SpeechSynthesisUtterance("");
+                window.speechSynthesis.speak(desbloqueo);
+            }
+            inicializarApp();
+        }
+
+        function hablar(texto) {
+            if (!audioPermitido || !texto || !window.speechSynthesis) return;
+            try {
+                window.speechSynthesis.cancel(); 
+                const mensaje = new SpeechSynthesisUtterance(texto);
+                mensaje.lang = 'es-AR'; 
+                mensaje.rate = 0.95;    
+                window.speechSynthesis.speak(mensaje);
+            } catch(e) {
+                console.error("Error en SpeechSynthesis", e);
+            }
+        }
+        
+        function obtenerEstructuraMesas() {
+            let listaMesas = [];
+            for (let i = 1; i <= 6; i++) {
+                listaMesas.push({ id: 'A' + i, lado: 'A', etiqueta: `Mesa A${i}`, contenedor: 'col-lado-a' });
+                listaMesas.push({ id: 'B' + i, lado: 'B', etiqueta: `Mesa B${i}`, contenedor: 'col-lado-b' });
+            }
+            listaMesas.push({ id: 'VEGETA', lado: 'VEGETA', etiqueta: 'Mesa VEGETA 🥦', contenedor: 'col-vegeta' });
+            return listaMesas;
+        }
+
+        function inicializarApp() {
+            const contB = document.getElementById('col-lado-b');
+            const contA = document.getElementById('col-lado-a');
+            const contV = document.getElementById('col-vegeta');
+
+            if (contB) contB.innerHTML = '<div class="columna-titulo">Lado B</div>';
+            if (contA) contA.innerHTML = '<div class="columna-titulo">Lado A</div>';
+            if (contV) contV.innerHTML = '<div class="columna-titulo">Mesa Especial</div>';
+            
+            let necesitaPodaAlerta = false;
+            let textoAlarma = "";
+            let listaMesas = obtenerEstructuraMesas();
+
+            listaMesas.forEach(m => {
+                const id = m.id;
+                const data = datos[id];
+                const card = document.createElement('div');
+                card.className = 'mesa-card';
+                
+                // Homogeneizado estructural a '.notas'
+                let notasEscapadas = data?.notas ? escaparHTML(data.notas) : '';
+                let notesHTML = notasEscapadas ? `<div class="notes-display"><strong>Notas:</strong><br>${notesEscapadas}</div>` : '';
+                let atencionHTML = data?.atencion ? `<div class="atencion-display">⚠️ ATENCIÓN: ${escaparHTML(data.atencion)}</div>` : '';
+                let claseBtnAtencion = data?.atencion ? 'atencion-btn con-enfermedad' : 'atencion-btn';
+
+                if (data && data.fecha) {
+                    const infoTiempo = calcularTiempoExacto(data.fecha);
+                    const requierePoda = infoTiempo.semanas === 3;
+                    const esAlertaMeta = infoTiempo.semanas >= data.objetivo;
+
+                    let podaTagHTML = '';
+
+                    if (requierePoda) {
+                        card.classList.add('alerta-poda');
+                        card.style.backgroundColor = '#4e342e'; 
+                        podaTagHTML = '<br><div class="poda-tag">⚠️ ¡PODAR!</div>';
+
+                        if (audioPermitido && !mesasGritadas.has(id)) {
+                            necesitaPodaAlerta = true;
+                            textoAlarma += `${m.etiqueta}, podar. `;
+                            mesasGritadas.add(id);
+                        }
+                    } else if (esAlertaMeta) { 
+                        card.classList.add('alerta'); 
+                        card.style.backgroundColor = '#b71c1c'; 
+                    } else { 
+                        card.style.backgroundColor = obtenerColorPorSemana(infoTiempo.semanas); 
+                        mesasGritadas.delete(id); 
+                    }
+
+                    let textoTiempo = `${infoTiempo.semanas} ${infoTiempo.semanas === 1 ? 'sem' : 'sems'}`;
+                    if (infoTiempo.diasRestantes > 0) {
+                        textoTiempo += ` y ${infoTiempo.diasRestantes}d`;
+                    }
+
+                    const partesFecha = data.fecha.split("-");
+                    const fechaFormateada = `${partesFecha[2]}/${partesFecha[1]}/${partesFecha[0]}`;
+
+                    card.innerHTML = `
+                        <strong style="color: #ffffff; font-size:0.9rem;">${m.etiqueta}</strong>
+                        <div style="font-size: 0.7rem; color: #aaaaaa; margin-top: 2px;">Inic: ${fechaFormateada}</div>
+                        <div class="semana-info">${textoTiempo}</div>
+                        <div class="dia-info">Total: ${infoTiempo.diasTotales} días</div>
+                        <div class="objetivo-info">Meta: Sem. ${data.objetivo}</div>
+                        ${podaTagHTML}
+                        ${atencionHTML}
+                        ${notesHTML}
+                        <div class="btn-group">
+                            <button onclick="abrirModal('${id}')">Editar</button>
+                            <button class="notes-btn" onclick="abrirModalNotas('${id}')">Notas</button>
+                            <button class="${claseBtnAtencion}" onclick="gestionarAtencion('${id}', event)">Alerta</button>
+                            <button class="reset-btn" onclick="resetearMesa('${id}', event)">Vaciar</button>
+                        </div>
+                    `;
+                } else if (data && (data.notas || data.atencion)) {
+                    // Mesa configurada sin fecha: conserva notas/alerta y NO calcula tiempo.
+                    card.style.backgroundColor = 'var(--card-bg)';
+                    card.style.border = '1px dashed #666';
+
+                    card.innerHTML = `
+                        <strong style="color: #ffffff; display: block; margin-bottom: 5px; font-size:0.9rem;">${m.etiqueta}</strong>
+                        <div style="font-style:italic; color:#aaa; margin: 10px 0; font-size:0.85rem;">
+                            Sin fecha de inicio
+                        </div>
+                        ${atencionHTML}
+                        ${notesHTML}
+                        <div class="btn-group">
+                            <button onclick="abrirModal('${id}')">Iniciar</button>
+                            <button class="notes-btn" onclick="abrirModalNotas('${id}')">Notas</button>
+                            <button class="${claseBtnAtencion}" onclick="gestionarAtencion('${id}', event)">Alerta</button>
+                            <button class="reset-btn" onclick="resetearMesa('${id}', event)">Vaciar</button>
+                        </div>
+                    `;
+                    mesasGritadas.delete(id);
+                } else {
+                    card.style.backgroundColor = 'var(--card-bg)';
+                    card.style.border = '1px dashed #444';
+
+                    card.innerHTML = `
+                        <strong style="color: #ffffff; display: block; margin-bottom: 5px; font-size:0.9rem;">${m.etiqueta}</strong>
+                        <div style="font-style:italic; color:#888; margin: 10px 0; font-size:0.85rem;">Vacía</div>
+                        ${atencionHTML}
+                        ${notesHTML}
+                        <div class="btn-group">
+                            <button onclick="abrirModal('${id}')">Iniciar</button>
+                            <button class="notes-btn" onclick="abrirModalNotas('${id}')">Notas</button>
+                            <button class="${claseBtnAtencion}" onclick="gestionarAtencion('${id}', event)">Alerta</button>
+                            <div style="visibility: hidden;"></div> 
+                        </div>
+                    `;
+                    mesasGritadas.delete(id);
+                }
+
+                const contenedorDestino = document.getElementById(m.contenedor);
+                if (contenedorDestino) {
+                    contenedorDestino.appendChild(card);
+                }
+            });
+
+            if (necesitaPodaAlerta && textoAlarma) {
+                hablar(textoAlarma);
+            }
+        }
+
+        function gestionarAtencion(id, event) {
+            event.stopPropagation();
+            let nombreTitulo = id === 'VEGETA' ? 'Mesa VEGETA' : `Mesa ${id.charAt(0)}-${id.slice(1)}`;
+            
+            let seleccion = prompt(
+                `Seleccioná una enfermedad para ${nombreTitulo}:\n\n` +
+                `1 - Oidio\n` +
+                `2 - Araña\n` +
+                `3 - Otro (Escribir personalizado)\n` +
+                `4 - Ninguna (Limpiar atención)`
+            );
+
+            if (seleccion === null) return;
+
+            let enfermedad = "";
+            if (seleccion.trim() === "1") {
+                enfermedad = "Oidio";
+            } else if (seleccion.trim() === "2") {
+                enfermedad = "Araña";
+            } else if (seleccion.trim() === "3") {
+                let otraEnfermedad = prompt("Ingresá el nombre de la enfermedad o problema:");
+                if (otraEnfermedad && otraEnfermedad.trim() !== "") {
+                    enfermedad = otraEnfermedad.trim();
+                } else {
+                    return; 
+                }
+            } else if (seleccion.trim() === "4") {
+                enfermedad = "";
+            } else {
+                alert("Opción no válida.");
+                return;
+            }
+
+            if (!datos[id]) {
+                if (enfermedad !== "") {
+                    datos[id] = { fecha: "", objetivo: 8, notas: "", atencion: enfermedad };
+                }
+            } else {
+                datos[id].atencion = enfermedad;
+                // Verificación de remoción completa mejorada
+                if (!datos[id].fecha && !datos[id].notas && !datos[id].atencion) {
+                    delete datos[id];
+                }
+            }
+
+            localStorage.setItem('datosCultivoV3_Final', JSON.stringify(datos));
+            inicializarApp();
+        }
+
+        function calcularTiempoExacto(fecha) {
+            if (!fecha) return { semanas: 0, diasRestantes: 0, diasTotales: 0 };
+            const hoy = new Date();
+            const partes = fecha.split("-");
+            const inicio = new Date(partes[0], partes[1] - 1, partes[2]); 
+            
+            inicio.setHours(0,0,0,0); 
+            hoy.setHours(0,0,0,0);
+            
+            const diff = hoy.getTime() - inicio.getTime();
+            let diasTotales = Math.round(diff / (1000 * 60 * 60 * 24));
+            if (diasTotales < 0) diasTotales = 0;
+
+            const semanas = Math.floor(diasTotales / 7);
+            const diasRestantes = diasTotales % 7; 
+
+            return { semanas, diasRestantes, diasTotales };
+        }
+
+        function obtenerColorPorSemana(s) {
+            if (s <= 2) return '#1b4d3e'; 
+            if (s <= 4) return '#2e6f40';
+            if (s <= 6) return '#5d6d2f'; 
+            if (s <= 8) return '#7a681a';
+            return '#8c4f1d';
+        }
+
+        let idActual = "";
+        function abrirModal(id) {
+            idActual = id; 
+            document.getElementById('modal').style.display = 'flex';
+            let nombreTitulo = id === 'VEGETA' ? 'Mesa VEGETA' : `Mesa ${id.charAt(0)}-${id.slice(1)}`;
+            document.getElementById('modal-title').innerText = nombreTitulo;
+            document.getElementById('fecha-input').value = datos[id]?.fecha || '';
+            document.getElementById('objetivo-input').value = datos[id]?.objetivo || 8;
+        }
+        
+        function cerrarModal() { document.getElementById('modal').style.display = 'none'; }
+        
+        function guardarFecha() {
+            const f = document.getElementById('fecha-input').value;
+            const o = parseInt(document.getElementById('objetivo-input').value);
+            
+            if (isNaN(o) || o <= 0) {
+                alert("Por favor, ingresá una meta de semanas mayor a 0.");
+                return;
+            }
+            
+            if (!datos[idActual]) datos[idActual] = { notas: "", atencion: "" };
+
+            if (f) {
+                datos[idActual].fecha = f;
+            } else {
+                delete datos[idActual].fecha;
+            }
+
+            datos[idActual].objetivo = o;
+
+            // Si no queda ningún dato, eliminar la mesa del almacenamiento.
+            if (!datos[idActual].fecha && !datos[idActual].notas && !datos[idActual].atencion) {
+                delete datos[idActual];
+            }
+
+            localStorage.setItem('datosCultivoV3_Final', JSON.stringify(datos)); 
+            inicializarApp(); 
+            cerrarModal(); 
+        }
+
+        function abrirModalNotas(id) {
+            idActual = id;
+            document.getElementById('modal-notes').style.display = 'flex';
+            let nombreTitulo = id === 'VEGETA' ? 'Mesa VEGETA' : `Mesa ${id.charAt(0)}-${id.slice(1)}`;
+            document.getElementById('modal-notas-title').innerText = `Notas de ${nombreTitulo}`;
+            document.getElementById('notas-input').value = datos[id]?.notas || "";
+        }
+
+        function cerrarModalNotas() { document.getElementById('modal-notes').style.display = 'none'; }
+
+        function guardarNota() {
+            const nuevaNota = document.getElementById('notas-input').value;
+            if (!datos[idActual]) {
+                if (nuevaNota.trim() !== "") {
+                    datos[idActual] = { fecha: "", objetivo: 8, notas: nuevaNota, atencion: "" };
+                }
+            } else {
+                datos[idActual].notas = nuevaNota;
+                // Verificación de remoción completa mejorada
+                if (!datos[idActual].fecha && !datos[idActual].notas && !datos[idActual].atencion) {
+                    delete datos[idActual];
+                }
+            }
+            localStorage.setItem('datosCultivoV3_Final', JSON.stringify(datos));
+            inicializarApp();
+            cerrarModalNotas();
+        }
+        
+        function resetearMesa(id, event) {
+            event.stopPropagation();
+            let nombreTitulo = id === 'VEGETA' ? 'Mesa VEGETA' : `Mesa ${id.charAt(0)}-${id.slice(1)}`;
+            if (confirm(`¿Vaciar ${nombreTitulo}? (Se borrarán los tiempos y las notas)`)) { 
+                if(datos[id]) {
+                    delete datos[id];
+                }
+                localStorage.setItem('datosCultivoV3_Final', JSON.stringify(datos)); 
+                inicializarApp(); 
+            }
+        }
+
+        function abrirModalReporte() {
+            let listaMesas = obtenerEstructuraMesas();
+            
+            textoReporteGlobal = "*📋 REPORTE DE CULTIVO - OFICINA*\n";
+            textoReporteGlobal += `Fecha: ${new Date().toLocaleDateString('es-AR')}\n`;
+            textoReporteGlobal += "=============================\n\n";
+            
+            let contadorActivas = 0;
+
+            listaMesas.forEach(m => {
+                const data = datos[m.id];
+                if (data && data.fecha) {
+                    contadorActivas++;
+                    const info = calcularTiempoExacto(data.fecha);
+                    
+                    const partes = data.fecha.split("-");
+                    const fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+                    
+                    let tiempoTranscurrido = `${info.semanas} ${info.semanas === 1 ? 'sem' : 'sems'}`;
+                    if (info.diasRestantes > 0) {
+                        tiempoTranscurrido += ` y ${info.diasRestantes}d`;
+                    }
+
+                    textoReporteGlobal += `*🌱 ${m.etiqueta.toUpperCase()}*\n`;
+                    textoReporteGlobal += `• Inicio: ${fechaFormateada}\n`;
+                    textoReporteGlobal += `• Transcurrido: ${tiempoTranscurrido}\n`;
+                    textoReporteGlobal += `• Días Totales: ${info.diasTotales} días\n`;
+                    textoReporteGlobal += `• Meta: Sem. ${data.objetivo}\n`;
+                    if(data.atencion) textoReporteGlobal += `• ⚠️ ATENCIÓN ENFERMEDAD: ${data.atencion}\n`;
+                    if(data.notas) textoReporteGlobal += `• Notas: ${data.notas}\n`;
+                    textoReporteGlobal += "-----------------------------\n";
+                }
+            });
+
+            if (contadorActivas === 0) {
+                textoReporteGlobal += "No hay mesas activas en este momento.\n";
+            }
+
+            document.getElementById('report-text-output').value = textoReporteGlobal;
+            document.getElementById('modal-report').style.display = 'flex';
+        }
+
+        function cerrarModalReporte() {
+            document.getElementById('modal-report').style.display = 'none';
+        }
+
+        function compartirWhatsApp() {
+            const textoCodificado = encodeURIComponent(textoReporteGlobal);
+            const urlWhatsApp = `https://api.whatsapp.com/send?text=${textoCodificado}`;
+            window.open(urlWhatsApp, '_blank');
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                cerrarModal();
+                cerrarModalNotas();
+                cerrarModalReporte();
+            }
+        });
+
+        window.onload = inicializarApp;
+
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "visible") {
+                inicializarApp();
+            }
+        });
+
+        setInterval(inicializarApp, 3600000);
+    </script>
+</body>
+</html>
+    
+  </body>
+  
+</html>
