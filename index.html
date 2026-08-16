@@ -330,12 +330,12 @@
         // Hashes SHA256 de las contraseñas (para proteger en el código fuente)
         const AUTH_STORAGE_KEY = 'cultivo_user_v1';
         const ALLOWED_USERS = {
-            'benja': '4388a6f5dbfbb38005f2db266335b487f2942a6730332d970715cd6af71fa3b4',
-            'pablito': '4388a6f5dbfbb38005f2db266335b487f2942a6730332d970715cd6af71fa3b4',
-            'elo': '4388a6f5dbfbb38005f2db266335b487f2942a6730332d970715cd6af71fa3b4',
-            'cami': '4388a6f5dbfbb38005f2db266335b487f2942a6730332d970715cd6af71fa3b4'
+            'benja': '4f02a3cf9c8e86e16326bfe1427d15e1ab950265e8e127f2d38e30e9788a7fa8',
+            'pablito': '4f02a3cf9c8e86e16326bfe1427d15e1ab950265e8e127f2d38e30e9788a7fa8',
+            'elo': '4f02a3cf9c8e86e16326bfe1427d15e1ab950265e8e127f2d38e30e9788a7fa8',
+            'cami': '4f02a3cf9c8e86e16326bfe1427d15e1ab950265e8e127f2d38e30e9788a7fa8'
         };
-        // Todos comparten la misma contraseña: 'laputaclave' (hash arriba)
+        // Todos comparten la misma contraseña: 'laputaclave' (hash SHA256 correcto)
 
         function abrirLogin() {
           document.getElementById('modal-login').style.display = 'flex';
