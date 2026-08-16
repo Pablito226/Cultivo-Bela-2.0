@@ -329,10 +329,8 @@
         // --- CLIENT-SIDE LOGIN (4 usuarios) ---
         // Hashes SHA256 de las contraseñas (para proteger en el código fuente)
         const AUTH_STORAGE_KEY = 'cultivo_user_v1';
-        // NOTE: los hashes previos eran incorrectos (longitud/formato inválido) y causaban fallo de login.
-        // Para mantener compatibilidad y que el login funcione con la contraseña conocida 'laputaclave',
-        // inicializamos ALLOWED_USERS con placeholders y reemplazamos automáticamente por el hash correcto
-        // al cargar la página (esto evita errores si los hashes en el archivo fuente están mal formados).
+        // Para evitar hashes mal formados en el archivo fuente, calculamos el hash conocido al cargar
+        // y lo usamos como valor para los usuarios. No se acepta la contraseña en claro como fallback.
         let ALLOWED_USERS = {
             'benja': '',
             'pablito': '',
@@ -340,9 +338,9 @@
             'cami': ''
         };
 
-        // Rellenar automáticamente con el hash de la contraseña conocida 'laputaclave' si faltan.
         (async () => {
             try {
+                // IMPORTANTE: idealmente estos hashes deberían venir del servidor o mantenerse fuera del cliente.
                 const defaultHash = await sha256('laputaclave');
                 Object.keys(ALLOWED_USERS).forEach(u => {
                     if (!ALLOWED_USERS[u] || ALLOWED_USERS[u].length !== 64) {
@@ -354,7 +352,7 @@
             }
         })();
 
-        // Todos comparten la misma contraseña: 'laputaclave' (hash arriba)
+        // Todos comparten la misma contraseña: 'laputaclave' (hash calculado arriba)
 
         function abrirLogin() {
           document.getElementById('modal-login').style.display = 'flex';
@@ -395,9 +393,8 @@
           // Calcular hash SHA256 de la contraseña ingresada
           const passHash = await sha256(pass);
           
-          // Comparar con el hash almacenado
-          // Además, por compatibilidad, aceptar la contraseña en claro 'laputaclave' (fallback)
-          if (passHash === ALLOWED_USERS[user] || pass === 'laputaclave') {
+          // Comparar con el hash almacenado (no se acepta la contraseña en claro)
+          if (passHash === ALLOWED_USERS[user]) {
             localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ user, ts: Date.now() }));
             cerrarLogin();
             afterLogin();
@@ -421,9 +418,9 @@
             btn.style.alignItems = 'center';
             btn.style.gap = '8px';
             btn.innerHTML = `
-              <div style="color:#aaa;">Usuario: <strong style="color:#fff; margin-left:6px;">${getSessionUser()}</strong></div>
-              <div style="display:flex; gap:6px;">
-                <button id="logout-btn" style="background:#c62828; color:#fff; padding:8px 12px; border-radius:8px;" onclick="logout()">Cerrar sesión</button>
+              <div style=\"color:#aaa;\">Usuario: <strong style=\"color:#fff; margin-left:6px;\">${getSessionUser()}</strong></div>
+              <div style=\"display:flex; gap:6px;\">
+                <button id=\"logout-btn\" style=\"background:#c62828; color:#fff; padding:8px 12px; border-radius:8px;\" onclick=\"logout()\">Cerrar sesión</button>
               </div>
             `;
             top.appendChild(btn);
@@ -652,160 +649,4 @@
             idActual = id; 
             document.getElementById('modal').style.display = 'flex';
             let nombreTitulo = id === 'VEGETA' ? 'Mesa VEGETA' : `Mesa ${id.charAt(0)}-${id.slice(1)}`;
-            document.getElementById('modal-title').innerText = nombreTitulo;
-            document.getElementById('fecha-input').value = datos[id]?.fecha || '';
-            document.getElementById('objetivo-input').value = datos[id]?.objetivo || 8;
-        }
-        
-        function cerrarModal() { document.getElementById('modal').style.display = 'none'; }
-        
-        function guardarFecha() {
-            const f = document.getElementById('fecha-input').value;
-            const o = parseInt(document.getElementById('objetivo-input').value);
-            
-            if (isNaN(o) || o <= 0) {
-                alert("Por favor, ingresá una meta de semanas mayor a 0.");
-                return;
-            }
-            
-            if (!datos[idActual]) datos[idActual] = { notas: "", atencion: "" };
-
-            if (f) {
-                datos[idActual].fecha = f;
-            } else {
-                delete datos[idActual].fecha;
-            }
-
-            datos[idActual].objetivo = o;
-
-            // Si no queda ningún dato, eliminar la mesa del almacenamiento.
-            if (!datos[idActual].fecha && !datos[idActual].notas && !datos[idActual].atencion) {
-                delete datos[idActual];
-            }
-
-            guardarLocalStorage();
-            inicializarApp(); 
-            cerrarModal(); 
-        }
-
-        function abrirModalNotas(id) {
-            idActual = id;
-            document.getElementById('modal-notes').style.display = 'flex';
-            let nombreTitulo = id === 'VEGETA' ? 'Mesa VEGETA' : `Mesa ${id.charAt(0)}-${id.slice(1)}`;
-            document.getElementById('modal-notas-title').innerText = `Notas de ${nombreTitulo}`;
-            document.getElementById('notas-input').value = datos[id]?.notas || "";
-        }
-
-        function cerrarModalNotas() { document.getElementById('modal-notes').style.display = 'none'; }
-
-        function guardarNota() {
-            const nuevaNota = document.getElementById('notas-input').value;
-            if (!datos[idActual]) {
-                if (nuevaNota.trim() !== "") {
-                    datos[idActual] = { fecha: "", objetivo: 8, notas: nuevaNota, atencion: "" };
-                }
-            } else {
-                datos[idActual].notas = nuevaNota;
-                // Verificación de remoción completa mejorada
-                if (!datos[idActual].fecha && !datos[idActual].notas && !datos[idActual].atencion) {
-                    delete datos[idActual];
-                }
-            }
-            guardarLocalStorage();
-            inicializarApp();
-            cerrarModalNotas();
-        }
-        
-        function resetearMesa(id, event) {
-            event.stopPropagation();
-            let nombreTitulo = id === 'VEGETA' ? 'Mesa VEGETA' : `Mesa ${id.charAt(0)}-${id.slice(1)}`;
-            if (confirm(`¿Vaciar ${nombreTitulo}? (Se borrarán los tiempos y las notas)`)) { 
-                if(datos[id]) {
-                    delete datos[id];
-                }
-                guardarLocalStorage();
-                inicializarApp(); 
-            }
-        }
-
-        function abrirModalReporte() {
-            let listaMesas = obtenerEstructuraMesas();
-            
-            textoReporteGlobal = "*📋 REPORTE DE CULTIVO - OFICINA*\n";
-            textoReporteGlobal += `Fecha: ${new Date().toLocaleDateString('es-AR')}\n`;
-            textoReporteGlobal += "=============================\n\n";
-            
-            let contadorActivas = 0;
-
-            listaMesas.forEach(m => {
-                const data = datos[m.id];
-                if (data && data.fecha) {
-                    contadorActivas++;
-                    const info = calcularTiempoExacto(data.fecha);
-                    
-                    const partes = (data.fecha || '').split("-");
-                    const fechaFormateada = (partes.length === 3) ? `${partes[2]}/${partes[1]}/${partes[0]}` : data.fecha;
-                    
-                    let tiempoTranscurrido = `${info.semanas} ${info.semanas === 1 ? 'sem' : 'sems'}`;
-                    if (info.diasRestantes > 0) {
-                        tiempoTranscurrido += ` y ${info.diasRestantes}d`;
-                    }
-
-                    textoReporteGlobal += `*🌱 ${m.etiqueta.toUpperCase()}*\n`;
-                    textoReporteGlobal += `• Inicio: ${fechaFormateada}\n`;
-                    textoReporteGlobal += `• Transcurrido: ${tiempoTranscurrido}\n`;
-                    textoReporteGlobal += `• Días Totales: ${info.diasTotales} días\n`;
-                    textoReporteGlobal += `• Meta: Sem. ${data.objetivo}\n`;
-                    if(data.atencion) textoReporteGlobal += `• ⚠️ ATENCIÓN ENFERMEDAD: ${data.atencion}\n`;
-                    if(data.notas) textoReporteGlobal += `• Notas: ${data.notas}\n`;
-                    textoReporteGlobal += "-----------------------------\n";
-                }
-            });
-
-            if (contadorActivas === 0) {
-                textoReporteGlobal += "No hay mesas activas en este momento.\n";
-            }
-
-            document.getElementById('report-text-output').value = textoReporteGlobal;
-            document.getElementById('modal-report').style.display = 'flex';
-        }
-
-        function cerrarModalReporte() {
-            document.getElementById('modal-report').style.display = 'none';
-        }
-
-        function compartirWhatsApp() {
-            const textoCodificado = encodeURIComponent(textoReporteGlobal);
-            const urlWhatsApp = `https://api.whatsapp.com/send?text=${textoCodificado}`;
-            window.open(urlWhatsApp, '_blank');
-        }
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                cerrarModal();
-                cerrarModalNotas();
-                cerrarModalReporte();
-            }
-        });
-
-        // Inicialización controlada por login
-        window.addEventListener('load', () => {
-          const user = getSessionUser();
-          if (!user) {
-            abrirLogin();
-          } else {
-            afterLogin();
-          }
-        });
-
-        document.addEventListener("visibilitychange", () => {
-            if (document.visibilityState === "visible") {
-                // solo refrescar UI si la app ya está inicializada por login
-                if (getSessionUser()) inicializarApp();
-            }
-        });
-
-        setInterval(() => { if (getSessionUser()) inicializarApp(); }, 3600000);
-    </script>
-</body>
-</html>
+            document.getElementById('modal-title').innerText = nombreTitl
