@@ -329,12 +329,31 @@
         // --- CLIENT-SIDE LOGIN (4 usuarios) ---
         // Hashes SHA256 de las contraseñas (para proteger en el código fuente)
         const AUTH_STORAGE_KEY = 'cultivo_user_v1';
-        const ALLOWED_USERS = {
-            'benja': 'c8e8e37e17c5c0ce2c8e8e37e17c5c0ce2c8e8e37e17c5c0ce2c8e8e37e17c5',
-            'pablito': 'c8e8e37e17c5c0ce2c8e8e37e17c5c0ce2c8e8e37e17c5c0ce2c8e8e37e17c5',
-            'elo': 'c8e8e37e17c5c0ce2c8e8e37e17c5c0ce2c8e8e37e17c5c0ce2c8e8e37e17c5',
-            'cami': 'c8e8e37e17c5c0ce2c8e8e37e17c5c0ce2c8e8e37e17c5c0ce2c8e8e37e17c5'
+        // NOTE: los hashes previos eran incorrectos (longitud/formato inválido) y causaban fallo de login.
+        // Para mantener compatibilidad y que el login funcione con la contraseña conocida 'laputaclave',
+        // inicializamos ALLOWED_USERS con placeholders y reemplazamos automáticamente por el hash correcto
+        // al cargar la página (esto evita errores si los hashes en el archivo fuente están mal formados).
+        let ALLOWED_USERS = {
+            'benja': '',
+            'pablito': '',
+            'elo': '',
+            'cami': ''
         };
+
+        // Rellenar automáticamente con el hash de la contraseña conocida 'laputaclave' si faltan.
+        (async () => {
+            try {
+                const defaultHash = await sha256('laputaclave');
+                Object.keys(ALLOWED_USERS).forEach(u => {
+                    if (!ALLOWED_USERS[u] || ALLOWED_USERS[u].length !== 64) {
+                        ALLOWED_USERS[u] = defaultHash;
+                    }
+                });
+            } catch (e) {
+                console.error('No se pudo inicializar hashes de usuarios:', e);
+            }
+        })();
+
         // Todos comparten la misma contraseña: 'laputaclave' (hash arriba)
 
         function abrirLogin() {
@@ -377,7 +396,8 @@
           const passHash = await sha256(pass);
           
           // Comparar con el hash almacenado
-          if (passHash === ALLOWED_USERS[user]) {
+          // Además, por compatibilidad, aceptar la contraseña en claro 'laputaclave' (fallback)
+          if (passHash === ALLOWED_USERS[user] || pass === 'laputaclave') {
             localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ user, ts: Date.now() }));
             cerrarLogin();
             afterLogin();
