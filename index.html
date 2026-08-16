@@ -236,7 +236,6 @@
     </div>
 
     <div class="top-controls">
-        <div id="audio-btn" class="audio-status" onclick="activarAudio()">🔈 Audio Desactivado (Hacé clic acá para activar alarmas de voz)</div>
     </div>
     
     <div class="panel-container">
@@ -291,8 +290,6 @@
             datos = {};
         }
 
-        let audioPermitido = false;
-        let mesasGritadas = new Set(); 
         let textoReporteGlobal = ""; 
 
         function escaparHTML(texto) {
@@ -301,37 +298,10 @@
                 .replace(/&/g, "&amp;")
                 .replace(/</g, "&lt;")
                 .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
+                .replace(/\"/g, "&quot;")
                 .replace(/'/g, "&#039;");
         }
 
-        function activarAudio() {
-            audioPermitido = true;
-            const btn = document.getElementById('audio-btn');
-            btn.innerText = "🔊 Alarmas de voz activadas correctamente";
-            btn.classList.add('activo');
-            
-            // Forzar desbloqueo del contexto de audio nativo en móviles/iOS
-            if (window.speechSynthesis) {
-                const desbloqueo = new SpeechSynthesisUtterance("");
-                window.speechSynthesis.speak(desbloqueo);
-            }
-            inicializarApp();
-        }
-
-        function hablar(texto) {
-            if (!audioPermitido || !texto || !window.speechSynthesis) return;
-            try {
-                window.speechSynthesis.cancel(); 
-                const mensaje = new SpeechSynthesisUtterance(texto);
-                mensaje.lang = 'es-AR'; 
-                mensaje.rate = 0.95;    
-                window.speechSynthesis.speak(mensaje);
-            } catch(e) {
-                console.error("Error en SpeechSynthesis", e);
-            }
-        }
-        
         function obtenerEstructuraMesas() {
             let listaMesas = [];
             for (let i = 1; i <= 6; i++) {
@@ -351,8 +321,6 @@
             if (contA) contA.innerHTML = '<div class="columna-titulo">Lado A</div>';
             if (contV) contV.innerHTML = '<div class="columna-titulo">Mesa Especial</div>';
             
-            let necesitaPodaAlerta = false;
-            let textoAlarma = "";
             let listaMesas = obtenerEstructuraMesas();
 
             listaMesas.forEach(m => {
@@ -378,18 +346,11 @@
                         card.classList.add('alerta-poda');
                         card.style.backgroundColor = '#4e342e'; 
                         podaTagHTML = '<br><div class="poda-tag">⚠️ ¡PODAR!</div>';
-
-                        if (audioPermitido && !mesasGritadas.has(id)) {
-                            necesitaPodaAlerta = true;
-                            textoAlarma += `${m.etiqueta}, podar. `;
-                            mesasGritadas.add(id);
-                        }
                     } else if (esAlertaMeta) { 
                         card.classList.add('alerta'); 
                         card.style.backgroundColor = '#b71c1c'; 
                     } else { 
                         card.style.backgroundColor = obtenerColorPorSemana(infoTiempo.semanas); 
-                        mesasGritadas.delete(id); 
                     }
 
                     let textoTiempo = `${infoTiempo.semanas} ${infoTiempo.semanas === 1 ? 'sem' : 'sems'}`;
@@ -435,7 +396,6 @@
                             <button class="reset-btn" onclick="resetearMesa('${id}', event)">Vaciar</button>
                         </div>
                     `;
-                    mesasGritadas.delete(id);
                 } else {
                     card.style.backgroundColor = 'var(--card-bg)';
                     card.style.border = '1px dashed #444';
@@ -452,7 +412,6 @@
                             <div style="visibility: hidden;"></div> 
                         </div>
                     `;
-                    mesasGritadas.delete(id);
                 }
 
                 const contenedorDestino = document.getElementById(m.contenedor);
@@ -460,10 +419,6 @@
                     contenedorDestino.appendChild(card);
                 }
             });
-
-            if (necesitaPodaAlerta && textoAlarma) {
-                hablar(textoAlarma);
-            }
         }
 
         function gestionarAtencion(id, event) {
