@@ -281,6 +281,22 @@
         </div>
     </div>
 
+    <!-- LOGIN MODAL -->
+    <div class="modal" id="modal-login" role="dialog" aria-modal="true" aria-labelledby="login-title">
+      <div class="modal-content">
+        <h3 id="login-title" style="margin-top:0; color:var(--accent);">Acceso - Cultivo Oficina</h3>
+        <label for="login-user">Usuario:</label>
+        <input id="login-user" autocomplete="username" />
+        <label for="login-pass">Contraseña:</label>
+        <input id="login-pass" type="password" autocomplete="current-password" />
+        <div style="display:flex; gap:8px; justify-content:center;">
+          <button onclick="doLogin()" aria-label="Ingresar">Ingresar</button>
+          <button style="background:#555;" onclick="cerrarLogin()" aria-label="Cancelar">Cancelar</button>
+        </div>
+        <div id="login-error" style="color:#ff8a80; margin-top:8px; display:none;"></div>
+      </div>
+    </div>
+
     <script>
         const STORAGE_KEY = 'datosCultivoV3_Final';
         let datos = {};
@@ -301,6 +317,84 @@
             }
         }
 
+        // --- SIMPLE CLIENT-SIDE LOGIN (4 usuarios) ---
+        // Usuarios: benja, pablito, elo, cami
+        // Contraseña compartida: laputaclave
+        const AUTH_STORAGE_KEY = 'cultivo_user_v1';
+        const ALLOWED_USERS = ['benja','pablito','elo','cami'];
+        const SHARED_PASSWORD = 'laputaclave'; // contraseña proporcionada
+
+        function abrirLogin() {
+          document.getElementById('modal-login').style.display = 'flex';
+          // limpiar campos
+          document.getElementById('login-user').value = '';
+          document.getElementById('login-pass').value = '';
+          document.getElementById('login-error').style.display = 'none';
+        }
+        function cerrarLogin() {
+          document.getElementById('modal-login').style.display = 'none';
+        }
+
+        function getSessionUser() {
+          try {
+            const s = JSON.parse(localStorage.getItem(AUTH_STORAGE_KEY) || 'null');
+            return s && s.user ? s.user : null;
+          } catch (e) { return null; }
+        }
+
+        function doLogin() {
+          const user = document.getElementById('login-user').value.trim().toLowerCase();
+          const pass = document.getElementById('login-pass').value || '';
+          const errEl = document.getElementById('login-error');
+          errEl.style.display = 'none';
+          if (!user || !pass) {
+            errEl.innerText = 'Completar usuario y contraseña';
+            errEl.style.display = 'block';
+            return;
+          }
+
+          if (!ALLOWED_USERS.includes(user)) {
+            errEl.innerText = 'Usuario no autorizado';
+            errEl.style.display = 'block';
+            return;
+          }
+
+          if (pass === SHARED_PASSWORD) {
+            localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ user, ts: Date.now() }));
+            cerrarLogin();
+            afterLogin();
+          } else {
+            errEl.innerText = 'Usuario o contraseña incorrectos';
+            errEl.style.display = 'block';
+          }
+        }
+
+        function logout() {
+          localStorage.removeItem(AUTH_STORAGE_KEY);
+          location.reload();
+        }
+
+        function afterLogin() {
+          const top = document.querySelector('.top-controls');
+          if (top && !document.getElementById('logout-btn')) {
+            const btn = document.createElement('div');
+            btn.style.display = 'flex';
+            btn.style.justifyContent = 'space-between';
+            btn.style.alignItems = 'center';
+            btn.style.gap = '8px';
+            btn.innerHTML = `
+              <div style="color:#aaa;">Usuario: <strong style="color:#fff; margin-left:6px;">${getSessionUser()}</strong></div>
+              <div style="display:flex; gap:6px;">
+                <button id="logout-btn" style="background:#c62828; color:#fff; padding:8px 12px; border-radius:8px;" onclick="logout()">Cerrar sesión</button>
+              </div>
+            `;
+            top.appendChild(btn);
+          }
+          // inicia la app
+          inicializarApp();
+        }
+
+        // --- resto del código original ---
         let textoReporteGlobal = ""; 
 
         function escaparHTML(texto) {
@@ -656,15 +750,24 @@
             }
         });
 
-        window.onload = inicializarApp;
+        // Inicialización controlada por login
+        window.addEventListener('load', () => {
+          const user = getSessionUser();
+          if (!user) {
+            abrirLogin();
+          } else {
+            afterLogin();
+          }
+        });
 
         document.addEventListener("visibilitychange", () => {
             if (document.visibilityState === "visible") {
-                inicializarApp();
+                // solo refrescar UI si la app ya está inicializada por login
+                if (getSessionUser()) inicializarApp();
             }
         });
 
-        setInterval(inicializarApp, 3600000);
+        setInterval(() => { if (getSessionUser()) inicializarApp(); }, 3600000);
     </script>
 </body>
 </html>
