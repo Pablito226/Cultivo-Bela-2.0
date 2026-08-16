@@ -317,12 +317,25 @@
             }
         }
 
-        // --- SIMPLE CLIENT-SIDE LOGIN (4 usuarios) ---
-        // Usuarios: benja, pablito, elo, cami
-        // Contraseña compartida: laputaclave
+        // --- SHA256 HASH FUNCTION ---
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
+
+        // --- CLIENT-SIDE LOGIN (4 usuarios) ---
+        // Hashes SHA256 de las contraseñas (para proteger en el código fuente)
         const AUTH_STORAGE_KEY = 'cultivo_user_v1';
-        const ALLOWED_USERS = ['benja','pablito','elo','cami'];
-        const SHARED_PASSWORD = 'laputaclave'; // contraseña proporcionada
+        const ALLOWED_USERS = {
+            'benja': 'f84c48c9ee0feca98a4a7a821db87ab3c3b0df93f7d5db2cc61c1e56e27b5e1a',
+            'pablito': 'f84c48c9ee0feca98a4a7a821db87ab3c3b0df93f7d5db2cc61c1e56e27b5e1a',
+            'elo': 'f84c48c9ee0feca98a4a7a821db87ab3c3b0df93f7d5db2cc61c1e56e27b5e1a',
+            'cami': 'f84c48c9ee0feca98a4a7a821db87ab3c3b0df93f7d5db2cc61c1e56e27b5e1a'
+        };
+        // Todos comparten la misma contraseña: 'laputaclave' (hash arriba)
 
         function abrirLogin() {
           document.getElementById('modal-login').style.display = 'flex';
@@ -342,24 +355,29 @@
           } catch (e) { return null; }
         }
 
-        function doLogin() {
+        async function doLogin() {
           const user = document.getElementById('login-user').value.trim().toLowerCase();
           const pass = document.getElementById('login-pass').value || '';
           const errEl = document.getElementById('login-error');
           errEl.style.display = 'none';
+          
           if (!user || !pass) {
             errEl.innerText = 'Completar usuario y contraseña';
             errEl.style.display = 'block';
             return;
           }
 
-          if (!ALLOWED_USERS.includes(user)) {
+          if (!ALLOWED_USERS[user]) {
             errEl.innerText = 'Usuario no autorizado';
             errEl.style.display = 'block';
             return;
           }
 
-          if (pass === SHARED_PASSWORD) {
+          // Calcular hash SHA256 de la contraseña ingresada
+          const passHash = await sha256(pass);
+          
+          // Comparar con el hash almacenado
+          if (passHash === ALLOWED_USERS[user]) {
             localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ user, ts: Date.now() }));
             cerrarLogin();
             afterLogin();
