@@ -121,6 +121,7 @@
             border-radius: 6px; 
             margin-top: 8px; 
             text-align: left;
+            white-space: pre-wrap; /* conserva saltos de línea si se usa textContent */
         }
         .atencion-display { 
             font-size: 0.8rem; 
@@ -246,28 +247,28 @@
     <div class="vegeta-container" id="col-vegeta"></div>
 
     <div class="bottom-controls">
-        <button class="report-btn-main" onclick="abrirModalReporte()">📋 Generar Reporte de Tiempos</button>
+        <button class="report-btn-main" onclick="abrirModalReporte()" aria-label="Generar reporte de tiempos">📋 Generar Reporte de Tiempos</button>
     </div>
 
-    <div class="modal" id="modal">
+    <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
         <div class="modal-content">
             <h3 id="modal-title" style="margin-top:0; color:var(--accent);">Configurar Mesa</h3>
-            <label>Fecha de inicio:</label>
+            <label for="fecha-input">Fecha de inicio:</label>
             <input type="date" id="fecha-input">
-            <label>¿En qué semana avisar?:</label>
+            <label for="objetivo-input">¿En qué semana avisar?:</label>
             <input type="number" id="objetivo-input" value="8" min="1">
-            <button onclick="guardarFecha()">Guardar</button>
-            <button style="background:#555; margin-top: 4px;" onclick="cerrarModal()">Cancelar</button>
+            <button onclick="guardarFecha()" aria-label="Guardar configuración">Guardar</button>
+            <button style="background:#555; margin-top: 4px;" onclick="cerrarModal()" aria-label="Cancelar">Cancelar</button>
         </div>
     </div>
 
-    <div class="modal" id="modal-notes">
+    <div class="modal" id="modal-notes" role="dialog" aria-modal="true" aria-labelledby="modal-notas-title">
         <div class="modal-content">
             <h3 id="modal-notas-title" style="margin-top:0; color:#2196f3;">Notas de la Mesa</h3>
-            <label>Escribí tus anotaciones:</label>
+            <label for="notas-input">Escribí tus anotaciones:</label>
             <textarea id="notas-input" placeholder="Ej: Agregar nutrientes&#10;Revisar pH los martes..."></textarea>
-            <button style="background:#2196f3;" onclick="guardarNota()">Guardar Nota</button>
-            <button style="background:#555; margin-top: 4px;" onclick="cerrarModalNotas()">Cancelar</button>
+            <button style="background:#2196f3;" onclick="guardarNota()" aria-label="Guardar nota">Guardar Nota</button>
+            <button style="background:#555; margin-top: 4px;" onclick="cerrarModalNotas()" aria-label="Cancelar">Cancelar</button>
         </div>
     </div>
 
@@ -275,26 +276,36 @@
         <div class="modal-content" style="width: 100%; max-width: 340px;">
             <h3 style="margin-top:0; color:#009688;">Reporte de Producción</h3>
             <textarea id="report-text-output" class="report-textarea" readonly></textarea>
-            <button class="whatsapp-btn" onclick="compartirWhatsApp()">💬 Enviar por WhatsApp</button>
-            <button style="background:#555;" onclick="cerrarModalReporte()">Cerrar</button>
+            <button class="whatsapp-btn" onclick="compartirWhatsApp()" aria-label="Enviar por WhatsApp">💬 Enviar por WhatsApp</button>
+            <button style="background:#555;" onclick="cerrarModalReporte()" aria-label="Cerrar reporte">Cerrar</button>
         </div>
     </div>
 
     <script>
+        const STORAGE_KEY = 'datosCultivoV3_Final';
         let datos = {};
         try {
-            const datosLocales = localStorage.getItem('datosCultivoV3_Final');
+            const datosLocales = localStorage.getItem(STORAGE_KEY);
             datos = datosLocales ? JSON.parse(datosLocales) : {};
         } catch (e) {
             console.error("Error crítico al leer localStorage, re-inicializando almacenamiento vacío.", e);
             datos = {};
         }
 
+        function guardarLocalStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(datos));
+            } catch (e) {
+                console.error('No se pudo guardar en localStorage', e);
+                alert('No se pudo guardar la configuración en el almacenamiento local (localStorage).');
+            }
+        }
+
         let textoReporteGlobal = ""; 
 
         function escaparHTML(texto) {
-            if (!texto) return '';
-            return texto
+            if (texto === undefined || texto === null) return '';
+            return String(texto)
                 .replace(/&/g, "&amp;")
                 .replace(/</g, "&lt;")
                 .replace(/>/g, "&gt;")
@@ -329,8 +340,8 @@
                 const card = document.createElement('div');
                 card.className = 'mesa-card';
                 
-                // Homogeneizado estructural a '.notas'
-                let notasEscapadas = data?.notas ? escaparHTML(data.notas) : '';
+                // Notas: escapadas y preservando saltos de línea cuando se inserten como innerHTML
+                let notasEscapadas = data?.notas ? escaparHTML(data.notas).replace(/\n/g, '<br>') : '';
                 let notesHTML = notasEscapadas ? `<div class="notes-display"><strong>Notas:</strong><br>${notasEscapadas}</div>` : '';
                 let atencionHTML = data?.atencion ? `<div class="atencion-display">⚠️ ATENCIÓN: ${escaparHTML(data.atencion)}</div>` : '';
                 let claseBtnAtencion = data?.atencion ? 'atencion-btn con-enfermedad' : 'atencion-btn';
@@ -338,7 +349,7 @@
                 if (data && data.fecha) {
                     const infoTiempo = calcularTiempoExacto(data.fecha);
                     const requierePoda = infoTiempo.semanas === 3;
-                    const esAlertaMeta = infoTiempo.semanas >= data.objetivo;
+                    const esAlertaMeta = data.objetivo !== undefined && infoTiempo.semanas >= data.objetivo;
 
                     let podaTagHTML = '';
 
@@ -358,12 +369,12 @@
                         textoTiempo += ` y ${infoTiempo.diasRestantes}d`;
                     }
 
-                    const partesFecha = data.fecha.split("-");
-                    const fechaFormateada = `${partesFecha[2]}/${partesFecha[1]}/${partesFecha[0]}`;
+                    const partesFecha = (data.fecha || '').split("-");
+                    const fechaFormateada = (partesFecha.length === 3) ? `${partesFecha[2]}/${partesFecha[1]}/${partesFecha[0]}` : data.fecha;
 
                     card.innerHTML = `
                         <strong style="color: #ffffff; font-size:0.9rem;">${m.etiqueta}</strong>
-                        <div style="font-size: 0.7rem; color: #aaaaaa; margin-top: 2px;">Inic: ${fechaFormateada}</div>
+                        <div style="font-size: 0.7rem; color: #aaaaaa; margin-top: 2px;">Inicio: ${fechaFormateada}</div>
                         <div class="semana-info">${textoTiempo}</div>
                         <div class="dia-info">Total: ${infoTiempo.diasTotales} días</div>
                         <div class="objetivo-info">Meta: Sem. ${data.objetivo}</div>
@@ -371,10 +382,10 @@
                         ${atencionHTML}
                         ${notesHTML}
                         <div class="btn-group">
-                            <button onclick="abrirModal('${id}')">Editar</button>
-                            <button class="notes-btn" onclick="abrirModalNotas('${id}')">Notas</button>
-                            <button class="${claseBtnAtencion}" onclick="gestionarAtencion('${id}', event)">Alerta</button>
-                            <button class="reset-btn" onclick="resetearMesa('${id}', event)">Vaciar</button>
+                            <button onclick="abrirModal('${id}')" aria-label="Editar ${m.etiqueta}">Editar</button>
+                            <button class="notes-btn" onclick="abrirModalNotas('${id}')" aria-label="Notas ${m.etiqueta}">Notas</button>
+                            <button class="${claseBtnAtencion}" onclick="gestionarAtencion('${id}', event)" aria-label="Alerta ${m.etiqueta}">Alerta</button>
+                            <button class="reset-btn" onclick="resetearMesa('${id}', event)" aria-label="Vaciar ${m.etiqueta}">Vaciar</button>
                         </div>
                     `;
                 } else if (data && (data.notas || data.atencion)) {
@@ -390,10 +401,10 @@
                         ${atencionHTML}
                         ${notesHTML}
                         <div class="btn-group">
-                            <button onclick="abrirModal('${id}')">Iniciar</button>
-                            <button class="notes-btn" onclick="abrirModalNotas('${id}')">Notas</button>
-                            <button class="${claseBtnAtencion}" onclick="gestionarAtencion('${id}', event)">Alerta</button>
-                            <button class="reset-btn" onclick="resetearMesa('${id}', event)">Vaciar</button>
+                            <button onclick="abrirModal('${id}')" aria-label="Iniciar ${m.etiqueta}">Iniciar</button>
+                            <button class="notes-btn" onclick="abrirModalNotas('${id}')" aria-label="Notas ${m.etiqueta}">Notas</button>
+                            <button class="${claseBtnAtencion}" onclick="gestionarAtencion('${id}', event)" aria-label="Alerta ${m.etiqueta}">Alerta</button>
+                            <button class="reset-btn" onclick="resetearMesa('${id}', event)" aria-label="Vaciar ${m.etiqueta}">Vaciar</button>
                         </div>
                     `;
                 } else {
@@ -406,9 +417,9 @@
                         ${atencionHTML}
                         ${notesHTML}
                         <div class="btn-group">
-                            <button onclick="abrirModal('${id}')">Iniciar</button>
-                            <button class="notes-btn" onclick="abrirModalNotas('${id}')">Notas</button>
-                            <button class="${claseBtnAtencion}" onclick="gestionarAtencion('${id}', event)">Alerta</button>
+                            <button onclick="abrirModal('${id}')" aria-label="Iniciar ${m.etiqueta}">Iniciar</button>
+                            <button class="notes-btn" onclick="abrirModalNotas('${id}')" aria-label="Notas ${m.etiqueta}">Notas</button>
+                            <button class="${claseBtnAtencion}" onclick="gestionarAtencion('${id}', event)" aria-label="Alerta ${m.etiqueta}">Alerta</button>
                             <div style="visibility: hidden;"></div> 
                         </div>
                     `;
@@ -466,21 +477,28 @@
                 }
             }
 
-            localStorage.setItem('datosCultivoV3_Final', JSON.stringify(datos));
+            guardarLocalStorage();
             inicializarApp();
         }
 
         function calcularTiempoExacto(fecha) {
             if (!fecha) return { semanas: 0, diasRestantes: 0, diasTotales: 0 };
             const hoy = new Date();
-            const partes = fecha.split("-");
-            const inicio = new Date(partes[0], partes[1] - 1, partes[2]); 
-            
+            const partes = (fecha || '').split("-");
+            let inicio;
+            if (partes.length === 3) {
+                inicio = new Date(Number(partes[0]), Number(partes[1]) - 1, Number(partes[2]));
+            } else {
+                inicio = new Date(fecha);
+            }
+
+            if (isNaN(inicio.getTime())) return { semanas: 0, diasRestantes: 0, diasTotales: 0 };
+
             inicio.setHours(0,0,0,0); 
             hoy.setHours(0,0,0,0);
             
             const diff = hoy.getTime() - inicio.getTime();
-            let diasTotales = Math.round(diff / (1000 * 60 * 60 * 24));
+            let diasTotales = Math.floor(diff / (1000 * 60 * 60 * 24));
             if (diasTotales < 0) diasTotales = 0;
 
             const semanas = Math.floor(diasTotales / 7);
@@ -533,7 +551,7 @@
                 delete datos[idActual];
             }
 
-            localStorage.setItem('datosCultivoV3_Final', JSON.stringify(datos)); 
+            guardarLocalStorage();
             inicializarApp(); 
             cerrarModal(); 
         }
@@ -561,7 +579,7 @@
                     delete datos[idActual];
                 }
             }
-            localStorage.setItem('datosCultivoV3_Final', JSON.stringify(datos));
+            guardarLocalStorage();
             inicializarApp();
             cerrarModalNotas();
         }
@@ -573,7 +591,7 @@
                 if(datos[id]) {
                     delete datos[id];
                 }
-                localStorage.setItem('datosCultivoV3_Final', JSON.stringify(datos)); 
+                guardarLocalStorage();
                 inicializarApp(); 
             }
         }
@@ -593,8 +611,8 @@
                     contadorActivas++;
                     const info = calcularTiempoExacto(data.fecha);
                     
-                    const partes = data.fecha.split("-");
-                    const fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+                    const partes = (data.fecha || '').split("-");
+                    const fechaFormateada = (partes.length === 3) ? `${partes[2]}/${partes[1]}/${partes[0]}` : data.fecha;
                     
                     let tiempoTranscurrido = `${info.semanas} ${info.semanas === 1 ? 'sem' : 'sems'}`;
                     if (info.diasRestantes > 0) {
