@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ciclo Cultivo Oficina v2.8 - IA Athena</title>
+  <style>
+    :root {
+      --bg-color: #121212;
+      --card-bg: #1e1e1e;
+      --text-color: #ffffff;
+      --accent: #4caf50;
+      --alert: #ff5252;
+      --notes-color: #ffb74d;
+      --ai: #7e57c2;
+    }
+
+    body {
+      font-family: sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0;
+    }
+
+    .header-container { text-align: center; margin-bottom: 15px; margin-top: 10px; }
+    .logo-cultivo { font-size: 2.5rem; margin: 0; padding: 0; line-height: 1; }
+    h1 { font-size: 1.3rem; color: var(--accent); margin: 5px 0 0 0; font-weight: bold; }
+
+    .top-controls { width: 100%; max-width: 600px; margin-bottom: 12px; }
+
+    .user-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      background: #1b1b1b;
+      border: 1px solid #333;
+      border-radius: 14px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      box-sizing: border-box;
+    }
+
+    .user-bar span { color: #aaa; font-size: 0.9rem; }
+
+    .quick-access {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto 15px auto;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 16px;
+      padding: 12px;
+      box-sizing: border-box;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.22);
+    }
+
+    .quick-access-title {
+      text-align: center;
+      color: #cfcfcf;
+      font-weight: bold;
+      font-size: 0.95rem;
+      margin-bottom: 10px;
+    }
+
+    .quick-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+
+    .quick-btn {
+      border: none;
+      border-radius: 14px;
+      padding: 14px 10px;
+      cursor: pointer;
+      width: 100%;
+      color: #fff;
+      font-weight: bold;
+      font-size: 0.9rem;
+      min-height: 64px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+      transition: transform 0.15s ease, opacity 0.2s ease;
+    }
+
+    .quick-btn:hover { transform: translateY(-1px); opacity: 0.95; }
+    .quick-btn .sub { font-size: 0.72rem; opacity: 0.85; font-weight: 500; }
+    .quick-btn.sales { background: linear-gradient(135deg, #6a4c93, #8e5bbd); }
+    .quick-btn.notes { background: linear-gradient(135deg, #1565c0, #1e88e5); }
+    .quick-btn.vegeta { background: linear-gradient(135deg, #2e7d32, #43a047); }
+    .quick-btn.report { background: linear-gradient(135deg, #00796b, #009688); }
+    .quick-btn.ai { background: linear-gradient(135deg, #5e35b1, #7e57c2); }
+
+    .panel-open { width: 100%; max-width: 600px; margin: 0 auto 15px auto; display: none; }
+    .panel-open.visible { display: block; }
+
+    .sales-panel {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto 15px auto;
+      background: #1b1b1b;
+      border: 1px solid #444;
+      border-radius: 12px;
+      padding: 10px;
+      box-sizing: border-box;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+    }
+
+    .sales-title { text-align: center; color: #ffb74d; font-weight: bold; font-size: 1.05rem; margin: 0 0 8px 0; }
+    .sales-controls { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+    .sales-controls label { display: inline; margin: 0; color: #ddd; font-weight: bold; }
+
+    .sales-litros {
+      width: 90px !important;
+      margin: 0 !important;
+      padding: 7px 8px !important;
+      text-align: center;
+      font-weight: bold;
+      background: #292929 !important;
+    }
+
+    .sales-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; }
+    .sales-table { width: 100%; min-width: 470px; border-collapse: collapse; font-size: 0.78rem; background: #242424; }
+    .sales-table th, .sales-table td { border: 1px solid #555; padding: 6px 5px; text-align: center; white-space: nowrap; }
+    .sales-table th { background: #303030; color: #fff; font-weight: bold; }
+    .sales-table td:first-child { color: #ffcc80; font-weight: bold; }
+    .sales-table .gramos { color: #fff; font-weight: bold; }
+    .sales-table .por-litro { color: #4dd0e1; font-size: 0.72rem; }
+    .sales-table tr.seleccionada { background: rgba(76, 175, 80, 0.22); outline: 2px solid var(--accent); outline-offset: -2px; }
+    .sales-note { text-align: center; color: #999; font-size: 0.68rem; margin-top: 6px; }
+
+    .panel-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; width: 100%; max-width: 600px; }
+    .columna-lado { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+    .vegeta-container { width: 100%; max-width: 600px; margin-top: 15px; }
+
+    .columna-titulo { text-align: center; font-weight: bold; margin-bottom: 5px; color: #aaaaaa; font-size: 1rem; border-bottom: 1px solid #333; padding-bottom: 5px; }
+
+    .mesa-card {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+      border: 2px solid transparent;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .notes-display {
+      font-size: 0.8rem;
+      background: rgba(255, 183, 77, 0.15);
+      border: 1px dashed var(--notes-color);
+      color: var(--notes-color);
+      padding: 6px;
+      border-radius: 6px;
+      margin-top: 8px;
+      text-align: left;
+      white-space: pre-wrap;
+    }
+
+    .nota-general-display {
+      font-size: 0.8rem;
+      background: rgba(77, 208, 225, 0.14);
+      border: 1px dashed #4dd0e1;
+      color: #4dd0e1;
+      padding: 6px;
+      border-radius: 6px;
+      margin-top: 8px;
+      text-align: left;
+      white-space: pre-wrap;
+    }
+
+    button {
+      background-color: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 4px;
+      cursor: pointer;
+      width: 100%;
+      font-weight: bold;
+      font-size: 0.8rem;
+      box-sizing: border-box;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 34px;
+      transition: background 0.2s;
+    }
+
+    .bottom-controls { width: 100%; max-width: 600px; margin-top: 18px; margin-bottom: 25px; text-align: center; }
+    .report-btn-main { background-color: #009688; color: white; border: none; border-radius: 20px; padding: 12px 20px; font-weight: bold; font-size: 0.95rem; cursor: pointer; border: 1px solid #00796b; width: 100%; box-sizing: border-box; }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+
+    .modal-content {
+      background: #222;
+      padding: 20px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 340px;
+      text-align: center;
+      box-sizing: border-box;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0 15px 0;
+      background: #333;
+      border: 1px solid #555;
+      color: white;
+      box-sizing: border-box;
+      border-radius: 6px;
+      font-family: sans-serif;
+    }
+
+    .report-textarea { font-family: monospace; font-size: 0.85rem; height: 180px; background: #111; color: #4caf50; border: 1px solid #333; }
+
+    @media (max-width: 480px) {
+      .sales-panel { padding: 7px; }
+      .sales-table { font-size: 0.72rem; min-width: 440px; }
+      .sales-table th, .sales-table td { padding: 5px 4px; }
+      .quick-grid { grid-template-columns: 1fr 1fr; }
+      .quick-btn { min-height: 60px; font-size: 0.84rem; }
+      .panel-container { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .logo-cultivo { font-size: 2rem; }
+      h1 { font-size: 1.1rem; }
+      .mesa-card { padding: 8px 6px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header-container">
+    <div class="logo-cultivo">🌱</div>
+    <h1>Ciclo Cultivo Oficina</h1>
+  </div>
+
+  <div class="top-controls">
+    <div class="user-bar" id="user-bar" style="display:none;"></div>
+  </div>
+
+  <div class="quick-access">
+    <div class="quick-access-title">Accesos rápidos</div>
+    <div class="quick-grid">
+      <button class="quick-btn sales" onclick="togglePanel('sales-panel')">🧪 Sales<span class="sub">Tabla EC / gramos</span></button>
+      <button class="quick-btn notes" onclick="togglePanel('notes-panel')">📝 Notas<span class="sub">Notas generales</span></button>
+      <button class="quick-btn vegeta" onclick="togglePanel('vegeta-panel')">🥦 Vegeta<span class="sub">Mesa especial</span></button>
+      <button class="quick-btn report" onclick="abrirModalReporte()">📋 Reporte<span class="sub">Tiempos de cultivo</span></button>
+      <button class="quick-btn ai" onclick="togglePanel('ai-panel')">🤖 IA Athena<span class="sub">Experta en cannabis</span></button>
+    </div>
+  </div>
+
+  <div class="panel-open" id="sales-panel">
+    <div class="sales-panel">
+      <div class="sales-title">🧪 SALES = GRAMOS × 10L</div>
+      <div class="sales-controls">
+        <label for="sales-litros">Litros:</label>
+        <input id="sales-litros" class="sales-litros" type="number" min="0.1" step="0.1" value="10" inputmode="decimal" oninput="actualizarTablaSales()" aria-label="Cantidad de litros">
+      </div>
+      <div class="sales-scroll">
+        <table class="sales-table" aria-label="Tabla de sales">
+          <thead><tr><th>EC</th><th>GROW / BLOOM</th><th>CORE</th></tr></thead>
+          <tbody id="sales-table-body"></tbody>
+        </table>
+      </div>
+      <div class="sales-note">Modificá los litros y los gramos se recalculan automáticamente.</div>
+    </div>
+  </div>
+
+  <div class="panel-container">
+    <div class="columna-lado" id="col-lado-a"></div>
+    <div class="columna-lado" id="col-lado-b"></div>
+  </div>
+
+  <div class="panel-open" id="vegeta-panel">
+    <div class="vegeta-container" id="col-vegeta"></div>
+  </div>
+
+  <div class="panel-open" id="notes-panel">
+    <div class="mesa-card" id="notes-wrapper" style="border:1px dashed #4dd0e1; background:var(--card-bg);">
+      <strong style="color:#ffffff; display:block; margin-bottom:5px; font-size:0.9rem;">Notas generales</strong>
+      <textarea id="nota-general-input" placeholder="Escribí acá notas generales del cultivo..." style="min-height:120px; margin-bottom:8px;"></textarea>
+      <button style="background:#009688;" onclick="guardarNotaGeneral();" aria-label="Guardar notas generales">Guardar notas generales</button>
+    </div>
+  </div>
+
+  <div class="panel-open" id="ai-panel">
+    <div class="mesa-card" style="border:1px solid #7e57c2;">
+      <strong style="color:#ffffff; display:block; margin-bottom:5px; font-size:0.95rem;">🤖 IA Experta Cannabis + Athena Nutrients</strong>
+      <textarea id="ai-question" placeholder="Ej: Estoy en flora semana 4 en coco con Athena. ¿Qué ajustes de EC/pH me recomendás?" style="min-height:110px; margin-bottom:8px;"></textarea>
+      <button style="background:#7e57c2;" onclick="preguntarIA()" aria-label="Consultar IA">Consultar IA</button>
+      <div id="ai-answer" class="nota-general-display" style="margin-top:10px;">Escribí tu consulta y tocá “Consultar IA”.</div>
+      <div style="font-size:0.72rem; color:#999; margin-top:6px; text-align:left;">Tip: configurá <code>AI_ENDPOINT</code> en el script para conectar tu backend RAG con PDFs de Athena.</div>
+    </div>
+  </div>
+
+  <div class="bottom-controls">
+    <button class="report-btn-main" onclick="abrirModalReporte()" aria-label="Generar reporte de tiempos">📋 Generar Reporte de Tiempos</button>
+  </div>
+
+  <div class="modal" id="modal-report">
+    <div class="modal-content">
+      <h3 style="margin-top:0; color:#009688;">Reporte de Producción</h3>
+      <textarea id="report-text-output" class="report-textarea" readonly></textarea>
+      <button style="background:#25D366; color:black; border:1px solid #1ebd59;" onclick="compartirWhatsApp()" aria-label="Enviar por WhatsApp">💬 Enviar por WhatsApp</button>
+      <button style="background:#555; margin-top:6px;" onclick="cerrarModalReporte()" aria-label="Cerrar reporte">Cerrar</button>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'datosCultivoV3_Final';
+    const GENERAL_NOTES_KEY = 'notasGeneralesCultivoV1';
+
+    const SALES_BASE = [
+      { ec: 0.5, grow: 2.8, core: 1.7 },
+      { ec: 1.0, grow: 6.1, core: 3.6 },
+      { ec: 1.5, grow: 9.4, core: 5.7 },
+      { ec: 1.8, grow: 11.1, core: 6.8 },
+      { ec: 2.0, grow: 12.9, core: 7.7 },
+      { ec: 2.5, grow: 16.5, core: 9.9, especial: true },
+      { ec: 3.0, grow: 20.3, core: 12.2 }
+    ];
+
+    // 🔧 Configurá este endpoint con tu backend de IA (RAG + PDFs Athena)
+    const AI_ENDPOINT = 'https://TU_BACKEND/api/athena-chat';
+
+    let datos = {};
+
+    function getCachedData() {
+      try {
+        const datosLocales = localStorage.getItem(STORAGE_KEY);
+        return datosLocales ? JSON.parse(datosLocales) : {};
+      } catch (e) {
+        console.error('Error al leer datos locales', e);
+        return {};
+      }
+    }
+
+    function getCachedGeneralNotes() {
+      try { return localStorage.getItem(GENERAL_NOTES_KEY) || ''; }
+      catch (e) { return ''; }
+    }
+
+    function guardarCopiaLocal() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(datos)); }
+      catch (e) { console.error('No se pudo guardar copia local', e); }
+    }
+
+    function guardarCopiaLocalNotasGenerales(valor) {
+      try { localStorage.setItem(GENERAL_NOTES_KEY, valor || ''); }
+      catch (e) { console.error('No se pudo guardar nota general local', e); }
+    }
+
+    function formatearNumeroSales(valor) {
+      return Number(valor).toLocaleString('es-AR', { minimumFractionDigits: 1, maximumFractionDigits: 2 });
+    }
+
+    function actualizarTablaSales() {
+      const litrosInput = document.getElementById('sales-litros');
+      const tbody = document.getElementById('sales-table-body');
+      if (!litrosInput || !tbody) return;
+
+      let litros = parseFloat(String(litrosInput.value).replace(',', '.'));
+      if (!Number.isFinite(litros) || litros <= 0) litros = 10;
+
+      const filas = SALES_BASE.map(item => {
+        const grow = item.grow * litros / 10;
+        const core = item.core * litros / 10;
+        const clase = item.especial ? ' class="seleccionada"' : '';
+        const marca = item.especial ? ' *' : '';
+        return `
+          <tr${clase}>
+            <td>${formatearNumeroSales(item.ec)}${marca}</td>
+            <td><span class="gramos">${formatearNumeroSales(grow)} g</span> <span class="por-litro"> / ${formatearNumeroSales(item.grow / 10)} g/L</span></td>
+            <td><span class="gramos">${formatearNumeroSales(core)} g</span> <span class="por-litro"> / ${formatearNumeroSales(item.core / 10)} g/L</span></td>
+          </tr>`;
+      }).join('');
+
+      tbody.innerHTML = filas;
+    }
+
+    function togglePanel(id) {
+      const panel = document.getElementById(id);
+      if (!panel) return;
+      const isVisible = panel.classList.contains('visible');
+      document.querySelectorAll('.panel-open.visible').forEach(el => el.classList.remove('visible'));
+      if (!isVisible) panel.classList.add('visible');
+
+      if (id === 'sales-panel') actualizarTablaSales();
+      if (id === 'notes-panel') {
+        const input = document.getElementById('nota-general-input');
+        if (input) input.value = getCachedGeneralNotes();
+      }
+
+      setTimeout(() => {
+        panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+
+    async function guardarNotaGeneral() {
+      const valor = document.getElementById('nota-general-input')?.value || '';
+      guardarCopiaLocalNotasGenerales(valor);
+      alert('Notas generales guardadas ✅');
+    }
+
+    function inicializarApp() {
+      datos = getCachedData();
+      const contB = document.getElementById('col-lado-b');
+      const contA = document.getElementById('col-lado-a');
+      const contV = document.getElementById('col-vegeta');
+
+      if (contB) contB.innerHTML = '<div class="columna-titulo">Lado B</div>';
+      if (contA) contA.innerHTML = '<div class="columna-titulo">Lado A</div>';
+      if (contV) contV.innerHTML = '<div class="columna-titulo">Mesa Especial</div>';
+    }
+
+    function abrirModalReporte() {
+      const salida = document.getElementById('report-text-output');
+      const notas = getCachedGeneralNotes();
+      if (salida) {
+        salida.value = [
+          '🌱 REPORTE DE PRODUCCIÓN - CULTIVO OFICINA',
+          '',
+          `Fecha: ${new Date().toLocaleDateString('es-AR')}`,
+          '',
+          'Notas generales:',
+          notas || '(sin notas)'
+        ].join('\n');
+      }
+      document.getElementById('modal-report').style.display = 'flex';
+    }
+
+    function cerrarModalReporte() {
+      document.getElementById('modal-report').style.display = 'none';
+    }
+
+    function compartirWhatsApp() {
+      const texto = encodeURIComponent(document.getElementById('report-text-output')?.value || '');
+      window.open(`https://wa.me/?text=${texto}`, '_blank');
+    }
+
+    async function preguntarIA() {
+      const q = document.getElementById('ai-question')?.value?.trim();
+      const out = document.getElementById('ai-answer');
+
+      if (!q) {
+        if (out) out.textContent = 'Escribí una pregunta primero.';
+        return;
+      }
+
+      if (out) out.textContent = 'Consultando IA experta...';
+
+      try {
+        const resp = await fetch(AI_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            question: q,
+            app: 'Cultivo-Bela-2.0',
+            mode: 'athena-expert'
+          })
+        });
+
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+
+        const answer = data?.answer || data?.respuesta || 'Sin respuesta.';
+        const fuentes = Array.isArray(data?.sources) && data.sources.length
+          ? `\n\nFuentes:\n- ${data.sources.join('\n- ')}`
+          : '';
+
+        if (out) out.textContent = `${answer}${fuentes}`;
+      } catch (e) {
+        console.error(e);
+        if (out) {
+          out.textContent = 'No se pudo conectar con la IA.\n\n1) Verificá AI_ENDPOINT\n2) Revisá CORS en backend\n3) Confirmá que /api/athena-chat responda POST';
+        }
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      inicializarApp();
+      actualizarTablaSales();
+      const notesInput = document.getElementById('nota-general-input');
+      if (notesInput) notesInput.value = getCachedGeneralNotes();
+    });
+  </script>
+</body>
+</html>
