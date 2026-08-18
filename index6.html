@@ -194,7 +194,7 @@
     }
 
     .bottom-controls { width: 100%; max-width: 600px; margin-top: 18px; margin-bottom: 25px; text-align: center; }
-    .report-btn-main { background-color: #009688; color: white; border: none; border-radius: 20px; padding: 12px 20px; font-weight: bold; font-size: 0.95rem; cursor: pointer; border: 1px solid #00796b; width: 100%; box-sizing: border-box; }
+    .report-btn-main { background-color: #009688; color: white; border: none; border-radius: 20px; padding: 12px 20px; font-weight: bold; font-size: 0.95rem; cursor: pointer; border: 1px solid #00796b; }
 
     .modal {
       display: none;
@@ -234,6 +234,8 @@
     }
 
     .report-textarea { font-family: monospace; font-size: 0.85rem; height: 180px; background: #111; color: #4caf50; border: 1px solid #333; }
+
+    .hidden-mesas { display: none !important; }
 
     @media (max-width: 480px) {
       .sales-panel { padding: 7px; }
@@ -286,13 +288,13 @@
     </div>
   </div>
 
-  <div class="panel-container">
+  <div class="panel-container hidden-mesas">
     <div class="columna-lado" id="col-lado-a"></div>
     <div class="columna-lado" id="col-lado-b"></div>
   </div>
 
   <div class="panel-open" id="vegeta-panel">
-    <div class="vegeta-container" id="col-vegeta"></div>
+    <div class="vegeta-container hidden-mesas" id="col-vegeta"></div>
   </div>
 
   <div class="panel-open" id="notes-panel">
@@ -340,7 +342,6 @@
       { ec: 3.0, grow: 20.3, core: 12.2 }
     ];
 
-    // 🔧 Configurá este endpoint con tu backend de IA (RAG + PDFs Athena)
     const AI_ENDPOINT = 'https://TU_BACKEND/api/athena-chat';
 
     let datos = {};
@@ -428,9 +429,9 @@
       const contA = document.getElementById('col-lado-a');
       const contV = document.getElementById('col-vegeta');
 
-      if (contB) contB.innerHTML = '<div class="columna-titulo">Lado B</div>';
-      if (contA) contA.innerHTML = '<div class="columna-titulo">Lado A</div>';
-      if (contV) contV.innerHTML = '<div class="columna-titulo">Mesa Especial</div>';
+      if (contB) contB.innerHTML = '';
+      if (contA) contA.innerHTML = '';
+      if (contV) contV.innerHTML = '';
     }
 
     function abrirModalReporte() {
