@@ -670,7 +670,7 @@
           const userBar = document.getElementById('user-bar');
           if (userBar) {
             userBar.style.display = 'flex';
-            userBar.innerHTML = `<span>Usuario: <strong style="color:#fff;">${getSessionUser()}</strong></span><button id="logout-btn" style="width:auto; min-height:auto; padding:8px 12px; border-radius:12px; background:#e65100; margin-left:auto;" onclick="logout()">Cerrar sesión</button>`;
+            userBar.innerHTML = `<span>Usuario: <strong style="color:#fff;">${getSessionUser()}</strong></span><button id="logout-btn" style="width:auto; min-height:auto; padding:8px 12px; border-radius:20px; background:#e65100; font-size:0.8rem;" onclick="logout()">Cerrar sesión</button>`;
           }
           const cargado = await cargarDatosFirebase();
           if (!cargado) console.warn("La aplicación continúa con la copia local porque Firebase no está disponible.");
@@ -679,7 +679,7 @@
           const notesInput = document.getElementById('nota-general-input');
           if (notesInput) notesInput.value = getCachedGeneralNotes();
         }
-        function escaparHTML(texto) { if (texto === undefined || texto === null) return ''; return String(texto).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#039;"); }
+        function escaparHTML(texto) { if (texto === undefined || texto === null) return ''; return String(texto).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;"); }
         function obtenerEstructuraMesas() { let listaMesas = []; for (let i = 1; i <= 6; i++) { listaMesas.push({ id: 'A' + i, lado: 'A', etiqueta: `Mesa A${i}`, contenedor: 'col-lado-a' }); listaMesas.push({ id: 'B' + i, lado: 'B', etiqueta: `Mesa B${i}`, contenedor: 'col-lado-b' }); } listaMesas.push({ id: 'VEGETA', lado: 'V', etiqueta: 'Mesa VEGETA', contenedor: 'col-vegeta' }); return listaMesas; }
         function inicializarApp() {
             const contB = document.getElementById('col-lado-b');
@@ -710,28 +710,17 @@
                     if (infoTiempo.diasRestantes > 0) textoTiempo += ` y ${infoTiempo.diasRestantes}d`;
                     const partesFecha = (data.fecha || '').split("-");
                     const fechaFormateada = (partesFecha.length === 3) ? `${partesFecha[2]}/${partesFecha[1]}/${partesFecha[0]}` : data.fecha;
-                    card.innerHTML = `<strong style="color: #ffffff; font-size:0.9rem;">${m.etiqueta}</strong><div style="font-size: 0.7rem; color: #aaaaaa; margin-top: 2px;">Inicio: ${fechaFormateada}</div><div class="semana-info">${textoTiempo}</div>${podaTagHTML}${atencionHTML}${notesHTML}<div class="btn-group"><button onclick="abrirModal('${id}')" style="background:#2196f3;">📅 Fecha</button><button class="${claseBtnAtencion}" onclick="gestionarAtencion('${id}', event)">⚠️ Atención</button><button class="notes-btn" onclick="abrirModalNotas('${id}')">📝 Notas</button><button class="reset-btn" onclick="resetearMesa('${id}', event)">Vaciar</button></div>`;
+                    card.innerHTML = `<strong style="color: #ffffff; font-size:0.9rem;">${m.etiqueta}</strong><div style="font-size: 0.7rem; color: #aaaaaa; margin-top: 2px;">Inicio: ${fechaFormateada}</div><div class="semana-info">${textoTiempo}</div><div class="objetivo-info">Meta: semana ${data.objetivo}</div>${notesHTML}${atencionHTML}${podaTagHTML}<div class="btn-group"><button onclick="abrirModal('${id}')" aria-label="Configurar ${m.etiqueta}">⚙️ Config</button><button class="notes-btn" onclick="abrirModalNotas('${id}')" aria-label="Agregar notas a ${m.etiqueta}">📝 Notas</button><button class="${claseBtnAtencion}" onclick="gestionarAtencion('${id}', event)" aria-label="Reportar enfermedad en ${m.etiqueta}">⚠️ Atención</button><button class="reset-btn" onclick="resetearMesa('${id}', event)" aria-label="Eliminar datos de ${m.etiqueta}">🗑️</button></div>`;
                 } else if (data && (data.notas || data.atencion)) {
                     card.style.backgroundColor = 'var(--card-bg)'; card.style.border = '1px dashed #666';
-                    card.innerHTML = `<strong style="color: #ffffff; display: block; margin-bottom: 5px; font-size:0.9rem;">${m.etiqueta}</strong><div style="font-style:italic; color:#aaa; margin: 10px 0;">Sin fecha configurada</div>${atencionHTML}${notesHTML}<div class="btn-group"><button onclick="abrirModal('${id}')" style="background:#2196f3;">📅 Fecha</button><button class="${claseBtnAtencion}" onclick="gestionarAtencion('${id}', event)">⚠️ Atención</button><button class="notes-btn" onclick="abrirModalNotas('${id}')">📝 Notas</button><button class="reset-btn" onclick="resetearMesa('${id}', event)">Vaciar</button></div>`;
+                    card.innerHTML = `<strong style="color: #ffffff; display: block; margin-bottom: 5px; font-size:0.9rem;">${m.etiqueta}</strong><div style="font-style:italic; color:#aaa; margin: 10px 0;">Sin fecha de inicio</div>${notesHTML}${atencionHTML}<div class="btn-group"><button onclick="abrirModal('${id}')" aria-label="Configurar ${m.etiqueta}">⚙️ Config</button><button class="notes-btn" onclick="abrirModalNotas('${id}')" aria-label="Agregar notas a ${m.etiqueta}">📝 Notas</button><button class="${claseBtnAtencion}" onclick="gestionarAtencion('${id}', event)" aria-label="Reportar enfermedad en ${m.etiqueta}">⚠️ Atención</button><button class="reset-btn" onclick="resetearMesa('${id}', event)" aria-label="Eliminar datos de ${m.etiqueta}">🗑️</button></div>`;
                 } else {
                     card.style.backgroundColor = 'var(--card-bg)'; card.style.border = '1px dashed #444';
-                    card.innerHTML = `<strong style="color: #ffffff; display: block; margin-bottom: 5px; font-size:0.9rem;">${m.etiqueta}</strong><div style="font-style:italic; color:#888; margin: 10px 0;">Sin información</div><div class="btn-group"><button onclick="abrirModal('${id}')" style="background:#2196f3;">📅 Fecha</button><button class="atencion-btn" onclick="gestionarAtencion('${id}', event)">⚠️ Atención</button><button class="notes-btn" onclick="abrirModalNotas('${id}')">📝 Notas</button></div>`;
+                    card.innerHTML = `<strong style="color: #ffffff; display: block; margin-bottom: 5px; font-size:0.9rem;">${m.etiqueta}</strong><div style="font-style:italic; color:#888; margin: 10px 0;">Click acá para comenzar</div><div class="btn-group"><button onclick="abrirModal('${id}')" aria-label="Configurar ${m.etiqueta}">➕ Agregar</button></div>`;
                 }
                 const contenedorDestino = document.getElementById(m.contenedor);
                 if (contenedorDestino) contenedorDestino.appendChild(card);
             });
-            const contVFinal = document.getElementById('col-vegeta');
-            if (contVFinal && !document.getElementById('nota-general-vegeta-card')) {
-                const generalCard = document.createElement('div');
-                generalCard.className = 'mesa-card';
-                generalCard.id = 'nota-general-vegeta-card';
-                generalCard.style.border = '1px dashed #4dd0e1';
-                generalCard.style.backgroundColor = 'var(--card-bg)';
-                const notaGeneral = getCachedGeneralNotes();
-                generalCard.innerHTML = `<strong style="color:#ffffff; display:block; margin-bottom:5px; font-size:0.9rem;">Notas generales</strong><textarea id="nota-general-input" placeholder="Escribí acá notas generales del cultivo..." style="min-height:120px; margin-bottom:8px; width:100%; padding:10px; background:#333; border:1px solid #555; color:white; box-sizing:border-box; border-radius:6px; font-family:sans-serif; resize:vertical;">${notaGeneral}</textarea><button style="background:#009688; width:100%; padding:8px 4px; border:none; border-radius:6px; color:white; font-weight:bold; font-size:0.8rem; cursor:pointer;" onclick="guardarNotaGeneral();">Guardar notas generales</button>`;
-                contVFinal.appendChild(generalCard);
-            }
         }
         async function gestionarAtencion(id, event) {
             event.stopPropagation();
@@ -741,7 +730,7 @@
             let enfermedad = "";
             if (seleccion.trim() === "1") enfermedad = "Oidio";
             else if (seleccion.trim() === "2") enfermedad = "Araña";
-            else if (seleccion.trim() === "3") { let otraEnfermedad = prompt("Ingresá el nombre de la enfermedad o problema:"); if (otraEnfermedad && otraEnfermedad.trim() !== "") enfermedad = otraEnfermedad.trim(); else return; }
+            else if (seleccion.trim() === "3") { let otraEnfermedad = prompt("Ingresá el nombre de la enfermedad o problema:"); if (otraEnfermedad && otraEnfermedad.trim() !== "") enfermedad = otraEnfermedad; }
             else if (seleccion.trim() === "4") enfermedad = "";
             else { alert("Opción no válida."); return; }
             if (!datos[id]) { if (enfermedad !== "") datos[id] = { fecha: "", objetivo: 8, notas: "", atencion: enfermedad }; }
