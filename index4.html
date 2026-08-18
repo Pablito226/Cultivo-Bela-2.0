@@ -136,12 +136,122 @@
             .sales-panel { padding: 7px; }
             .sales-table { font-size: 0.72rem; min-width: 440px; }
             .sales-table th, .sales-table td { padding: 5px 4px; }
+            .quick-grid { grid-template-columns: 1fr 1fr; }
+            .quick-btn { min-height: 60px; font-size: 0.84rem; }
         }
 
         .top-controls {
             width: 100%;
             max-width: 600px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
+        }
+
+        .user-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            background: #1b1b1b;
+            border: 1px solid #333;
+            border-radius: 14px;
+            padding: 10px 14px;
+            margin-bottom: 12px;
+            box-sizing: border-box;
+        }
+
+        .user-bar span {
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        .quick-access {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 15px auto;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 16px;
+            padding: 12px;
+            box-sizing: border-box;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .quick-access-title {
+            text-align: center;
+            color: #cfcfcf;
+            font-weight: bold;
+            font-size: 0.85rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .quick-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        @media (max-width: 480px) {
+            .quick-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .quick-btn {
+            border: none;
+            border-radius: 12px;
+            padding: 12px 6px;
+            cursor: pointer;
+            width: 100%;
+            color: #fff;
+            font-weight: bold;
+            font-size: 0.82rem;
+            min-height: 64px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+            transition: transform 0.12s ease, box-shadow 0.12s ease;
+        }
+
+        .quick-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(0,0,0,0.4); }
+        .quick-btn:active { transform: translateY(0); }
+        .quick-btn .btn-icon { font-size: 1.3rem; line-height: 1; }
+        .quick-btn .btn-label { font-size: 0.82rem; font-weight: bold; }
+        .quick-btn .btn-sub { font-size: 0.65rem; opacity: 0.8; font-weight: 400; }
+
+        .quick-btn.sales  { background: linear-gradient(135deg, #6a4c93, #8e5bbd); }
+        .quick-btn.notes  { background: linear-gradient(135deg, #1565c0, #1e88e5); }
+        .quick-btn.vegeta { background: linear-gradient(135deg, #2e7d32, #43a047); }
+        .quick-btn.report { background: linear-gradient(135deg, #00796b, #00acc1); }
+
+        .quick-btn.active::after {
+            content: '';
+            display: block;
+            width: 6px;
+            height: 6px;
+            background: #fff;
+            border-radius: 50%;
+            margin-top: 4px;
+            opacity: 0.7;
+        }
+
+        .panel-open {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 15px auto;
+            overflow: hidden;
+            max-height: 0;
+            transition: max-height 0.35s ease, opacity 0.25s ease;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .panel-open.visible {
+            max-height: 1200px;
+            opacity: 1;
+            pointer-events: auto;
         }
 
         .audio-status { 
@@ -357,48 +467,83 @@
     </div>
 
     <div class="top-controls">
+        <div class="user-bar" id="user-bar" style="display:none;"></div>
     </div>
-    
 
-    <!-- TABLA DE SALES -->
-    <div class="sales-panel" id="sales-panel">
-        <div class="sales-title">🧪 SALES = GRAMOS × 10L</div>
-
-        <div class="sales-controls">
-            <label for="sales-litros">Litros:</label>
-            <input id="sales-litros" class="sales-litros" type="number"
-                   min="0.1" step="0.1" value="10" inputmode="decimal"
-                   oninput="actualizarTablaSales()" aria-label="Cantidad de litros">
-        </div>
-
-        <div class="sales-scroll">
-            <table class="sales-table" aria-label="Tabla de sales">
-                <thead>
-                    <tr>
-                        <th>EC</th>
-                        <th>GROW / BLOOM</th>
-                        <th>CORE</th>
-                    </tr>
-                </thead>
-                <tbody id="sales-table-body"></tbody>
-            </table>
-        </div>
-
-        <div class="sales-note">
-            Modificá los litros y los gramos se recalculan automáticamente.
+    <!-- ACCESOS RÁPIDOS -->
+    <div class="quick-access">
+        <div class="quick-access-title">Accesos rápidos</div>
+        <div class="quick-grid">
+            <button class="quick-btn sales" id="qbtn-sales-panel" onclick="togglePanel('sales-panel')" aria-label="Abrir tabla de sales">
+                <span class="btn-icon">🧪</span>
+                <span class="btn-label">Sales</span>
+                <span class="btn-sub">Tabla EC / gramos</span>
+            </button>
+            <button class="quick-btn notes" id="qbtn-notes-panel" onclick="togglePanel('notes-panel')" aria-label="Abrir notas generales">
+                <span class="btn-icon">📝</span>
+                <span class="btn-label">Notas</span>
+                <span class="btn-sub">Notas generales</span>
+            </button>
+            <button class="quick-btn vegeta" id="qbtn-vegeta-panel" onclick="togglePanel('vegeta-panel')" aria-label="Abrir mesa Vegeta">
+                <span class="btn-icon">🥦</span>
+                <span class="btn-label">Vegeta</span>
+                <span class="btn-sub">Mesa especial</span>
+            </button>
+            <button class="quick-btn report" onclick="abrirModalReporte()" aria-label="Generar reporte de tiempos">
+                <span class="btn-icon">📋</span>
+                <span class="btn-label">Reporte</span>
+                <span class="btn-sub">Tiempos cultivo</span>
+            </button>
         </div>
     </div>
 
+    <!-- PANEL SALES (colapsable) -->
+    <div class="panel-open" id="sales-panel">
+        <div class="sales-panel">
+            <div class="sales-title">🧪 SALES = GRAMOS × 10L</div>
+            <div class="sales-controls">
+                <label for="sales-litros">Litros:</label>
+                <input id="sales-litros" class="sales-litros" type="number"
+                       min="0.1" step="0.1" value="10" inputmode="decimal"
+                       oninput="actualizarTablaSales()" aria-label="Cantidad de litros">
+            </div>
+            <div class="sales-scroll">
+                <table class="sales-table" aria-label="Tabla de sales">
+                    <thead>
+                        <tr>
+                            <th>EC</th>
+                            <th>GROW / BLOOM</th>
+                            <th>CORE</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sales-table-body"></tbody>
+                </table>
+            </div>
+            <div class="sales-note">Modificá los litros y los gramos se recalculan automáticamente.</div>
+        </div>
+    </div>
+
+    <!-- MESAS A/B -->
     <div class="panel-container">
         <div class="columna-lado" id="col-lado-a"></div>
         <div class="columna-lado" id="col-lado-b"></div>
     </div>
 
-    <div class="vegeta-container" id="col-vegeta"></div>
-
-    <div class="bottom-controls">
-        <button class="report-btn-main" onclick="abrirModalReporte()" aria-label="Generar reporte de tiempos">📋 Generar Reporte de Tiempos</button>
+    <!-- PANEL VEGETA (colapsable) -->
+    <div class="panel-open" id="vegeta-panel">
+        <div class="vegeta-container" id="col-vegeta"></div>
     </div>
+
+    <!-- PANEL NOTAS GENERALES (colapsable) -->
+    <div class="panel-open" id="notes-panel">
+        <div class="mesa-card" style="border:1px dashed #4dd0e1; background:var(--card-bg);">
+            <strong style="color:#ffffff; display:block; margin-bottom:5px; font-size:0.9rem;">📝 Notas generales</strong>
+            <textarea id="nota-general-input" placeholder="Escribí acá notas generales del cultivo..." style="min-height:120px; margin-bottom:8px;"></textarea>
+            <button style="background:#009688;" onclick="guardarNotaGeneral()" aria-label="Guardar notas generales">Guardar notas generales</button>
+        </div>
+    </div>
+
+    <div class="bottom-controls" style="margin-top:10px;"></div>
 
     <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
         <div class="modal-content">
@@ -708,27 +853,42 @@
           location.reload();
         }
 
+        function togglePanel(id) {
+            const panel = document.getElementById(id);
+            if (!panel) return;
+            const isVisible = panel.classList.contains('visible');
+            // Close all panels and deactivate buttons
+            document.querySelectorAll('.panel-open.visible').forEach(el => el.classList.remove('visible'));
+            document.querySelectorAll('.quick-btn.active').forEach(el => el.classList.remove('active'));
+            if (!isVisible) {
+                panel.classList.add('visible');
+                const btn = document.getElementById('qbtn-' + id);
+                if (btn) btn.classList.add('active');
+                if (id === 'sales-panel') actualizarTablaSales();
+                if (id === 'notes-panel') {
+                    const input = document.getElementById('nota-general-input');
+                    if (input) input.value = getCachedGeneralNotes();
+                }
+            }
+        }
+
         async function afterLogin() {
-          const top = document.querySelector('.top-controls');
-          if (top && !document.getElementById('logout-btn')) {
-            const btn = document.createElement('div');
-            btn.style.display = 'flex';
-            btn.style.justifyContent = 'space-between';
-            btn.style.alignItems = 'center';
-            btn.style.gap = '8px';
-            btn.innerHTML = `
-              <div style="color:#aaa;">Usuario: <strong style="color:#fff; margin-left:6px;">${getSessionUser()}</strong></div>
-              <div style="display:flex; gap:6px;">
-                <button id="logout-btn" style="background:#c62828; color:#fff; padding:8px 12px; border-radius:8px;" onclick="logout()">Cerrar sesión</button>
-              </div>
+          const userBar = document.getElementById('user-bar');
+          if (userBar) {
+            userBar.style.display = 'flex';
+            userBar.innerHTML = `
+              <span>Usuario: <strong style="color:#fff;">${getSessionUser()}</strong></span>
+              <button id="logout-btn" style="width:auto; min-height:auto; padding:6px 14px; border-radius:10px; font-size:0.82rem; background:#c62828;" onclick="logout()">Cerrar sesión</button>
             `;
-            top.appendChild(btn);
           }
           const cargado = await cargarDatosFirebase();
           if (!cargado) {
             console.warn("La aplicación continúa con la copia local porque Firebase no está disponible.");
           }
           inicializarApp();
+          actualizarTablaSales();
+          const notesInput = document.getElementById('nota-general-input');
+          if (notesInput) notesInput.value = getCachedGeneralNotes();
         }
 
         function escaparHTML(texto) {
@@ -857,21 +1017,6 @@
                 }
             });
 
-            const contVFinal = document.getElementById('col-vegeta');
-            if (contVFinal && !document.getElementById('nota-general-vegeta-card')) {
-                const generalCard = document.createElement('div');
-                generalCard.className = 'mesa-card';
-                generalCard.id = 'nota-general-vegeta-card';
-                generalCard.style.border = '1px dashed #4dd0e1';
-                generalCard.style.backgroundColor = 'var(--card-bg)';
-                const notaGeneral = getCachedGeneralNotes();
-                generalCard.innerHTML = `
-                    <strong style="color:#ffffff; display:block; margin-bottom:5px; font-size:0.9rem;">Notas generales</strong>
-                    <textarea id="nota-general-input" placeholder="Escribí acá notas generales del cultivo..." style="min-height:120px; margin-bottom:8px;">${escaparHTML(notaGeneral)}</textarea>
-                    <button style="background:#009688;" onclick="guardarNotaGeneral();" aria-label="Guardar notas generales">Guardar notas generales</button>
-                `;
-                contVFinal.appendChild(generalCard);
-            }
         }
 
         async function gestionarAtencion(id, event) {
