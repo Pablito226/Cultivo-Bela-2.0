@@ -670,12 +670,6 @@
             const v = parseFloat((m[1] || '').replace(',', '.'));
             return Number.isFinite(v) ? v : null;
         }
-        function extraerNumeroConUnidad(texto, unidadRegex) {
-            const m = texto.match(unidadRegex);
-            if (!m) return null;
-            const v = parseFloat((m[1] || '').replace(',', '.'));
-            return Number.isFinite(v) ? v : null;
-        }
         function extraerSemana(texto) {
             const m = texto.match(/\bsemana\s*([0-9]{1,2})\b/i);
             if (!m) return null;
@@ -690,7 +684,7 @@
         }
         function detectarEtapa(texto) {
             if (texto.includes('plantul') || texto.includes('esqueje')) return 'plantula';
-            if (texto.includes('transicion') || texto.includes('preflora') || texto.includes('pre-flora') || texto.includes('preflor')) return 'transicion';
+            if (texto.includes('transicion') || texto.includes('preflora') || texto.includes('pre-flora') || texto.includes('preflor') || texto.includes('pre flor')) return 'transicion';
             if (texto.includes('floracion') || texto.includes('flora') || texto.includes('flor')) return 'floracion';
             if (texto.includes('vege') || texto.includes('veget')) return 'vege';
             if (texto.includes('madur') || texto.includes('cosecha') || texto.includes('flush') || texto.includes('lavado')) return 'maduracion';
@@ -701,6 +695,13 @@
         }
         function convertirPpmAEc(ppm, escala) {
             return +(ppm / escala).toFixed(2);
+        }
+        function detectarEscalaPpm(texto) {
+            if (/\b(escala|factor)\s*700\b/.test(texto) || /\b700\s*ppm\b/.test(texto) || /\bppm\s*700\b/.test(texto)) return 700;
+            return 500;
+        }
+        function escalaPpmEspecificada(texto) {
+            return /\b(escala|factor)\s*(500|700)\b/.test(texto) || /\b(500|700)\s*ppm\b/.test(texto) || /\bppm\s*(500|700)\b/.test(texto);
         }
         function obtenerFilaNutricion(etapa, semana) {
             const tabla = ATHENA_HANDBOOK.nutricion[etapa];
@@ -755,16 +756,18 @@
         function responderCultivoAthena(preguntaOriginal) {
             const p = normalizarTexto(preguntaOriginal);
             const ec = extraerNumeroDespuesDe(p, /(?:\bec\b|electroconductividad)\s*[:=]?\s*([0-9]+(?:[.,][0-9]+)?)/i)
-                ?? extraerNumeroConUnidad(p, /\b([0-9]+(?:[.,][0-9]+)?)\s*ec\b/i);
+                ?? extraerNumeroDespuesDe(p, /\b([0-9]+(?:[.,][0-9]+)?)\s*ec\b/i);
             const ppm = extraerNumeroDespuesDe(p, /\bppm\b\s*[:=]?\s*([0-9]+(?:[.,][0-9]+)?)/i)
-                ?? extraerNumeroConUnidad(p, /\b([0-9]+(?:[.,][0-9]+)?)\s*ppm\b/i);
+                ?? extraerNumeroDespuesDe(p, /\b([0-9]+(?:[.,][0-9]+)?)\s*ppm\b/i);
             const ph = extraerNumeroDespuesDe(p, /\bph\b\s*[:=]?\s*([0-9]+(?:[.,][0-9]+)?)/i)
-                ?? extraerNumeroConUnidad(p, /\b([0-9]+(?:[.,][0-9]+)?)\s*ph\b/i);
+                ?? extraerNumeroDespuesDe(p, /\b([0-9]+(?:[.,][0-9]+)?)\s*ph\b/i);
             const litros = extraerNumeroDespuesDe(p, /\b([0-9]+(?:[.,][0-9]+)?)\s*(?:l|litros?)\b/i);
             const semana = extraerSemana(p);
             const etapaDetectada = detectarEtapa(p);
             const sustrato = detectarSustrato(p);
-            const ecDesdePpm = ec === null && ppm !== null ? convertirPpmAEc(ppm, 500) : null;
+            const escalaPpm = detectarEscalaPpm(p);
+            const escalaPpmIndicada = escalaPpmEspecificada(p);
+            const ecDesdePpm = ec === null && ppm !== null ? convertirPpmAEc(ppm, escalaPpm) : null;
             const ecTrabajo = ec !== null ? ec : ecDesdePpm;
 
             const hablaAthena = p.includes('athena') || p.includes('grow') || p.includes('bloom') || p.includes('core');
@@ -778,10 +781,13 @@
             const hablaBloqueo = p.includes('bloqueo') || p.includes('lockout') || p.includes('no absorbe') || p.includes('acumulacion');
 
             let r = [];
+            let agregoContenido = false;
             r.push('🌱 Resumen técnico Athena (handbook en español + referencia pública). Confirmá siempre con mediciones reales.');
 
             if (ecDesdePpm !== null) {
-                r.push(`\n🔁 Conversión Athena: ${ppm} ppm (escala 500) ≈ EC ${ecDesdePpm}.`);
+                const etiquetaEscala = escalaPpmIndicada ? `escala ${escalaPpm}` : `escala ${escalaPpm} asumida`;
+                r.push(`\n🔁 Conversión Athena: ${ppm} ppm (${etiquetaEscala}) ≈ EC ${ecDesdePpm}.`);
+                if (!escalaPpmIndicada) r.push('- Si usás escala 700, indicámelo para ajustar la conversión.');
             }
 
             if (hablaEtapa || (hablaAthena && semana)) {
@@ -794,9 +800,16 @@
                             const tabla = ATHENA_HANDBOOK.nutricion[etapaDetectada].map(f => `S${f.semana}: EC ${f.ecMin}-${f.ecMax} | G ${f.grow} / B ${f.bloom} / C ${f.core} g/L`).join('\n');
                             r.push(`\nResumen ${etapaDetectada}:\n${tabla}`);
                         }
+                        agregoContenido = true;
                     }
+                } else if (etapaDetectada === 'plantula' || etapaDetectada === 'maduracion') {
+                    const a = ATHENA_HANDBOOK.ambiente[etapaDetectada];
+                    r.push(`\n📆 Etapa ${etapaDetectada}: usar EC moderada y ambiente controlado.`);
+                    r.push(`- Ambiente guía: día ${a.tempDia}, noche ${a.tempNoche}, HR ${a.hr}, VPD ${a.vpd}.`);
+                    agregoContenido = true;
                 } else {
                     r.push('\n📆 Etapas Athena disponibles: vege (S1-S8), transición (S1-S2), floración (S1-S8).');
+                    agregoContenido = true;
                 }
             }
 
@@ -822,6 +835,7 @@
                 r.push('- Fórmula de dilución: gramos totales = (g/L objetivo) × litros.');
                 r.push('- Orden de mezcla: 1) Agua base 2) Disolver Core 3) Disolver Grow/Bloom por separado 4) Unir 5) Medir EC 6) Ajustar pH.');
                 r.push('- Agua blanda (EC base <0.2): usar dosis completa de Core. Agua dura (EC base >0.4): empezar con -10% Core y corregir por lectura.');
+                agregoContenido = true;
             }
 
             if (hablaPh || ph !== null) {
@@ -839,6 +853,7 @@
                         else r.push('- Está dentro del rango de absorción recomendado.');
                     }
                 }
+                agregoContenido = true;
             }
 
             if (hablaEc || ecTrabajo !== null) {
@@ -855,6 +870,7 @@
                         }
                     }
                 }
+                agregoContenido = true;
             }
 
             if (hablaDeficiencia) {
@@ -863,13 +879,15 @@
                 r.push('- Calcio/Magnesio: manchas necróticas nuevas + bordes deformados. Causa: pH fuera de rango o antagonismo por K. Corrección: normalizar pH, asegurar Core completo. Mejora: 4-7 días.');
                 r.push('- Potasio: bordes quemados en hojas medias/altas. Causa: desbalance en floración o acumulación de sales. Corrección: drenaje 20-30%, retomar con EC controlada. Mejora: 3-6 días.');
                 r.push('- Toxicidad por exceso: puntas quemadas + hoja oscura/garra. Corrección: bajar EC 15-25% y estabilizar pH. Respuesta: 24-72h.');
+                agregoContenido = true;
             }
 
-            if (hablaAmbiente || etapaDetectada) {
+            if (hablaAmbiente) {
                 const etapaAmbiente = etapaDetectada && ATHENA_HANDBOOK.ambiente[etapaDetectada] ? etapaDetectada : 'vege';
                 const a = ATHENA_HANDBOOK.ambiente[etapaAmbiente];
                 r.push(`\n🌡️ Ambiente óptimo (${etapaAmbiente}): día ${a.tempDia}, noche ${a.tempNoche}, HR ${a.hr}, VPD ${a.vpd}.`);
                 r.push('- Si sube temperatura o VPD, aumenta consumo de agua y puede subir EC en sustrato: medí drenaje y ajustá.');
+                agregoContenido = true;
             }
 
             if (hablaPlaga) {
@@ -878,6 +896,7 @@
                 r.push('- Trips: plateado lineal + puntitos negros (heces). Acción: trampas azules, limpieza y aplicaciones dirigidas al envés.');
                 r.push('- Oídio: polvo blanco superficial. Acción: bajar HR nocturna, mejorar circulación y tratamiento preventivo/curativo temprano.');
                 r.push('- Preventivo > curativo: monitoreo semanal, higiene, cuarentena de ingresos.');
+                agregoContenido = true;
             }
 
             if (hablaBloqueo) {
@@ -885,16 +904,18 @@
                 r.push('- Rangos pH: hidro 5.6-6.2 | coco 5.7-6.2 | tierra 6.2-6.8.');
                 r.push('- Interacciones comunes: exceso K bloquea Ca/Mg; exceso P afecta Zn/Fe; exceso amonio reduce absorción de Ca.');
                 r.push('- Protocolo: 1) medir entrada/salida 2) corregir pH 3) reducir EC 15-25% 4) restablecer receta por etapa 5) reevaluar en 48h.');
+                agregoContenido = true;
             }
 
-            if (hablaEtapa) {
+            if (hablaEtapa && !etapaDetectada) {
                 r.push('\n📆 Manejo por etapa:');
                 r.push('- Vege: priorizar estabilidad y crecimiento uniforme, sin saltos bruscos de EC.');
                 r.push('- Transición: cambio gradual de Grow a Bloom en 2 semanas.');
                 r.push('- Flora: sostener EC según semana y controlar drenaje diario.');
+                agregoContenido = true;
             }
 
-            if (r.length <= 2) {
+            if (!agregoContenido) {
                 r.push('\nPodés preguntarme así:');
                 r.push('- "Semana 4 de vege en coco: ¿qué Grow/Bloom/Core y EC uso?"');
                 r.push('- "Preparame 25L para floración semana 3 en hidro"');
