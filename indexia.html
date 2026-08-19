@@ -852,9 +852,9 @@
                     const factorDilucion = ecObj / ec;
                     const litrosFinales = +(l / factorDilucion).toFixed(2);
                     const aguaAgregar = +(litrosFinales - l).toFixed(2);
-                    r.push(`- Corrección por dilución: con EC actual ${ec} y objetivo ${ecObj}, agregá aprox ${aguaAgregar} L de agua para ${l} L de mezcla.`);
+                    r.push(`- Corrección por dilución: con EC actual ${ec} y objetivo ${ecObj}, agregá aprox ${aguaAgregar} L de agua a tus ${l} L actuales (quedan ${litrosFinales} L totales).`);
                 } else if (ec !== null && ecObj !== null && ec < ecObj) {
-                    const delta = +(((ecObj - ec) / ecObj) * 100).toFixed(1);
+                    const delta = ec > 0 ? +(((ecObj - ec) / ec) * 100).toFixed(1) : 0;
                     r.push(`- EC actual ${ec} por debajo del objetivo ${ecObj}: subí nutrición de forma gradual (~${delta}% de refuerzo total, en 1-2 pasos).`);
                 }
             }
@@ -961,7 +961,7 @@
                 r.push('- Para subir EC: aumentar dosis total en incrementos de 5-10% y controlar drenaje 24-48h.');
             }
 
-            if (hablaDeficiencia || hablaConsumo || p.includes('bloqueo') || p.includes('raiz') || p.includes('estr')) {
+            if (hablaDeficiencia || hablaConsumo || incluyeAlguna(p, ['bloqueo', 'raiz', 'raíz', 'estres', 'estrés'])) {
                 r.push('\n🧰 Troubleshooting común:');
                 r.push(`- Bloqueo de nutrientes: ${troubleshootingComun.bloqueoNutrientes}`);
                 r.push(`- Problemas de raíz: ${troubleshootingComun.raiz}`);
