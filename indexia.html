@@ -786,11 +786,10 @@
             return { etapa, semana: semanas[0], ...bloque.semanas[semanas[0]] };
         }
         function calcularDosisAthena(litros, fila) {
-            const factor = litros;
             return {
-                grow: +(fila.grow * factor).toFixed(2),
-                bloom: +(fila.bloom * factor).toFixed(2),
-                core: +(fila.core * factor).toFixed(2),
+                grow: +(fila.grow * litros).toFixed(2),
+                bloom: +(fila.bloom * litros).toFixed(2),
+                core: +(fila.core * litros).toFixed(2),
                 growPorL: +fila.grow.toFixed(2),
                 bloomPorL: +fila.bloom.toFixed(2),
                 corePorL: +fila.core.toFixed(2)
@@ -817,8 +816,9 @@
             const litros = extraerNumeroDespuesDe(p, /\b([0-9]+(?:[.,][0-9]+)?)\s*(?:l|litros?)\b/i);
             const semana = extraerSemana(p);
             const etapaDetectada = detectarEtapa(p);
-            const etapaInferida = etapaDetectada || ((ecObjetivo !== null && ecObjetivo >= 1.9) ? 'floracion' : 'vegetativo');
-            const etapa = etapaInferida;
+            const etapa = etapaDetectada || (ecObjetivo !== null
+                ? (ecObjetivo >= 1.9 ? 'floracion' : (ecObjetivo >= 1.4 ? 'prefloracion' : 'vegetativo'))
+                : 'vegetativo');
 
             const hablaAthena = incluyeAlguna(p, ['athena', 'grow', 'bloom', 'core']);
             const hablaDosis = incluyeAlguna(p, ['dosis', 'gramos', 'mezcla', 'prepar', 'sales', 'calcula', 'calculame', 'ml/l']);
@@ -849,13 +849,13 @@
                 r.push(`- Core: ${calc.core} g total (${calc.corePorL} g/L)`);
                 r.push('- Orden sugerido: agua → disolver sales por separado → mezclar → medir EC → ajustar pH al final.');
                 if (ec !== null && ecObj !== null && ec > ecObj) {
-                    const factorDilucion = ecObj / ec;
-                    const litrosFinales = +(l / factorDilucion).toFixed(2);
+                    const litrosFinales = +((l * ec) / ecObj).toFixed(2);
                     const aguaAgregar = +(litrosFinales - l).toFixed(2);
-                    r.push(`- Corrección por dilución: con EC actual ${ec} y objetivo ${ecObj}, agregá aprox ${aguaAgregar} L de agua a tus ${l} L actuales (quedan ${litrosFinales} L totales).`);
+                    if (litros !== null) r.push(`- Corrección por dilución: con EC actual ${ec} y objetivo ${ecObj}, agregá aprox ${aguaAgregar} L de agua a tus ${l} L actuales (quedan ${litrosFinales} L totales).`);
+                    else r.push(`- Corrección por dilución estimada (asumiendo 10 L): para bajar de EC ${ec} a ${ecObj}, agregar ~${aguaAgregar} L de agua (final ~${litrosFinales} L).`);
                 } else if (ec !== null && ecObj !== null && ec < ecObj) {
                     const delta = ec > 0 ? +(((ecObj - ec) / ec) * 100).toFixed(1) : 0;
-                    r.push(`- EC actual ${ec} por debajo del objetivo ${ecObj}: subí nutrición de forma gradual (~${delta}% de refuerzo total, en 1-2 pasos).`);
+                    r.push(`- EC actual ${ec} por debajo del objetivo ${ecObj}: subí nutrición de forma gradual (~${delta}% de incremento sobre la mezcla actual, en 1-2 pasos).`);
                 }
             }
 
@@ -961,12 +961,15 @@
                 r.push('- Para subir EC: aumentar dosis total en incrementos de 5-10% y controlar drenaje 24-48h.');
             }
 
-            if (hablaDeficiencia || hablaConsumo || incluyeAlguna(p, ['bloqueo', 'raiz', 'raíz', 'estres', 'estrés'])) {
+            if (hablaDeficiencia || incluyeAlguna(p, ['bloqueo', 'raiz', 'raíz', 'estres', 'estrés', 'stress', 'problema'])) {
+                const troubleshootingItems = [];
+                if (hablaDeficiencia || p.includes('bloqueo')) troubleshootingItems.push(`- Bloqueo de nutrientes: ${troubleshootingComun.bloqueoNutrientes}`);
+                if (incluyeAlguna(p, ['raiz', 'raíz', 'raices', 'raíces'])) troubleshootingItems.push(`- Problemas de raíz: ${troubleshootingComun.raiz}`);
+                if (incluyeAlguna(p, ['luz', 'ppfd', 'led', 'quemado arriba'])) troubleshootingItems.push(`- Estrés de luz: ${troubleshootingComun.estresLuz}`);
+                if (incluyeAlguna(p, ['temp', 'temperatura', 'calor', 'frio', 'frío'])) troubleshootingItems.push(`- Estrés térmico: ${troubleshootingComun.estresTemperatura}`);
+                if (troubleshootingItems.length === 0) troubleshootingItems.push(`- Bloqueo de nutrientes: ${troubleshootingComun.bloqueoNutrientes}`);
                 r.push('\n🧰 Troubleshooting común:');
-                r.push(`- Bloqueo de nutrientes: ${troubleshootingComun.bloqueoNutrientes}`);
-                r.push(`- Problemas de raíz: ${troubleshootingComun.raiz}`);
-                r.push(`- Estrés de luz: ${troubleshootingComun.estresLuz}`);
-                r.push(`- Estrés térmico: ${troubleshootingComun.estresTemperatura}`);
+                r.push(...troubleshootingItems);
             }
 
             if (r.length <= 2) {
