@@ -103,6 +103,28 @@
         .quick-btn.notes { background: linear-gradient(135deg, #1565c0, #1e88e5); }
         .quick-btn.vegeta { background: linear-gradient(135deg, #2e7d32, #43a047); }
         .quick-btn.report { background: linear-gradient(135deg, #00796b, #009688); }
+        .quick-btn.ia { background: linear-gradient(135deg, #37474f, #546e7a); }
+
+        /* AI Assistant modal overrides */
+        #modal-ia .modal-content { max-width: 420px; }
+        #ia-response {
+            background: #111;
+            border: 1px solid #444;
+            border-radius: 10px;
+            padding: 10px;
+            min-height: 80px;
+            max-height: 260px;
+            overflow-y: auto;
+            font-size: 0.88rem;
+            color: #e0e0e0;
+            white-space: pre-wrap;
+            margin-bottom: 10px;
+        }
+        #ia-response.loading { color: #888; font-style: italic; }
+        #ia-question {
+            min-height: 70px;
+            margin-bottom: 8px;
+        }
 
         .panel-open {
             width: 100%;
@@ -446,6 +468,7 @@
             <button class="quick-btn notes" onclick="togglePanel('notes-panel')">📝 Notas<span class="sub">Notas generales</span></button>
             <button class="quick-btn vegeta" onclick="togglePanel('vegeta-panel')">🥦 Vegeta<span class="sub">Mesa especial</span></button>
             <button class="quick-btn report" onclick="abrirModalReporte()">📋 Reporte<span class="sub">Tiempos de cultivo</span></button>
+            <button class="quick-btn ia" onclick="abrirModalIA()">🤖 IA Athena<span class="sub">Asistente de cultivo</span></button>
         </div>
     </div>
 
@@ -534,7 +557,176 @@
       </div>
     </div>
 
+    <!-- AI ASSISTANT MODAL -->
+    <div class="modal" id="modal-ia" role="dialog" aria-modal="true" aria-labelledby="ia-modal-title">
+        <div class="modal-content" id="modal-ia-content">
+            <h3 id="ia-modal-title" style="margin-top:0; color:#78909c;">🤖 IA Athena – Asistente de Cultivo</h3>
+            <!-- Contexto de mesas activas cargado automáticamente -->
+            <div id="ia-context-summary" style="font-size:0.78rem; color:#888; margin-bottom:8px; border-left:3px solid #37474f; padding-left:8px;"></div>
+            <label for="ia-question" style="font-size:0.85rem; color:#ccc;">Tu pregunta:</label>
+            <textarea id="ia-question" placeholder="Ej: ¿Cuánto Athena Grow debo usar esta semana? ¿Qué significa EC 2.0?"></textarea>
+            <div id="ia-response" style="display:none;"></div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button style="background:#546e7a; flex:1;" onclick="consultarIA()" aria-label="Consultar IA">Consultar</button>
+                <button style="background:#555; flex:1;" onclick="cerrarModalIA()" aria-label="Cerrar">Cerrar</button>
+            </div>
+            <!-- Configurar clave API para OpenAI u otro proveedor compatible -->
+            <div style="margin-top:10px; font-size:0.72rem; color:#555; text-align:center;">
+                Powered by OpenAI · <a href="#" onclick="configurarAPIKey(); return false;" style="color:#78909c;">Configurar API Key</a>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // --- Configuración IA (sin secretos hardcodeados) ---
+        // Podés guardar la clave en localStorage o cambiarla aquí como placeholder.
+        const IA_API_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
+        const IA_MODEL = 'gpt-3.5-turbo';
+        const IA_API_KEY_STORAGE = 'cultivo_ia_api_key_v1';
+
+        function getIAKey() {
+            return localStorage.getItem(IA_API_KEY_STORAGE) || '';
+        }
+
+        function configurarAPIKey() {
+            const actual = getIAKey();
+            const nueva = prompt('Ingresá tu API Key de OpenAI (se guarda solo en tu dispositivo):', actual ? '(guardada)' : '');
+            if (nueva !== null && nueva.trim() !== '' && nueva.trim() !== '(guardada)') {
+                localStorage.setItem(IA_API_KEY_STORAGE, nueva.trim());
+                alert('API Key guardada.');
+            }
+        }
+
+        // --- Modal IA ---
+        function abrirModalIA() {
+            // Armar resumen del contexto actual para mostrarle al usuario
+            const resumen = construirContextoCultivo();
+            const el = document.getElementById('ia-context-summary');
+            if (el) el.textContent = resumen.resumenCorto;
+            document.getElementById('ia-response').style.display = 'none';
+            document.getElementById('ia-response').textContent = '';
+            document.getElementById('ia-question').value = '';
+            document.getElementById('modal-ia').style.display = 'flex';
+        }
+
+        function cerrarModalIA() {
+            document.getElementById('modal-ia').style.display = 'none';
+        }
+
+        // Recopila el contexto de cultivo: mesas activas, notas generales y semanas
+        function construirContextoCultivo() {
+            const mesasActivas = [];
+            const listaMesas = obtenerEstructuraMesas ? obtenerEstructuraMesas() : [];
+            listaMesas.forEach(m => {
+                const d = datos[m.id];
+                if (!d) return;
+                const info = d.fecha ? calcularTiempoExacto(d.fecha) : null;
+                mesasActivas.push({
+                    id: m.id,
+                    etiqueta: m.etiqueta,
+                    fecha: d.fecha || null,
+                    objetivo: d.objetivo,
+                    notas: d.notas || '',
+                    atencion: d.atencion || '',
+                    semanas: info ? info.semanas : null,
+                    diasRestantes: info ? info.diasRestantes : null
+                });
+            });
+
+            const notasGenerales = (typeof getCachedGeneralNotes === 'function')
+                ? getCachedGeneralNotes()
+                : (localStorage.getItem('notasGeneralesCultivoV1') || '');
+
+            // Texto largo para el prompt del sistema
+            const textoMesas = mesasActivas.length
+                ? mesasActivas.map(m => {
+                    const tiempo = m.semanas !== null
+                        ? `Semana ${m.semanas}${m.diasRestantes > 0 ? ' y ' + m.diasRestantes + 'd' : ''}`
+                        : 'Sin fecha';
+                    const meta = m.objetivo ? `, meta: semana ${m.objetivo}` : '';
+                    const notas = m.notas ? `, notas: "${m.notas}"` : '';
+                    const atencion = m.atencion ? `, ATENCIÓN: ${m.atencion}` : '';
+                    return `${m.etiqueta}: ${tiempo}${meta}${notas}${atencion}`;
+                }).join('\n')
+                : 'Ninguna mesa con datos cargados.';
+
+            const resumenLargo = `DATOS DE CULTIVO ACTUALES:\n${textoMesas}${notasGenerales ? '\n\nNotas generales:\n' + notasGenerales : ''}`;
+
+            // Texto corto para mostrar en el modal
+            const activas = mesasActivas.filter(m => m.semanas !== null);
+            const resumenCorto = activas.length
+                ? `Contexto: ${activas.length} mesa(s) activa(s). ${activas.map(m => m.etiqueta + ' sem.' + m.semanas).join(', ')}`
+                : 'No hay mesas con fecha activa. Preguntá lo que necesités.';
+
+            return { resumenLargo, resumenCorto };
+        }
+
+        async function consultarIA() {
+            const pregunta = (document.getElementById('ia-question').value || '').trim();
+            if (!pregunta) { alert('Por favor escribí tu pregunta.'); return; }
+
+            const apiKey = getIAKey();
+            if (!apiKey) {
+                alert('No hay API Key configurada. Hacé clic en "Configurar API Key" y pegá tu clave de OpenAI.');
+                return;
+            }
+
+            const respEl = document.getElementById('ia-response');
+            respEl.textContent = 'Consultando...';
+            respEl.className = 'loading';
+            respEl.style.display = 'block';
+
+            const { resumenLargo } = construirContextoCultivo();
+
+            // Prompt del sistema: asistente especializado en Athena Nutrients y horticultura general.
+            // NO provee instrucciones operativas para producción de sustancias controladas.
+            const systemPrompt = `Sos un asistente experto en Athena Nutrients y horticultura general. 
+Tu función es:
+- Interpretar fichas técnicas y etiquetas de productos Athena Nutrients (Grow, Bloom, Core, Stack, Balance, etc.)
+- Explicar conceptos de nutrición vegetal a nivel general (EC, pH, macros, micros, semanas de ciclo)
+- Resumir y analizar los datos de seguimiento de cultivo cargados por el usuario
+- Dar recomendaciones generales no operativas sobre el uso de nutrientes según las fichas del fabricante
+No debés dar instrucciones detalladas de producción, extracción o procesamiento de sustancias controladas. 
+Respondé siempre en español, de forma clara y concisa.
+
+${resumenLargo}`;
+
+            try {
+                const resp = await fetch(IA_API_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + apiKey
+                    },
+                    body: JSON.stringify({
+                        model: IA_MODEL,
+                        messages: [
+                            { role: 'system', content: systemPrompt },
+                            { role: 'user', content: pregunta }
+                        ],
+                        max_tokens: 500,
+                        temperature: 0.5
+                    })
+                });
+
+                if (!resp.ok) {
+                    const err = await resp.json().catch(() => ({}));
+                    throw new Error(err?.error?.message || `Error HTTP ${resp.status}`);
+                }
+
+                const data = await resp.json();
+                const texto = data?.choices?.[0]?.message?.content || '(sin respuesta)';
+                respEl.textContent = texto;
+                respEl.className = '';
+            } catch (e) {
+                respEl.textContent = `Error al consultar la IA: ${e.message}`;
+                respEl.className = '';
+            }
+        }
+    </script>
+
+    <script>
+
         const STORAGE_KEY = 'datosCultivoV3_Final';
         const GENERAL_NOTES_KEY = 'notasGeneralesCultivoV1';
         const FIREBASE_CONFIG = {
