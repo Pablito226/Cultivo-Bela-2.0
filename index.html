@@ -982,8 +982,7 @@
                 phHistorial: normalizarHistorialPH(data?.phHistorial)
             };
         }
-        function mesaTieneContenido(data = {}) {
-            const mesa = normalizarMesaData(data);
+        function mesaNormalizadaTieneContenido(mesa) {
             return Boolean(mesa.fecha || mesa.notas || mesa.atencion || mesa.phHistorial.length || mesa.variedadSemanas !== 9 || mesa.tipoCultivo !== 'tierra');
         }
         function formatearFecha(date, includeTime = false) {
@@ -1074,7 +1073,7 @@
             if (!pronostico) return '';
             const semanasObjetivo = Math.round(pronostico.totalDias / 7);
             const activaHasta = Math.min(semanasObjetivo, Math.max(semanasActuales, 0));
-            const semanaActual = Math.min(semanasObjetivo, Math.max(1, Math.floor(semanasActuales) + 1));
+            const semanaActual = Math.min(semanasObjetivo, Math.max(1, Math.ceil(semanasActuales || 1)));
             return Array.from({ length: semanasObjetivo }, (_, index) => {
                 const semana = index + 1;
                 const activa = semana <= activaHasta;
@@ -1226,13 +1225,14 @@
             const mesa = normalizarMesaData(datos[idActualPH] || {});
             const actualizado = { ...mesa, phHistorial: normalizarHistorialPH([{ valor, fecha: fecha.toISOString() }, ...mesa.phHistorial]) };
             const analisis = obtenerAnalisisPH(actualizado);
-            datos[idActualPH] = actualizado;
+            if (mesaNormalizadaTieneContenido(actualizado)) datos[idActualPH] = actualizado;
+            else delete datos[idActualPH];
             await guardarDatosFirebase();
-            inicializarApp();
-            cerrarModalPH();
             if (analisis.estado === 'bajo' || analisis.estado === 'alto') {
                 alert(`⚠️ pH fuera de rango para ${actualizado.tipoCultivo}. Óptimo actual: ${analisis.rango.min.toFixed(1)} - ${analisis.rango.max.toFixed(1)}.`);
             }
+            cerrarModalPH();
+            inicializarApp();
         }
         async function gestionarAtencion(id, event) {
             event.stopPropagation();
@@ -1246,11 +1246,15 @@
             else if (seleccion.trim() === "4") enfermedad = "";
             else { alert("Opción no válida."); return; }
             if (!datos[id]) {
-                if (enfermedad !== "") datos[id] = { ...normalizarMesaData({ atencion: enfermedad }), atencion: enfermedad };
+                if (enfermedad !== "") {
+                    const mesa = normalizarMesaData({});
+                    mesa.atencion = enfermedad;
+                    datos[id] = mesa;
+                }
             } else {
                 const mesa = normalizarMesaData(datos[id]);
                 mesa.atencion = enfermedad;
-                if (mesaTieneContenido(mesa)) datos[id] = mesa;
+                if (mesaNormalizadaTieneContenido(mesa)) datos[id] = mesa;
                 else delete datos[id];
             }
             await guardarDatosFirebase();
@@ -1287,7 +1291,7 @@
         function cerrarModal() { document.getElementById('modal').style.display = 'none'; }
         async function guardarFecha() {
             const f = document.getElementById('fecha-input').value;
-            const o = parseInt(document.getElementById('objetivo-input').value);
+            const o = parseInt(document.getElementById('objetivo-input').value, 10);
             const tipoCultivo = document.getElementById('tipo-cultivo-input').value === 'hidro' ? 'hidro' : 'tierra';
             const variedadSemanas = parseInt(document.getElementById('variedad-input').value, 10);
             if (isNaN(o) || o <= 0) { alert("Por favor, ingresá una meta de semanas mayor a 0."); return; }
@@ -1297,7 +1301,7 @@
             mesa.objetivo = o;
             mesa.tipoCultivo = tipoCultivo;
             mesa.variedadSemanas = variedadSemanas;
-            if (mesaTieneContenido(mesa)) datos[idActual] = mesa;
+            if (mesaNormalizadaTieneContenido(mesa)) datos[idActual] = mesa;
             else delete datos[idActual];
             await guardarDatosFirebase();
             inicializarApp(); 
@@ -1309,7 +1313,7 @@
             const texto = document.getElementById('notas-input').value;
             const mesa = normalizarMesaData(datos[idActual] || {});
             mesa.notas = texto;
-            if (mesaTieneContenido(mesa)) datos[idActual] = mesa;
+            if (mesaNormalizadaTieneContenido(mesa)) datos[idActual] = mesa;
             else delete datos[idActual];
             await guardarDatosFirebase();
             inicializarApp();
