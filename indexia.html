@@ -427,6 +427,125 @@
             .dia-info { font-size: 0.75rem; padding: 2px 4px; }
             button { font-size: 0.75rem; padding: 6px 2px; min-height: 30px; }
         }
+
+        /* ===== PLAGAS MODALS ===== */
+        .modal-plagas-content {
+            background: #1a1a1a;
+            padding: 18px;
+            border-radius: 14px;
+            width: 100%;
+            max-width: 680px;
+            max-height: 88vh;
+            overflow-y: auto;
+            box-sizing: border-box;
+            text-align: left;
+        }
+        .plaga-card {
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 14px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .plaga-card.oidio      { background: linear-gradient(135deg,#2a2010,#1a1a0a); border-color:#b5a20a44; }
+        .plaga-card.botrytis   { background: linear-gradient(135deg,#1e1228,#120a1a); border-color:#8b5cf644; }
+        .plaga-card.arana      { background: linear-gradient(135deg,#2a1010,#1a0a0a); border-color:#ef444444; }
+        .plaga-card.acaros     { background: linear-gradient(135deg,#1a1a2a,#0a0a1a); border-color:#60a5fa44; }
+        .plaga-card.afidos     { background: linear-gradient(135deg,#0a2010,#0a1a0a); border-color:#22c55e44; }
+        .plaga-card.trips      { background: linear-gradient(135deg,#1a1028,#100a1a); border-color:#a855f744; }
+        .plaga-card.fusarium   { background: linear-gradient(135deg,#2a1400,#1a0c00); border-color:#f9731644; }
+        .plaga-card.deficiencia{ background: linear-gradient(135deg,#0a1a10,#081209); border-color:#34d39944; }
+        .plaga-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .plaga-emoji { font-size: 1.8rem; line-height: 1; }
+        .plaga-nombre { flex: 1; }
+        .plaga-nombre strong { font-size: 1rem; display: block; }
+        .plaga-nombre em { font-size: 0.75rem; color: #9ca3af; font-style: italic; }
+        .severidad-badge {
+            font-size: 0.7rem;
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 20px;
+            white-space: nowrap;
+        }
+        .severidad-critica  { background:#ef44441a; color:#fca5a5; border:1px solid #ef444433; }
+        .severidad-alta     { background:#f973161a; color:#fdba74; border:1px solid #f9731633; }
+        .severidad-moderada { background:#eab3081a; color:#fde68a; border:1px solid #eab30833; }
+        .plaga-etapa {
+            font-size: 0.72rem;
+            color: #7dd3fc;
+            margin-bottom: 8px;
+        }
+        .plaga-section-title {
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin: 8px 0 4px 0;
+        }
+        .plaga-condiciones {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 6px;
+        }
+        .condicion-tag {
+            font-size: 0.72rem;
+            background: rgba(255,255,255,0.07);
+            border-radius: 6px;
+            padding: 2px 8px;
+            color: #d1d5db;
+        }
+        .plaga-sintomas ul, .plaga-tratamiento ul {
+            margin: 0;
+            padding-left: 18px;
+            font-size: 0.82rem;
+            color: #d1d5db;
+        }
+        .plaga-sintomas li, .plaga-tratamiento li { margin-bottom: 2px; }
+        .plaga-tratamiento ul { color: #bbf7d0; }
+
+        /* Diagnóstico interactivo */
+        .diagnostico-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+        @media (max-width: 400px) {
+            .diagnostico-grid { grid-template-columns: 1fr; }
+            .modal-plagas-content { padding: 12px; }
+        }
+        .sintoma-check {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            background: #252525;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 8px 10px;
+            cursor: pointer;
+            font-size: 0.82rem;
+            color: #d1d5db;
+            transition: border-color 0.15s;
+        }
+        .sintoma-check input[type=checkbox] { accent-color: #4caf50; width: 15px; height: 15px; flex-shrink: 0; }
+        .sintoma-check:has(input:checked) { border-color: #4caf50; background: #0a1f0a; }
+        #diagnostico-resultado {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 0.82rem;
+            color: #d1fae5;
+            min-height: 80px;
+            white-space: pre-wrap;
+        }
     </style>
 </head>
 <body>
@@ -542,12 +661,323 @@
         <h3 id="ia-title" style="margin-top:0; color:#7dd3fc;">Asistente IA Cultivo</h3>
         <label for="ia-input">Pregunta:</label>
         <textarea id="ia-input" placeholder="Ej: Estoy en vege semana 3, EC 1.8, pH 6.0 ¿qué ajusto?"></textarea>
-        <button style="background:#0284c7;" onclick="preguntarIA()">Preguntar</button>
-        <label for="ia-output" style="margin-top:10px;">Respuesta:</label>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:4px;">
+          <button style="background:#0284c7; flex:1;" onclick="preguntarIA()">Preguntar</button>
+          <button style="background:#7c3aed; flex:1;" onclick="abrirModalPlagas()">🪲 Tabla de Plagas</button>
+        </div>
+        <button style="background:#065f46; width:100%; margin-bottom:4px;" onclick="abrirModalDiagnostico()">🔍 Diagnóstico por Síntomas</button>
+        <label for="ia-output" style="margin-top:4px;">Respuesta:</label>
         <textarea id="ia-output" readonly style="min-height:170px; background:#111; color:#d1fae5;"></textarea>
         <button style="background:#555; margin-top:8px;" onclick="cerrarModalIA()">Cerrar</button>
         <div style="font-size:0.72rem; color:#9ca3af; margin-top:8px;">
           Nota: Asistente local. Verificá siempre con tabla oficial de Athena y mediciones reales de EC/pH.
+        </div>
+      </div>
+    </div>
+
+    <!-- TABLA VISUAL DE PLAGAS MODAL -->
+    <div class="modal" id="modal-plagas" role="dialog" aria-modal="true" aria-labelledby="plagas-title">
+      <div class="modal-plagas-content">
+        <h3 id="plagas-title" style="margin-top:0; color:#f9a8d4;">🪲 Guía Visual de Plagas y Enfermedades</h3>
+
+        <!-- OIDIO -->
+        <div class="plaga-card oidio">
+          <div class="plaga-header">
+            <div class="plaga-emoji">🍂</div>
+            <div class="plaga-nombre">
+              <strong>Oidio (Polvo blanco)</strong>
+              <em>Erysiphe / Podosphaera spp.</em>
+            </div>
+            <span class="severidad-badge severidad-alta">⚠ Alta</span>
+          </div>
+          <div class="plaga-etapa">📅 Peligroso en: Vegetativo tardío y Pre-floración</div>
+          <div class="plaga-section-title">Síntomas</div>
+          <div class="plaga-sintomas"><ul>
+            <li>Polvo blanco harinoso en hojas y tallos</li>
+            <li>Manchas circulares que se expanden</li>
+            <li>Hojas se curvan y amarillean</li>
+          </ul></div>
+          <div class="plaga-section-title">Condiciones favorables</div>
+          <div class="plaga-condiciones">
+            <span class="condicion-tag">🌡️ 18–25°C</span>
+            <span class="condicion-tag">💧 HR &gt;55%</span>
+            <span class="condicion-tag">🌬️ Ventilación deficiente</span>
+          </div>
+          <div class="plaga-section-title">Tratamiento (compatible Athena)</div>
+          <div class="plaga-tratamiento"><ul>
+            <li>Bajar HR &lt;50% + aumentar ventilación</li>
+            <li>Bicarbonato de potasio 5–7 g/L cada 7 días</li>
+            <li>Aceite de neem 10–15 ml/L en oscuridad</li>
+            <li>Azufre (no usar si T° &gt;28°C)</li>
+            <li>Retirar hojas afectadas</li>
+          </ul></div>
+        </div>
+
+        <!-- BOTRYTIS -->
+        <div class="plaga-card botrytis">
+          <div class="plaga-header">
+            <div class="plaga-emoji">🍇</div>
+            <div class="plaga-nombre">
+              <strong>Botrytis (Moho gris)</strong>
+              <em>Botrytis cinerea</em>
+            </div>
+            <span class="severidad-badge severidad-critica">🚨 Crítica</span>
+          </div>
+          <div class="plaga-etapa">📅 Peligroso en: Floración (especialmente semana 5–8)</div>
+          <div class="plaga-section-title">Síntomas</div>
+          <div class="plaga-sintomas"><ul>
+            <li>Moho gris esponjoso en cogollos y tallos</li>
+            <li>Zonas marrones y blandas en flores</li>
+            <li>Esporas grises visibles al mover la planta</li>
+          </ul></div>
+          <div class="plaga-section-title">Condiciones favorables</div>
+          <div class="plaga-condiciones">
+            <span class="condicion-tag">🌡️ 15–25°C</span>
+            <span class="condicion-tag">💧 HR &gt;60%</span>
+            <span class="condicion-tag">🍂 Restos vegetales</span>
+          </div>
+          <div class="plaga-section-title">Tratamiento (compatible Athena)</div>
+          <div class="plaga-tratamiento"><ul>
+            <li>Remover zonas afectadas (cortar 5 cm alrededor)</li>
+            <li>HR en floración &lt;55%, ventilación 24/7</li>
+            <li>Bacillus subtilis (biológico, compatible)</li>
+            <li>Sulfato de cobre 2–3 g/L (máx 3 aplicaciones)</li>
+            <li>Neem 15 ml/L cada 5 días</li>
+          </ul></div>
+        </div>
+
+        <!-- ARAÑA ROJA -->
+        <div class="plaga-card arana">
+          <div class="plaga-header">
+            <div class="plaga-emoji">🕷️</div>
+            <div class="plaga-nombre">
+              <strong>Araña roja</strong>
+              <em>Tetranychus urticae</em>
+            </div>
+            <span class="severidad-badge severidad-critica">🚨 Crítica</span>
+          </div>
+          <div class="plaga-etapa">📅 Peligroso en: Todo el ciclo (se reproduce cada 5–7 días)</div>
+          <div class="plaga-section-title">Síntomas</div>
+          <div class="plaga-sintomas"><ul>
+            <li>Puntitos amarillentos en haz de la hoja</li>
+            <li>Telaraña fina en envés y entre ramas</li>
+            <li>Hojas pálidas, descoloridas, bronce</li>
+          </ul></div>
+          <div class="plaga-section-title">Condiciones favorables</div>
+          <div class="plaga-condiciones">
+            <span class="condicion-tag">🌡️ &gt;24°C</span>
+            <span class="condicion-tag">💧 HR &lt;40%</span>
+            <span class="condicion-tag">🌬️ Aire seco</span>
+          </div>
+          <div class="plaga-section-title">Tratamiento (compatible Athena)</div>
+          <div class="plaga-tratamiento"><ul>
+            <li>Neem 15–20 ml/L cada 3 días (variar productos)</li>
+            <li>Aumentar HR a 50–55% (araña odia la humedad)</li>
+            <li>Phytoseiulus persimilis (depredador biológico)</li>
+            <li>Azadiractina pura según dosis del producto</li>
+            <li>Aumentar Core 10–15% si hay estrés notorio</li>
+          </ul></div>
+        </div>
+
+        <!-- ÁCAROS -->
+        <div class="plaga-card acaros">
+          <div class="plaga-header">
+            <div class="plaga-emoji">🔬</div>
+            <div class="plaga-nombre">
+              <strong>Ácaros blancos / Broad mite</strong>
+              <em>Polyphagotarsonemus latus</em>
+            </div>
+            <span class="severidad-badge severidad-alta">⚠ Alta</span>
+          </div>
+          <div class="plaga-etapa">📅 Peligroso en: Vegetativo y Pre-floración</div>
+          <div class="plaga-section-title">Síntomas</div>
+          <div class="plaga-sintomas"><ul>
+            <li>Puntos blancos en envés sin telaraña</li>
+            <li>Hojas nuevas retorcidas y brillantes</li>
+            <li>Tallos o flores con aspecto cristalizado</li>
+          </ul></div>
+          <div class="plaga-section-title">Condiciones favorables</div>
+          <div class="plaga-condiciones">
+            <span class="condicion-tag">🌡️ 20–30°C</span>
+            <span class="condicion-tag">💧 HR 60–80%</span>
+          </div>
+          <div class="plaga-section-title">Tratamiento (compatible Athena)</div>
+          <div class="plaga-tratamiento"><ul>
+            <li>Neem + jabón potásico cada 5 días</li>
+            <li>Azadiractina pura (dosis del producto)</li>
+            <li>Neemazal o similar sistémico en vega</li>
+            <li>En floración avanzada: discontinuar 2 sem antes de cosecha</li>
+          </ul></div>
+        </div>
+
+        <!-- ÁFIDOS -->
+        <div class="plaga-card afidos">
+          <div class="plaga-header">
+            <div class="plaga-emoji">🦗</div>
+            <div class="plaga-nombre">
+              <strong>Pulgones / Áfidos</strong>
+              <em>Myzus persicae / Aphis spp.</em>
+            </div>
+            <span class="severidad-badge severidad-moderada">⚡ Moderada</span>
+          </div>
+          <div class="plaga-etapa">📅 Peligroso en: Vegetativo</div>
+          <div class="plaga-section-title">Síntomas</div>
+          <div class="plaga-sintomas"><ul>
+            <li>Colonias verdes, negras o amarillas en tallos/nervios</li>
+            <li>Melaza pegajosa en hojas inferiores</li>
+            <li>Hojas rizadas o deformadas</li>
+          </ul></div>
+          <div class="plaga-section-title">Condiciones favorables</div>
+          <div class="plaga-condiciones">
+            <span class="condicion-tag">🌡️ 15–25°C</span>
+            <span class="condicion-tag">💧 HR &lt;60%</span>
+            <span class="condicion-tag">🪟 Alta luz</span>
+          </div>
+          <div class="plaga-section-title">Tratamiento (compatible Athena)</div>
+          <div class="plaga-tratamiento"><ul>
+            <li>Jabón potásico 5–10 ml/L (insecticida de contacto)</li>
+            <li>Neem 15–20 ml/L cada 5 días</li>
+            <li>Spray de agua a presión (remover mecánicamente)</li>
+            <li>HR &gt;65% dificulta su reproducción</li>
+          </ul></div>
+        </div>
+
+        <!-- TRIPS -->
+        <div class="plaga-card trips">
+          <div class="plaga-header">
+            <div class="plaga-emoji">✨</div>
+            <div class="plaga-nombre">
+              <strong>Trips</strong>
+              <em>Frankliniella occidentalis</em>
+            </div>
+            <span class="severidad-badge severidad-alta">⚠ Alta</span>
+          </div>
+          <div class="plaga-etapa">📅 Peligroso en: Pre-floración y Floración temprana</div>
+          <div class="plaga-section-title">Síntomas</div>
+          <div class="plaga-sintomas"><ul>
+            <li>Líneas plateadas o marrones en hojas</li>
+            <li>Flores deformadas con manchas oscuras</li>
+            <li>Insectos alados 1–2 mm (moverse rápido)</li>
+          </ul></div>
+          <div class="plaga-section-title">Condiciones favorables</div>
+          <div class="plaga-condiciones">
+            <span class="condicion-tag">🌡️ 20–30°C</span>
+            <span class="condicion-tag">💧 HR &lt;45%</span>
+          </div>
+          <div class="plaga-section-title">Tratamiento (compatible Athena)</div>
+          <div class="plaga-tratamiento"><ul>
+            <li>Neem 15–20 ml/L cada 3–4 días</li>
+            <li>Trampas azules adhesivas (monitoreo y control)</li>
+            <li>Amblyseius cucumeris (depredador biológico)</li>
+            <li>Aumentar HR a 55–60%</li>
+          </ul></div>
+        </div>
+
+        <!-- FUSARIUM -->
+        <div class="plaga-card fusarium">
+          <div class="plaga-header">
+            <div class="plaga-emoji">☠️</div>
+            <div class="plaga-nombre">
+              <strong>Fusarium / Pudrición de raíz</strong>
+              <em>Fusarium oxysporum / Pythium spp.</em>
+            </div>
+            <span class="severidad-badge severidad-critica">🚨 Crítica</span>
+          </div>
+          <div class="plaga-etapa">📅 Peligroso en: Todo el ciclo (hidro/coco especialmente)</div>
+          <div class="plaga-section-title">Síntomas</div>
+          <div class="plaga-sintomas"><ul>
+            <li>Marchitamiento repentino (parcial o total)</li>
+            <li>Raíces marrones/blandas con olor a podrido</li>
+            <li>Vascular interno marrón en tallo</li>
+            <li>Deficiencias inexplicables de nutrientes</li>
+          </ul></div>
+          <div class="plaga-section-title">Condiciones favorables</div>
+          <div class="plaga-condiciones">
+            <span class="condicion-tag">🌡️ Raíz &gt;22°C</span>
+            <span class="condicion-tag">💧 Drenaje &lt;15%</span>
+            <span class="condicion-tag">⚗️ pH inestable</span>
+          </div>
+          <div class="plaga-section-title">Prevención y Tratamiento (Athena)</div>
+          <div class="plaga-tratamiento"><ul>
+            <li>Cambio de reservorio cada 14–21 días (Athena hidro)</li>
+            <li>Temperatura raíz 18–20°C (enfriador)</li>
+            <li>pH 5.8–6.2, medición diaria</li>
+            <li>Trichoderma harzianum (biológico preventivo)</li>
+            <li>Bacillus licheniformis si ya apareció</li>
+            <li>Drenaje mínimo 20% en cada riego</li>
+          </ul></div>
+        </div>
+
+        <!-- DEFICIENCIAS -->
+        <div class="plaga-card deficiencia">
+          <div class="plaga-header">
+            <div class="plaga-emoji">🍃</div>
+            <div class="plaga-nombre">
+              <strong>Deficiencias nutricionales</strong>
+              <em>N, P, K, Ca, Mg, Fe, Mn</em>
+            </div>
+            <span class="severidad-badge severidad-moderada">⚡ Moderada</span>
+          </div>
+          <div class="plaga-etapa">📅 Peligroso en: Todo el ciclo (más visible en floración)</div>
+          <div class="plaga-section-title">Síntomas por nutriente</div>
+          <div class="plaga-sintomas"><ul>
+            <li><strong>N:</strong> Amarillamiento uniforme de hojas viejas</li>
+            <li><strong>P:</strong> Nervios morados, hoja oscura</li>
+            <li><strong>K:</strong> Puntas quemadas, bordes marrones</li>
+            <li><strong>Ca:</strong> Manchas marrones en hojas jóvenes</li>
+            <li><strong>Mg:</strong> Nervios verdes, lámina amarilla (interveinal)</li>
+            <li><strong>Fe:</strong> Amarillamiento en hojas nuevas (interveinal)</li>
+          </ul></div>
+          <div class="plaga-section-title">Condiciones que bloquean absorción</div>
+          <div class="plaga-condiciones">
+            <span class="condicion-tag">⚗️ pH fuera de 5.8–6.3</span>
+            <span class="condicion-tag">🌡️ T° raíz extrema</span>
+            <span class="condicion-tag">⚡ EC muy alta/baja</span>
+          </div>
+          <div class="plaga-section-title">Corrección (Athena)</div>
+          <div class="plaga-tratamiento"><ul>
+            <li>Verificar pH en rango 5.8–6.2 (paso 1 siempre)</li>
+            <li>Subir Core 0.5–1 g/L para micros (Fe, Mn, Mg)</li>
+            <li>Subir Grow/Bloom si falta N o P</li>
+            <li>Observar 3–5 días antes de otro cambio</li>
+          </ul></div>
+        </div>
+
+        <button style="background:#555; width:100%; margin-top:8px;" onclick="cerrarModalPlagas()">Cerrar tabla</button>
+        <div style="font-size:0.7rem; color:#6b7280; margin-top:8px; text-align:center;">
+          Referencias: <a href="https://support.athenaag.com/hc" target="_blank" rel="noopener" style="color:#7dd3fc;">support.athenaag.com</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIAGNÓSTICO POR SÍNTOMAS MODAL -->
+    <div class="modal" id="modal-diagnostico" role="dialog" aria-modal="true" aria-labelledby="diagnostico-title">
+      <div class="modal-plagas-content" style="max-width:520px;">
+        <h3 id="diagnostico-title" style="margin-top:0; color:#86efac;">🔍 Diagnóstico por Síntomas</h3>
+        <p style="font-size:0.82rem; color:#9ca3af; margin:0 0 12px 0;">Seleccioná los síntomas que observás. El sistema sugerirá plagas o problemas probables.</p>
+        <div class="diagnostico-grid">
+          <label class="sintoma-check"><input type="checkbox" value="polvo_blanco"> 🍂 Polvo blanco en hojas</label>
+          <label class="sintoma-check"><input type="checkbox" value="moho_gris"> 🍇 Moho gris / podredumbre</label>
+          <label class="sintoma-check"><input type="checkbox" value="telarana"> 🕸️ Telaraña fina en planta</label>
+          <label class="sintoma-check"><input type="checkbox" value="puntos_blancos"> ⚪ Puntos blancos sin tela</label>
+          <label class="sintoma-check"><input type="checkbox" value="colonias"> 🦗 Colonias de insectos</label>
+          <label class="sintoma-check"><input type="checkbox" value="lineas_plateadas"> ✨ Líneas plateadas en hoja</label>
+          <label class="sintoma-check"><input type="checkbox" value="marchitamiento"> 💀 Marchitamiento repentino</label>
+          <label class="sintoma-check"><input type="checkbox" value="raices_marron"> 🟫 Raíces marrones/blandas</label>
+          <label class="sintoma-check"><input type="checkbox" value="hoja_amarilla"> 💛 Hojas amarillas generales</label>
+          <label class="sintoma-check"><input type="checkbox" value="manchas_cafe"> 🟤 Manchas marrones en hoja</label>
+          <label class="sintoma-check"><input type="checkbox" value="puntas_quemadas"> 🔥 Puntas quemadas</label>
+          <label class="sintoma-check"><input type="checkbox" value="nervios_morados"> 🟣 Nervios morados</label>
+          <label class="sintoma-check"><input type="checkbox" value="interveinal"> 🍃 Amarillamiento interveinal</label>
+          <label class="sintoma-check"><input type="checkbox" value="flores_deform"> 🌸 Flores deformadas</label>
+          <label class="sintoma-check"><input type="checkbox" value="hojas_rizadas"> 🌀 Hojas rizadas/retorcidas</label>
+          <label class="sintoma-check"><input type="checkbox" value="pegajoso"> 🍯 Sustancia pegajosa</label>
+        </div>
+        <button style="background:#065f46; width:100%; margin-bottom:10px;" onclick="diagnosticarSintomas()">🔍 Diagnosticar</button>
+        <div id="diagnostico-resultado">Seleccioná síntomas y presioná "Diagnosticar".</div>
+        <div style="display:flex; gap:8px; margin-top:10px;">
+          <button style="background:#7c3aed; flex:1;" onclick="cerrarModalDiagnostico(); abrirModalPlagas()">🪲 Ver Tabla Completa</button>
+          <button style="background:#555; flex:1;" onclick="cerrarModalDiagnostico()">Cerrar</button>
         </div>
       </div>
     </div>
@@ -621,6 +1051,71 @@
             const m = document.getElementById('modal-ia');
             if (m) m.style.display = 'none';
         }
+        function abrirModalPlagas() {
+            cerrarModalIA();
+            const m = document.getElementById('modal-plagas');
+            if (m) m.style.display = 'flex';
+        }
+        function cerrarModalPlagas() {
+            const m = document.getElementById('modal-plagas');
+            if (m) m.style.display = 'none';
+        }
+        function abrirModalDiagnostico() {
+            cerrarModalIA();
+            const m = document.getElementById('modal-diagnostico');
+            if (m) m.style.display = 'flex';
+        }
+        function cerrarModalDiagnostico() {
+            const m = document.getElementById('modal-diagnostico');
+            if (m) m.style.display = 'none';
+        }
+        function diagnosticarSintomas() {
+            const checks = document.querySelectorAll('#modal-diagnostico .sintoma-check input[type=checkbox]:checked');
+            const seleccionados = Array.from(checks).map(c => c.value);
+            const res = document.getElementById('diagnostico-resultado');
+            if (!seleccionados.length) { res.textContent = '⚠️ Seleccioná al menos un síntoma.'; return; }
+            const plagas = [];
+            const tiene = v => seleccionados.includes(v);
+
+            if (tiene('polvo_blanco'))
+                plagas.push({ nombre: '🍂 OIDIO (Polvo blanco)', sev: '⚠ Alta', trat: 'Bajar HR <50%, bicarbonato de potasio 5–7 g/L, neem 10–15 ml/L en oscuridad.' });
+            if (tiene('moho_gris'))
+                plagas.push({ nombre: '🍇 BOTRYTIS (Moho gris)', sev: '🚨 Crítica', trat: 'Remover zonas afectadas, HR <55%, Bacillus subtilis, ventilación 24/7.' });
+            if (tiene('telarana'))
+                plagas.push({ nombre: '🕷️ ARAÑA ROJA', sev: '🚨 Crítica', trat: 'Neem 15–20 ml/L cada 3 días, subir HR 50–55%, Phytoseiulus persimilis.' });
+            if (tiene('puntos_blancos'))
+                plagas.push({ nombre: '🔬 ÁCAROS BLANCOS (Broad mite)', sev: '⚠ Alta', trat: 'Neem + jabón potásico cada 5 días. Azadiractina si es grave.' + (tiene('telarana') ? ' (puede coexistir con araña roja)' : '') });
+            if (tiene('colonias') || tiene('pegajoso'))
+                plagas.push({ nombre: '🦗 PULGONES / ÁFIDOS', sev: '⚡ Moderada', trat: 'Jabón potásico 5–10 ml/L, neem 15 ml/L, spray de agua a presión.' });
+            if (tiene('lineas_plateadas') || tiene('flores_deform'))
+                plagas.push({ nombre: '✨ TRIPS', sev: '⚠ Alta', trat: 'Neem cada 3–4 días, trampas azules, Amblyseius cucumeris.' });
+            if (tiene('marchitamiento') || tiene('raices_marron'))
+                plagas.push({ nombre: '☠️ FUSARIUM / PUDRICIÓN DE RAÍZ', sev: '🚨 Crítica', trat: 'Cambiar reservorio urgente, Trichoderma + Bacillus, verificar pH 5.8–6.2, drenar 20%.' });
+            if (tiene('hoja_amarilla') && !tiene('interveinal'))
+                plagas.push({ nombre: '🍃 DEFICIENCIA DE NITRÓGENO (N)', sev: '⚡ Moderada', trat: 'Verificar pH. Subir EC o subir Grow/Bloom 0.5–1 g/L.' });
+            if (tiene('interveinal'))
+                plagas.push({ nombre: '🍃 DEFICIENCIA DE Mg o Fe', sev: '⚡ Moderada', trat: 'Verificar pH 5.8–6.2. Subir Core 0.5–1 g/L. Observar 3–5 días.' });
+            if (tiene('manchas_cafe'))
+                plagas.push({ nombre: '🍃 DEFICIENCIA DE CALCIO (Ca)', sev: '⚡ Moderada', trat: 'Verificar pH. Subir Core. Riego uniforme (evitar estrés hídrico).' });
+            if (tiene('puntas_quemadas'))
+                plagas.push({ nombre: '🔥 EXCESO DE EC / TOXICIDAD K', sev: '⚡ Moderada', trat: 'Bajar EC 0.2–0.3. Aumentar drenaje. No cambiar pH hasta estabilizar.' });
+            if (tiene('nervios_morados'))
+                plagas.push({ nombre: '🟣 DEFICIENCIA DE FÓSFORO (P) o FRÍO', sev: '⚡ Moderada', trat: 'Verificar temperatura raíz (>18°C). Subir Core o Bloom.' });
+            if (tiene('hojas_rizadas'))
+                plagas.push({ nombre: '🔬 ÁCAROS BLANCOS o estrés hídrico', sev: '⚠ Alta', trat: 'Inspeccionar envés con lupa. Neem + jabón. Revisar riego.' });
+
+            if (!plagas.length) {
+                res.textContent = '🤔 No se identificó una causa clara con esos síntomas.\nVerificá:\n1. pH en rango 5.8–6.2\n2. EC acorde a etapa\n3. Temperatura y humedad\n4. Drenaje 15–20%\nUsá el botón "🪲 Ver Tabla Completa" para más detalles.';
+                return;
+            }
+            let texto = `🔍 Diagnóstico basado en ${seleccionados.length} síntoma(s):\n\n`;
+            plagas.forEach(pg => {
+                texto += `${pg.nombre} [${pg.sev}]\n`;
+                texto += `→ ${pg.trat}\n\n`;
+            });
+            texto += '⚠️ Verificá siempre con mediciones reales. Corregí 1 variable por vez.';
+            res.textContent = texto;
+        }
         function normalizarTexto(t) {
             return (t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
         }
@@ -664,8 +1159,103 @@
             const hablaDeficiencia = p.includes('hoja amarilla') || p.includes('puntas quemadas') || p.includes('deficien') || p.includes('toxicidad') || p.includes('manchas');
             const hablaEtapa = p.includes('vege') || p.includes('veget') || p.includes('flora') || p.includes('floracion') || p.includes('semana');
 
+            // Plagas y enfermedades
+            const hablaPlagas = p.includes('plaga') || p.includes('insecto') || p.includes('bicho') || p.includes('enfermedad');
+            const hablaOidio = p.includes('oidio') || p.includes('polvo blanco');
+            const hablaBotrytis = p.includes('botrytis') || p.includes('moho gris') || p.includes('podredum');
+            const hablaArana = p.includes('arana') || p.includes('aracn') || p.includes('telarana') || p.includes('tela arana');
+            const hablaAcaro = p.includes('acaro') || p.includes('broad mite');
+            const hablaAfidos = p.includes('pulgon') || p.includes('afido') || p.includes('colonia');
+            const hablaTrips = p.includes('trips') || p.includes('lineas plateadas');
+            const hablaFusarium = p.includes('fusarium') || p.includes('marchitam') || p.includes('pythium');
+            const hablaRaiz = p.includes('raiz') || p.includes('pudricion raiz') || p.includes('raices');
+
             let r = [];
+            let respondioAlgo = false;
             r.push('🌱 Recomendación orientativa (no reemplaza tabla oficial de Athena).');
+
+            if (hablaOidio) {
+                respondioAlgo = true;
+                r.push('\n🍂 OIDIO — Polvo blanco en hojas [⚠ Alta]');
+                r.push('Condiciones: 18–25°C, HR >55%, ventilación deficiente');
+                r.push('Etapa crítica: Vegetativo tardío y Pre-floración');
+                r.push('Tratamiento:');
+                r.push('  • Bajar HR <50% + aumentar ventilación');
+                r.push('  • Bicarbonato de potasio 5–7 g/L cada 7 días');
+                r.push('  • Neem 10–15 ml/L (aplicar en oscuridad)');
+                r.push('  • No usar azufre si T° >28°C');
+            }
+
+            if (hablaBotrytis) {
+                r.push('\n🍇 BOTRYTIS — Moho gris en cogollos [🚨 Crítica]');
+                r.push('Condiciones: 15–25°C, HR >60%, restos vegetales');
+                r.push('Etapa crítica: Floración semana 5–8 (URGENTE)');
+                r.push('Tratamiento:');
+                r.push('  • Remover zonas afectadas (cortar 5 cm alrededor)');
+                r.push('  • HR floración <55%, ventilación 24/7');
+                r.push('  • Bacillus subtilis (biológico compatible Athena)');
+                r.push('  • Sulfato de cobre 2–3 g/L (máx 3 aplicaciones)');
+            }
+
+            if (hablaArana) {
+                r.push('\n🕷️ ARAÑA ROJA — Telaraña fina, hoja pálida [🚨 Crítica]');
+                r.push('Condiciones: >24°C, HR <40%, aire seco');
+                r.push('Etapa crítica: Todo el ciclo (reproduce cada 5–7 días)');
+                r.push('Tratamiento:');
+                r.push('  • Neem 15–20 ml/L cada 3 días');
+                r.push('  • Phytoseiulus persimilis (depredador biológico)');
+                r.push('  • Subir HR 50–55%');
+                r.push('  • Aumentar Core 10–15% si hay estrés');
+            }
+
+            if (hablaAcaro) {
+                r.push('\n🔬 ÁCAROS BLANCOS — Puntos blancos sin tela [⚠ Alta]');
+                r.push('Condiciones: 20–30°C, HR 60–80%');
+                r.push('Síntomas: hojas nuevas retorcidas, sin telaraña visible');
+                r.push('Tratamiento: Neem + jabón potásico cada 5 días');
+            }
+
+            if (hablaAfidos) {
+                r.push('\n🦗 ÁFIDOS / PULGONES — Colonias pegajosas [⚡ Moderada]');
+                r.push('Condiciones: 15–25°C, HR <60%');
+                r.push('Tratamiento:');
+                r.push('  • Jabón potásico 5–10 ml/L');
+                r.push('  • Neem 15–20 ml/L cada 5 días');
+                r.push('  • Spray de agua a presión');
+                r.push('  • HR >65% dificulta reproducción');
+            }
+
+            if (hablaTrips) {
+                r.push('\n✨ TRIPS — Líneas plateadas, flores dañadas [⚠ Alta]');
+                r.push('Condiciones: 20–30°C, HR <45%');
+                r.push('Tratamiento:');
+                r.push('  • Neem 15–20 ml/L cada 3–4 días');
+                r.push('  • Trampas azules adhesivas');
+                r.push('  • Amblyseius cucumeris (biológico)');
+            }
+
+            if (hablaFusarium || hablaRaiz) {
+                r.push('\n☠️ FUSARIUM / PUDRICIÓN DE RAÍZ [🚨 Crítica]');
+                r.push('Causas Athena: raíz >22°C, drenaje <15%, pH inestable, reservorio sucio');
+                r.push('Síntomas: marchitamiento, raíces marrones, vascular marrón');
+                r.push('Prevención (mejor opción):');
+                r.push('  • Cambio de reservorio cada 14–21 días');
+                r.push('  • Temperatura raíz 18–20°C');
+                r.push('  • pH 5.8–6.2 diario, drenaje 20%');
+                r.push('  • Trichoderma harzianum preventivo');
+                r.push('Si ya apareció: Bacillus licheniformis, cambio urgente de reservorio');
+            }
+
+            if (hablaPlagas && !hablaOidio && !hablaBotrytis && !hablaArana && !hablaAcaro && !hablaAfidos && !hablaTrips && !hablaFusarium && !hablaRaiz) {
+                r.push('\n🪲 PLAGAS COMUNES — Guía rápida:');
+                r.push('• ARAÑA ROJA: telaraña fina, seco y calor → Neem + HR');
+                r.push('• OIDIO: polvo blanco → ventilación + bicarb potasio');
+                r.push('• BOTRYTIS: moho gris en flores → bajar HR urgente');
+                r.push('• ÁFIDOS: colonias pegajosas → jabón potásico');
+                r.push('• TRIPS: líneas plateadas → trampas azules + neem');
+                r.push('• FUSARIUM: marchitamiento → cambiar reservorio urgente');
+                r.push('\n💡 Usá el botón "🪲 Tabla de Plagas" para ver guía visual completa.');
+            }
 
             if (hablaDosis || (hablaAthena && (litros || ec))) {
                 const l = litros || 10;
@@ -674,7 +1264,7 @@
                 r.push(`\n🧪 Mezcla estimada para ${l} L (objetivo EC aprox ${ecObj}, fila usada EC ${calc.ec}):`);
                 r.push(`- Grow/Bloom: ${calc.grow} g total (${calc.growPorL} g/L)`);
                 r.push(`- Core: ${calc.core} g total (${calc.corePorL} g/L)`);
-                r.push('- Orden sugerido: agua → disolver sales por separado → mezclar → medir EC → ajustar pH al final.');
+                r.push('- Orden: agua → Core → Bloom/Grow → medir EC → ajustar pH.');
             }
 
             if (hablaPh || ph !== null) {
@@ -692,40 +1282,47 @@
 
             if (hablaEc || ec !== null) {
                 if (ec === null) {
-                    r.push('\n⚡ EC orientativa:');
+                    r.push('\n⚡ EC orientativa Athena:');
                     r.push('- Plántula: 0.4–0.8');
                     r.push('- Vege media: 1.0–1.8');
-                    r.push('- Floración media/alta: 1.6–2.4 (según respuesta de planta)');
+                    r.push('- Floración media/alta: 1.6–2.4');
                 } else {
                     r.push(`\n⚡ Tu EC actual: ${ec}`);
-                    if (ec < 0.8) r.push('- Puede estar baja (si no es plántula). Podés subir de a 0.1–0.2.');
-                    else if (ec > 2.4) r.push('- Puede estar alta para muchas genéticas: vigilá puntas quemadas y drenaje.');
-                    else r.push('- Está dentro de un rango común, confirmar con estado de hojas y consumo.');
+                    if (ec < 0.8) r.push('- Puede estar baja. Podés subir de a 0.1–0.2.');
+                    else if (ec > 2.4) r.push('- Puede estar alta: vigilá puntas quemadas y drenaje.');
+                    else r.push('- Rango común. Confirmar con estado de hojas y consumo.');
                 }
             }
 
             if (hablaDeficiencia) {
-                r.push('\n🍃 Diagnóstico rápido:');
-                r.push('- Puntas quemadas: posible exceso de EC/sales.');
-                r.push('- Hojas muy pálidas: posible falta de nutrición o bloqueo por pH.');
-                r.push('- Manchas irregulares: revisar plagas, calcio/magnesio, y estabilidad de riego.');
-                r.push('- Acción: corregir 1 variable por vez y observar 48–72h.');
+                r.push('\n🍃 Diagnóstico rápido de deficiencias:');
+                r.push('- Puntas quemadas: posible exceso EC/K.');
+                r.push('- Hojas pálidas: falta N o bloqueo por pH.');
+                r.push('- Interveinal amarillo: falta Mg o Fe (verificar pH primero).');
+                r.push('- Nervios morados: deficiencia P o frío.');
+                r.push('- Manchas irregulares: revisar pH + plagas + Ca/Mg.');
+                r.push('- Acción: corregir 1 variable por vez, observar 48–72h.');
             }
 
             if (hablaEtapa) {
                 r.push('\n📆 Manejo por etapa:');
-                r.push('- Vege: priorizar ambiente estable, raíces sanas y crecimiento parejo.');
-                r.push('- Preflora/flora: controlar humedad, circulación de aire y revisar consumo diario.');
+                r.push('- Vege: ambiente estable, raíces sanas, crecimiento parejo.');
+                r.push('- Preflora/flora: controlar HR, circulación y consumo diario.');
             }
 
             if (r.length <= 2) {
                 r.push('\nPodés preguntarme así:');
                 r.push('- "Calculame Athena para 25L a EC 1.8"');
                 r.push('- "Tengo pH 6.4 y EC 2.2 en semana 4, ¿qué ajusto?"');
+                r.push('- "¿Cómo trato el oidio?"');
+                r.push('- "Tengo araña roja, qué hago"');
+                r.push('- "Mis raíces están marrones"');
                 r.push('- "¿Qué revisar si tengo puntas quemadas?"');
+                r.push('\n💡 O usá los botones "🪲 Tabla de Plagas" y "🔍 Diagnóstico por Síntomas".');
             }
 
             r.push('\n⚠️ Verificá siempre etiqueta oficial de Athena y mediciones reales (EC/pH/drenaje).');
+            r.push('📚 https://support.athenaag.com/hc');
             return r.join('\n');
         }
         function preguntarIA() {
