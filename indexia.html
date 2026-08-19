@@ -580,6 +580,12 @@
                 "Athena Handbook Main (ES)",
                 "Athena Home Grower Handbook (ES)"
             ],
+            unidadNutricion: "gramos por 10L",
+            proporcionesCalculoPor500ppm: {
+                basePrincipal: 0.61,
+                coreAguaBlanda: 0.36,
+                coreAguaDura: 0.30
+            },
             phPorSustrato: {
                 hidro: { min: 5.5, objetivo: "5.8-6.1", max: 6.2 },
                 coco: { min: 5.8, objetivo: "5.9-6.2", max: 6.3 },
@@ -587,7 +593,7 @@
                 tierra: { min: 6.2, objetivo: "6.3-6.6", max: 6.8 }
             },
             ambiente: {
-                plantula: { dia: "24-27°C", noche: "22-24°C", hr: "70-75%", notas: "Raíz activa con VPD suave." },
+                plantula: { dia: "24-27°C", noche: "22-24°C", hr: "70-75%", notas: "Raíz activa con VPD bajo." },
                 vegetativo: { dia: "24-29°C", noche: "21-24°C", hr: "60-70%", notas: "Más temperatura = más consumo de agua y sales." },
                 prefloracion: { dia: "24-28°C", noche: "20-23°C", hr: "55-62%", notas: "Bajar HR reduce riesgo de hongos en transición." },
                 floracion: { dia: "23-27°C", noche: "19-22°C", hr: "45-55%", notas: "Con HR alta disminuye transpiración y puede acumular sales." },
@@ -726,14 +732,16 @@
         }
         function detectarSustrato(texto) {
             if (/(nft|dwc|aeropon|hidro|rdwc)/.test(texto)) return 'hidro';
-            if (/(coco|coir|turba|peat)/.test(texto)) return 'coco';
+            if (/(coco|coir)/.test(texto)) return 'coco';
+            if (/(turba|peat)/.test(texto)) return 'turba';
             if (/(tierra|suelo|sustrato vivo|living soil)/.test(texto)) return 'tierra';
             return null;
         }
         function detectarEtapa(texto) {
             if (/(plantula|esqueje|clon)/.test(texto)) return 'plantula';
+            if (/(madur|engorde final|finalizacion|acabado|flush)/.test(texto)) return 'maduracion';
             if (/(preflora|preflor|transicion|stretch)/.test(texto)) return 'preflora';
-            if (/(flora|floracion|flor)/.test(texto)) return 'flora';
+            if (/(flora|floracion|\bflor\b)/.test(texto)) return 'flora';
             if (/(vege|veget|crecimiento)/.test(texto)) return 'vege';
             return null;
         }
@@ -807,17 +815,19 @@
             const hablaPh = p.includes('ph');
             const hablaEc = p.includes('ec') || p.includes('ppm');
             const hablaDeficiencia = p.includes('hoja amarilla') || p.includes('puntas quemadas') || p.includes('deficien') || p.includes('toxicidad') || p.includes('manchas');
-            const hablaEtapa = p.includes('vege') || p.includes('veget') || p.includes('flora') || p.includes('floracion') || p.includes('semana');
+            const hablaEtapa = p.includes('vege') || p.includes('veget') || p.includes('flora') || p.includes('floracion') || p.includes('madur') || p.includes('semana');
             const hablaPlagas = p.includes('plaga') || p.includes('arana') || p.includes('trips') || p.includes('oidio') || p.includes('hongo');
             const hablaTroubleshoot = p.includes('bloque') || p.includes('lockout') || p.includes('estres') || p.includes('exceso') || p.includes('carencia');
 
             let r = [];
+            let agregoContenido = false;
             r.push(`🌱 Referencia: ${ATHENA_KNOWLEDGE.fuentes.join(' + ')}.`);
             if (sustrato) r.push(`- Sustrato detectado: ${sustrato}.`);
             if (etapa) r.push(`- Etapa detectada: ${etapa}${semana ? ` semana ${semana}` : ''}.`);
             if (tipoAgua) r.push(`- Tipo de agua detectado: ${tipoAgua}.`);
 
             if (hablaDosis || (hablaAthena && (litros || ec || ppm || receta))) {
+                agregoContenido = true;
                 const l = litros || 10;
                 const ecObj = ec || (ppm !== null ? ppmAEc(ppm) : (receta?.ec || 1.8));
                 const ppmObj = ppm !== null ? Math.round(ppm) : ecAppm(ecObj);
@@ -838,24 +848,30 @@
                 if (calc.formula) r.push(`- Fórmula semanal: ${calc.formula}.`);
                 if (calc.grow > 0) r.push(`- Grow: ${calc.grow} g total (${calc.growPorL} g/L)`);
                 if (calc.bloom > 0) r.push(`- Bloom: ${calc.bloom} g total (${calc.bloomPorL} g/L)`);
-                if (calc.grow && !calc.bloom) r.push(`- Bloom: reemplaza Grow al pasar a floración.`);
+                if (calc.grow > 0 && calc.bloom > 0) r.push(`- Semana de transición: Grow y Bloom se usan juntos.`);
+                if (calc.grow === 0 && calc.bloom > 0) r.push(`- En esta semana Bloom reemplaza Grow según transición Athena.`);
                 r.push(`- Core: ${calc.core} g total (${calc.corePorL} g/L)`);
                 const porLitro = calcularDosisPorLitro(ppmObj, {
-                    baseA: 0.61,
-                    baseB: tipoAgua === 'dura' ? 0.30 : 0.36
+                    basePrincipal: ATHENA_KNOWLEDGE.proporcionesCalculoPor500ppm.basePrincipal,
+                    core: tipoAgua === 'dura'
+                        ? ATHENA_KNOWLEDGE.proporcionesCalculoPor500ppm.coreAguaDura
+                        : ATHENA_KNOWLEDGE.proporcionesCalculoPor500ppm.coreAguaBlanda
                 });
                 r.push(`- Cálculo oficial: g/L = (ppm/500) × proporción.`);
-                r.push(`  Ejemplo ${ppmObj} ppm: Base principal ${porLitro.baseA} g/L, Core ${porLitro.baseB} g/L.`);
+                r.push(`  Ejemplo ${ppmObj} ppm: Base principal ${porLitro.basePrincipal} g/L, Core ${porLitro.core} g/L.`);
+                r.push(`- Unidad usada en tabla semanal: ${ATHENA_KNOWLEDGE.unidadNutricion}.`);
                 r.push('- Orden de mezcla Athena: 1) agua 2) primer componente 3) segundo componente 4) tercer componente 5) medir EC 6) ajustar pH.');
                 if (tipoAgua === 'blanda') r.push('- Agua blanda/RO: priorizar mantener Core completo y controlar Ca/Mg.');
                 if (tipoAgua === 'dura') r.push('- Agua dura: usar EC inicial del agua para no sobrecargar calcio.');
             }
 
             if (hablaPh || ph !== null) {
+                agregoContenido = true;
                 if (ph === null) {
                     r.push('\n💧 pH por sustrato (Athena):');
                     r.push(`- Hidro (NFT/DWC): ${resumirPhPorSustrato('hidro')}`);
-                    r.push(`- Coco/Turba: ${resumirPhPorSustrato('coco')}`);
+                    r.push(`- Coco: ${resumirPhPorSustrato('coco')}`);
+                    r.push(`- Turba: ${resumirPhPorSustrato('turba')}`);
                     r.push(`- Tierra: ${resumirPhPorSustrato('tierra')}`);
                 } else {
                     r.push(`\n💧 Tu pH actual: ${ph}`);
@@ -872,6 +888,7 @@
             }
 
             if (hablaEc || ec !== null || ppm !== null) {
+                agregoContenido = true;
                 if (ec === null && ppm === null) {
                     r.push('\n⚡ EC/PPM orientativa Athena:');
                     r.push('- Plántula: EC 0.4–0.8 (200–400 ppm).');
@@ -889,6 +906,7 @@
             }
 
             if (hablaDeficiencia) {
+                agregoContenido = true;
                 r.push('\n🍃 Deficiencias/toxicidades (síntoma → causa → acción):');
                 Object.keys(ATHENA_KNOWLEDGE.deficiencias).forEach(clave => {
                     const d = ATHENA_KNOWLEDGE.deficiencias[clave];
@@ -900,6 +918,7 @@
             }
 
             if (hablaEtapa) {
+                agregoContenido = true;
                 r.push('\n📆 Nutrición por etapa/semana (Athena):');
                 const tablaFiltrada = etapa
                     ? ATHENA_KNOWLEDGE.nutricionSemanal.filter(x => x.etapa === etapa)
@@ -907,18 +926,32 @@
                 tablaFiltrada.forEach(f => {
                     const comp = [`Core ${f.core} g/10L`];
                     if (f.grow) comp.unshift(`Grow ${f.grow} g/10L`);
-                    if (f.bloom) comp.unshift(`Bloom ${f.bloom} g/10L`);
+                    if (f.bloom) comp.splice(f.grow ? 1 : 0, 0, `Bloom ${f.bloom} g/10L`);
                     r.push(`- ${f.etapa} s${f.semana}: EC ${f.ec} (${f.ppm} ppm) → ${comp.join(' + ')}`);
                 });
-                const etapaAmb = etapa === 'vege' ? 'vegetativo' : (etapa === 'flora' ? 'floracion' : (etapa === 'preflora' ? 'prefloracion' : 'vegetativo'));
-                const a = ATHENA_KNOWLEDGE.ambiente[etapaAmb];
-                if (a) {
-                    r.push(`\n🌡️ Ambiente recomendado (${etapaAmb}): día ${a.dia}, noche ${a.noche}, HR ${a.hr}.`);
-                    r.push(`- ${a.notas}`);
+                if (etapa) {
+                    const etapaMap = {
+                        plantula: 'plantula',
+                        vege: 'vegetativo',
+                        preflora: 'prefloracion',
+                        flora: 'floracion',
+                        maduracion: 'maduracion'
+                    };
+                    const etapaAmb = etapaMap[etapa];
+                    const a = etapaAmb ? ATHENA_KNOWLEDGE.ambiente[etapaAmb] : null;
+                    if (a) {
+                        r.push(`\n🌡️ Ambiente recomendado (${etapaAmb}): día ${a.dia}, noche ${a.noche}, HR ${a.hr}.`);
+                        r.push(`- ${a.notas}`);
+                    } else {
+                        r.push('\n🌡️ No pude mapear la etapa. Probá con plántula, vege, preflora, flora o maduración.');
+                    }
+                } else {
+                    r.push('\n🌡️ Indicá etapa para ambiente exacto (plántula, vege, preflora, flora o maduración).');
                 }
             }
 
             if (hablaPlagas) {
+                agregoContenido = true;
                 r.push('\n🪲 Plagas/enfermedades (Athena):');
                 Object.keys(ATHENA_KNOWLEDGE.plagas).forEach(clave => {
                     const pz = ATHENA_KNOWLEDGE.plagas[clave];
@@ -930,6 +963,7 @@
             }
 
             if (hablaTroubleshoot) {
+                agregoContenido = true;
                 r.push('\n🛠️ Troubleshooting avanzado:');
                 r.push('- Lockout por pH: corregir pH primero; no subir EC hasta normalizar absorción.');
                 r.push('- Interacciones: exceso de K puede desplazar Ca/Mg; exceso de sales imita carencias.');
@@ -937,7 +971,7 @@
                 r.push('- Planta estresada: estabilizar clima/riego 24-48h y luego ajustar nutrición gradualmente.');
             }
 
-            if (r.length <= 2) {
+            if (!agregoContenido) {
                 r.push('\nPodés preguntarme así:');
                 r.push('- "Calculame Athena flora semana 3 para 25L a 1200 ppm"');
                 r.push('- "Estoy en coco, pH 6.4 y EC 2.2, ¿qué ajusto?"');
