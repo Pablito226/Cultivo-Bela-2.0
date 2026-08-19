@@ -685,7 +685,7 @@
         function detectarEtapa(texto) {
             if (texto.includes('plantul') || texto.includes('esqueje')) return 'plantula';
             if (texto.includes('transicion') || texto.includes('preflora') || texto.includes('pre-flora') || texto.includes('preflor') || texto.includes('pre flor')) return 'transicion';
-            if (texto.includes('floracion') || texto.includes('flora') || texto.includes('flor')) return 'floracion';
+            if (texto.includes('floracion') || texto.includes('flora')) return 'floracion';
             if (texto.includes('vege') || texto.includes('veget')) return 'vege';
             if (texto.includes('madur') || texto.includes('cosecha') || texto.includes('flush') || texto.includes('lavado')) return 'maduracion';
             return null;
@@ -786,16 +786,18 @@
 
             if (ecDesdePpm !== null) {
                 const etiquetaEscala = escalaPpmIndicada ? `escala ${escalaPpm}` : `escala ${escalaPpm} asumida`;
+                if (!escalaPpmIndicada) r.push('\n⚠️ No indicaste escala PPM; la conversión usa escala 500 por defecto.');
                 r.push(`\n🔁 Conversión Athena: ${ppm} ppm (${etiquetaEscala}) ≈ EC ${ecDesdePpm}.`);
-                if (!escalaPpmIndicada) r.push('- Si usás escala 700, indicámelo para ajustar la conversión.');
+                if (!escalaPpmIndicada) r.push('- Si usás escala 700, indicámelo para recalcular.');
             }
 
             if (hablaEtapa || (hablaAthena && semana)) {
                 if (etapaDetectada && ['vege', 'transicion', 'floracion'].includes(etapaDetectada)) {
-                    const fila = obtenerFilaNutricion(etapaDetectada, semana || 1);
+                    const fila = obtenerFilaNutricion(etapaDetectada, semana);
                     if (fila) {
                         r.push('\n📆 Tabla nutricional por etapa (Grow/Bloom/Core):');
                         r.push(formatearFilaNutricion(etapaDetectada, fila));
+                        if (!semana) r.push('- Semana no indicada: tomando semana 1 como base de referencia.');
                         if (!semana) {
                             const tabla = ATHENA_HANDBOOK.nutricion[etapaDetectada].map(f => `S${f.semana}: EC ${f.ecMin}-${f.ecMax} | G ${f.grow} / B ${f.bloom} / C ${f.core} g/L`).join('\n');
                             r.push(`\nResumen ${etapaDetectada}:\n${tabla}`);
@@ -817,7 +819,7 @@
                 const l = litros || 10;
                 const etapaParaCalculo = ['vege', 'transicion', 'floracion'].includes(etapaDetectada) ? etapaDetectada : null;
                 if (etapaParaCalculo) {
-                    const calcEtapa = calcularMezclaPorEtapa(l, etapaParaCalculo, semana || 1);
+                    const calcEtapa = calcularMezclaPorEtapa(l, etapaParaCalculo, semana);
                     if (calcEtapa) {
                         r.push(`\n🧪 Preparación por volumen (${l} L) en ${etapaParaCalculo} semana ${calcEtapa.fila.semana}:`);
                         r.push(`- Grow: ${calcEtapa.grow} g (${calcEtapa.fila.grow} g/L)`);
