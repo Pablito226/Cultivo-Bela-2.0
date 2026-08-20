@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ciclo Cultivo Oficina v2.8 - Notas sin fecha</title>
+    <style>
+        :root { 
+            --bg-color: #121212; 
+            --card-bg: #1e1e1e; 
+            --text-color: #ffffff; 
+            --accent: #4caf50; 
+            --alert: #ff5252; 
+            --notes-color: #ffb74d; 
+        }
+        body { 
+            font-family: sans-serif; 
+            background-color: var(--bg-color); 
+            color: var(--text-color); 
+            padding: 10px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            margin: 0; 
+        }
+        
+        .header-container { text-align: center; margin-bottom: 15px; margin-top: 10px; }
+        .logo-cultivo { font-size: 2.5rem; margin: 0; padding: 0; line-height: 1; }
+        h1 { font-size: 1.3rem; color: var(--accent); margin: 5px 0 0 0; font-weight: bold; }
+        
+        .top-controls {
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 12px;
+        }
+
+        .user-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            background: #1b1b1b;
+            border: 1px solid #333;
+            border-radius: 14px;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            box-sizing: border-box;
+        }
+
+        .user-bar span {
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        .quick-access {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 15px auto;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 16px;
+            padding: 12px;
+            box-sizing: border-box;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.22);
+        }
+
+        .quick-access-title {
+            text-align: center;
+            color: #cfcfcf;
+            font-weight: bold;
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+        }
+
+        .quick-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .quick-btn {
+            border: none;
+            border-radius: 14px;
+            padding: 14px 10px;
+            cursor: pointer;
+            width: 100%;
+            color: #fff;
+            font-weight: bold;
+            font-size: 0.9rem;
+            min-height: 64px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+            transition: transform 0.15s ease, opacity 0.2s ease;
+        }
+
+        .quick-btn:hover { transform: translateY(-1px); opacity: 0.95; }
+        .quick-btn .sub { font-size: 0.72rem; opacity: 0.85; font-weight: 500; }
+        .quick-btn.sales { background: linear-gradient(135deg, #6a4c93, #8e5bbd); }
+        .quick-btn.notes { background: linear-gradient(135deg, #1565c0, #1e88e5); }
+        .quick-btn.vegeta { background: linear-gradient(135deg, #2e7d32, #43a047); }
+        .quick-btn.report { background: linear-gradient(135deg, #00796b, #009688); }
+
+        .panel-open {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 15px auto;
+            display: none;
+        }
+        .panel-open.visible { display: block; }
+        
+        /* --- TABLA DE SALES / CALCULADORA --- */
+        .sales-panel {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 15px auto;
+            background: #1b1b1b;
+            border: 1px solid #444;
+            border-radius: 12px;
+            padding: 10px;
+            box-sizing: border-box;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+        }
+
+        .sales-title {
+            text-align: center;
+            color: #ffb74d;
+            font-weight: bold;
+            font-size: 1.05rem;
+            margin: 0 0 8px 0;
+        }
+
+        .sales-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+
+        .sales-controls label {
+            display: inline;
+            margin: 0;
+            color: #ddd;
+            font-weight: bold;
+        }
+
+        .sales-litros {
+            width: 90px !important;
+            margin: 0 !important;
+            padding: 7px 8px !important;
+            text-align: center;
+            font-weight: bold;
+            background: #292929 !important;
+        }
+
+        .sales-scroll {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border-radius: 8px;
+        }
+
+        .sales-table {
+            width: 100%;
+            min-width: 470px;
+            border-collapse: collapse;
+            font-size: 0.78rem;
+            background: #242424;
+        }
+
+        .sales-table th,
+        .sales-table td {
+            border: 1px solid #555;
+            padding: 6px 5px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .sales-table th {
+            background: #303030;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .sales-table td:first-child {
+            color: #ffcc80;
+            font-weight: bold;
+        }
+
+        .sales-table .gramos {
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .sales-table .por-litro {
+            color: #aaa;
+            font-size: 0.72rem;
+            display: block;
+        }
+
+        .sales-alert-box {
+            margin-top: 8px;
+            background: #2b1d00;
+            border: 1px solid #ffb74d;
+            border-radius: 8px;
+            padding: 8px 10px;
+            color: #ffe082;
+            font-size: 0.78rem;
+            line-height: 1.35;
+        }
+
+        .sales-alert-box strong {
+            color: #fff;
+        }
+
+        .sales-note-edit {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .sales-note-edit textarea {
+            width: 100%;
+            min-height: 55px;
+            background: #222;
+            border: 1px solid #555;
+            color: #fff;
+            border-radius: 6px;
+            padding: 6px;
+            box-sizing: border-box;
+            font-family: inherit;
+            font-size: 0.8rem;
+            resize: vertical;
+        }
+
+        .sales-note-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 6px;
+        }
+
+        .sales-note-actions button {
+            width: auto;
+            margin: 0;
+            padding: 6px 12px;
+            font-size: 0.78rem;
+        }
+
+        .mesa-card { 
+            background-color: var(--card-bg); 
+            border: 1px solid #333; 
+            border-radius: 12px; 
+            padding: 12px; 
+            margin-bottom: 15px; 
+            width: 100%; 
+            max-width: 600px; 
+            box-sizing: border-box; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3); 
+        }
+        
+        .mesa-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 1px solid #444; 
+            padding-bottom: 5px; 
+            margin-bottom: 10px; 
+        }
+        .mesa-header h2 { margin: 0; font-size: 1.1rem; color: #fff; }
+        
+        .status-badge { 
+            font-size: 0.75rem; 
+            padding: 3px 8px; 
+            border-radius: 4px; 
+            font-weight: bold; 
+            text-transform: uppercase; 
+        }
+        .status-flora { background-color: #7b1fa2; color: #fff; }
+        .status-corte { background-color: #d32f2f; color: #fff; }
+        
+        .timer-container { 
+            text-align: center; 
+            margin: 10px 0; 
+            background: #181818; 
+            padding: 8px; 
+            border-radius: 8px; 
+        }
+        .dias-flora { font-size: 1.6rem; font-weight: bold; color: var(--accent); margin: 0; }
+        .dias-restantes { font-size: 0.85rem; color: #aaa; margin: 2px 0 0 0; }
+        
+        .info-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 6px; 
+            font-size: 0.8rem; 
+            margin-bottom: 8px; 
+            background: #252525; 
+            padding: 8px; 
+            border-radius: 6px; 
+        }
+        .info-grid div { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        
+        .progress-bar-container { 
+            width: 100%; 
+            background-color: #333; 
+            border-radius: 6px; 
+            height: 10px; 
+            margin-bottom: 10px; 
+            overflow: hidden; 
+        }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, var(--accent), #8bc34a); width: 0%; transition: width 0.5s; }
+        .progress-bar.warning { background: linear-gradient(90deg, #ffa726, var(--alert)); }
+        
+        .lavado-box { 
+            background-color: rgba(255, 82, 82, 0.15); 
+            border: 1px solid var(--alert); 
+            color: #ff8a80; 
+            padding: 6px; 
+            border-radius: 6px; 
+            text-align: center; 
+            font-weight: bold; 
+            font-size: 0.8rem; 
+            margin-bottom: 8px; 
+            display: none; 
+        }
+        
+        .notes-section { 
+            margin-top: 8px; 
+            border-top: 1px dashed #444; 
+            padding-top: 8px; 
+        }
+        .notes-list { 
+            max-height: 140px; 
+            overflow-y: auto; 
+            font-size: 0.8rem; 
+            margin-bottom: 6px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 4px; 
+        }
+        .note-item { 
+            background: #2c2c2c; 
+            padding: 6px 8px; 
+            border-radius: 6px; 
+            border-left: 3px solid var(--notes-color); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start; 
+            gap: 6px; 
+        }
+        .note-text { 
+            color: #e0e0e0; 
+            word-break: break-word; 
+            flex-grow: 1; 
+        }
+        .note-delete-btn { 
+            background: transparent; 
+            color: #888; 
+            border: none; 
+            cursor: pointer; 
+            font-size: 0.8rem; 
+            padding: 0 4px; 
+            width: auto; 
+            margin: 0; 
+        }
+        .note-delete-btn:hover { color: var(--alert); }
+        
+        .note-input-container { display: flex; gap: 5px; }
+        .note-input-container input { 
+            flex-grow: 1; 
+            margin: 0; 
+            font-size: 0.8rem; 
+            padding: 6px 8px; 
+        }
+        .note-input-container button { 
+            width: auto; 
+            margin: 0; 
+            padding: 6px 12px; 
+            font-size: 0.8rem; 
+            background: var(--notes-color); 
+            color: #000; 
+            font-weight: bold; 
+        }
+        
+        .mesa-actions { display: flex; gap: 6px; margin-top: 8px; }
+        
+        button { 
+            background-color: var(--accent); 
+            color: white; 
+            border: none; 
+            padding: 8px 12px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 0.85rem; 
+            width: 100%; 
+        }
+        button.btn-sec { background-color: #444; }
+        button.btn-danger { background-color: #c62828; }
+        button:hover { opacity: 0.9; }
+        
+        input, select { 
+            background: #2c2c2c; 
+            border: 1px solid #555; 
+            color: white; 
+            padding: 8px; 
+            border-radius: 6px; 
+            width: 100%; 
+            box-sizing: border-box; 
+            margin-bottom: 8px; 
+            font-size: 0.85rem; 
+        }
+        label { 
+            font-size: 0.75rem; 
+            color: #aaa; 
+            margin-bottom: 2px; 
+            display: block; 
+        }
+        
+        .modal { 
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0,0,0,0.85); 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 1000; 
+            padding: 10px; 
+            box-sizing: border-box; 
+        }
+        .modal-content { 
+            background: var(--card-bg); 
+            padding: 15px; 
+            border-radius: 10px; 
+            width: 100%; 
+            max-width: 400px; 
+            border: 1px solid #444; 
+        }
+        .modal-content h3 { margin-top: 0; font-size: 1.1rem; color: var(--accent); }
+        .modal-actions { display: flex; gap: 8px; margin-top: 10px; }
+        
+        .tab-menu { 
+            display: flex; 
+            gap: 6px; 
+            margin-bottom: 12px; 
+            width: 100%; 
+            max-width: 600px; 
+        }
+        .tab-btn { 
+            background: #222; 
+            color: #888; 
+            border: 1px solid #333; 
+            border-radius: 6px; 
+            padding: 6px; 
+            font-size: 0.8rem; 
+        }
+        .tab-btn.active { 
+            background: var(--accent); 
+            color: #fff; 
+            font-weight: bold; 
+        }
+        
+        #toast { 
+            position: fixed; 
+            bottom: 20px; 
+            background: rgba(0,0,0,0.85); 
+            border: 1px solid #555; 
+            color: #fff; 
+            padding: 8px 16px; 
+            border-radius: 20px; 
+            font-size: 0.8rem; 
+            display: none; 
+            z-index: 2000; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3); 
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-container">
+        <div class="logo-cultivo">🌿</div>
+        <h1>Cultivo Bela 2.0</h1>
+    </div>
+
+    <div class="top-controls">
+        <div class="user-bar">
+            <span>Usuario: <strong id="current-user-display" style="color:#fff;">-</strong></span>
+            <div style="display:flex; gap:6px;">
+                <button id="btn-login-header" class="btn-sec" style="width:auto; padding:6px 12px; font-size:0.8rem;" onclick="abrirLogin()">Ingresar</button>
+                <button id="btn-logout-header" class="btn-danger" style="width:auto; padding:6px 12px; font-size:0.8rem; display:none;" onclick="logout()">Salir</button>
+            </div>
+        </div>
+
+        <div class="quick-access">
+            <div class="quick-access-title">⚡ Acceso Rápido</div>
+            <div class="quick-grid">
+                <button type="button" class="quick-btn sales" onclick="togglePanel('panel-sales')">
+                    <span>🧪 Sales</span>
+                    <span class="sub">Calculadora y tabla</span>
+                </button>
+                <button type="button" class="quick-btn notes" onclick="togglePanel('panel-notes')">
+                    <span>📝 Notas Generales</span>
+                    <span class="sub">Apuntes y recordatorios</span>
+                </button>
+                <button type="button" class="quick-btn vegeta" onclick="togglePanel('panel-vegeta')">
+                    <span>🌱 Vegetativo</span>
+                    <span class="sub">Esquejes y madres</span>
+                </button>
+                <button type="button" class="quick-btn report" onclick="generarReporteGeneral()">
+                    <span>📋 Reporte</span>
+                    <span class="sub">Copiar resumen completo</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="panel-sales" class="panel-open">
+            <div class="sales-panel">
+                <div class="sales-title">🧪 Calculadora de Sales</div>
+                
+                <div class="sales-controls">
+                    <label for="sales-litros-input">Litros de agua:</label>
+                    <input type="number" id="sales-litros-input" class="sales-litros" value="100" min="1" step="1" oninput="calcularSales()">
+                </div>
+
+                <div class="sales-scroll">
+                    <table class="sales-table">
+                        <thead>
+                            <tr>
+                                <th>Nutriente</th>
+                                <th>Flora 1</th>
+                                <th>Flora 2</th>
+                                <th>Flora 3</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Base</td>
+                                <td id="cell-base-f1"><span class="gramos">120 g</span><span class="por-litro">(1.2 g/L)</span></td>
+                                <td id="cell-base-f2"><span class="gramos">100 g</span><span class="por-litro">(1.0 g/L)</span></td>
+                                <td id="cell-base-f3"><span class="gramos">80 g</span><span class="por-litro">(0.8 g/L)</span></td>
+                            </tr>
+                            <tr>
+                                <td>Sulfato</td>
+                                <td id="cell-sulf-f1"><span class="gramos">60 g</span><span class="por-litro">(0.6 g/L)</span></td>
+                                <td id="cell-sulf-f2"><span class="gramos">60 g</span><span class="por-litro">(0.6 g/L)</span></td>
+                                <td id="cell-sulf-f3"><span class="gramos">60 g</span><span class="por-litro">(0.6 g/L)</span></td>
+                            </tr>
+                            <tr>
+                                <td>Nitrato</td>
+                                <td id="cell-nitr-f1"><span class="gramos">80 g</span><span class="por-litro">(0.8 g/L)</span></td>
+                                <td id="cell-nitr-f2"><span class="gramos">60 g</span><span class="por-litro">(0.6 g/L)</span></td>
+                                <td id="cell-nitr-f3"><span class="gramos">40 g</span><span class="por-litro">(0.4 g/L)</span></td>
+                            </tr>
+                            <tr>
+                                <td>MKP</td>
+                                <td id="cell-mkp-f1"><span class="gramos">0 g</span><span class="por-litro">(0.0 g/L)</span></td>
+                                <td id="cell-mkp-f2"><span class="gramos">60 g</span><span class="por-litro">(0.6 g/L)</span></td>
+                                <td id="cell-mkp-f3"><span class="gramos">60 g</span><span class="por-litro">(0.6 g/L)</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="sales-alert-box">
+                    <strong>⚠️ Regla importante:</strong><br>
+                    Diluir el <strong>MKP aparte</strong> y agregar primero que las otras sales.
+                </div>
+
+                <div class="sales-note-edit">
+                    <label for="sales-custom-notes" style="color: #ffb74d; font-weight: bold;">Notas / Instrucciones adicionales:</label>
+                    <textarea id="sales-custom-notes" placeholder="Escribe notas adicionales sobre la preparación del agua..." onchange="guardarNotasSales()"></textarea>
+                    <div class="sales-note-actions">
+                        <button type="button" class="btn-sec" onclick="guardarNotasSales()">Guardar Nota</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="panel-notes" class="panel-open">
+            <div class="mesa-card" style="margin: 0 auto;">
+                <div class="mesa-header">
+                    <h2>📝 Notas Generales</h2>
+                    <span class="status-badge" style="background:#ff9800; color:#000;">Global</span>
+                </div>
+                <textarea id="nota-general-input" style="width:100%; min-height:90px; background:#222; color:#fff; border:1px solid #555; border-radius:6px; padding:8px; box-sizing:border-box; resize:vertical; font-family:inherit; font-size:0.85rem;" placeholder="Escribe recordatorios, tareas pendientes o notas generales del cultivo..."></textarea>
+                <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:6px;">
+                    <button class="btn-sec" style="width:auto; padding:6px 14px;" onclick="guardarNotaGeneral()">Guardar</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="panel-vegeta" class="panel-open">
+            <div class="mesa-card" style="margin: 0 auto;">
+                <div class="mesa-header">
+                    <h2>🌱 Vegetativo</h2>
+                    <span class="status-badge" style="background:#43a047; color:#fff;">Plantel</span>
+                </div>
+                <textarea id="nota-vegetativo-input" style="width:100%; min-height:90px; background:#222; color:#fff; border:1px solid #555; border-radius:6px; padding:8px; box-sizing:border-box; resize:vertical; font-family:inherit; font-size:0.85rem;" placeholder="Anota estado de esquejes, madres, podas, riegos y fertilización de vege..."></textarea>
+                <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:6px;">
+                    <button class="btn-sec" style="width:auto; padding:6px 14px;" onclick="guardarNotaVegetativo()">Guardar</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-menu">
+            <button id="btn-tab-activas" class="tab-btn active" onclick="cambiarTab('activas')">Floración Activa</button>
+            <button id="btn-tab-todas" class="tab-btn" onclick="cambiarTab('todas')">Todas las Mesas</button>
+        </div>
+    </div>
+
+    <div id="mesas-container" style="width: 100%; display: flex; flex-direction: column; align-items: center;"></div>
+
+    <div id="modal-editar" class="modal">
+        <div class="modal-content">
+            <h3>Configurar Mesa <span id="modal-mesa-num"></span></h3>
+            <input type="hidden" id="edit-id">
+            
+            <label>Variedad / Genética</label>
+            <input type="text" id="edit-variedad" placeholder="Ej: Gorilla Glue">
+            
+            <label>Fecha Inicio Floración</label>
+            <input type="date" id="edit-fecha-inicio">
+            
+            <label>Días Estimados de Floración</label>
+            <input type="number" id="edit-dias-flora" placeholder="60">
+            
+            <label>Días de Lavado previo</label>
+            <input type="number" id="edit-dias-lavado" placeholder="10">
+
+            <div class="modal-actions">
+                <button class="btn-sec" onclick="cerrarModal()">Cancelar</button>
+                <button onclick="guardarCambiosMesa()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-login" class="modal">
+        <div class="modal-content" style="max-width:320px;">
+            <h3>Ingreso de Usuario</h3>
+            <label>Usuario</label>
+            <input type="text" id="login-user" placeholder="benja / pablito / elo" autocomplete="username">
+            <label>Contraseña</label>
+            <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+            <div id="login-error" style="color:var(--alert); font-size:0.8rem; margin-bottom:8px; display:none;"></div>
+            <div class="modal-actions">
+                <button class="btn-sec" onclick="cerrarLogin()">Cerrar</button>
+                <button onclick="doLogin()">Ingresar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            databaseURL: "https://cultivo-oficina-default-rtdb.firebaseio.com/"
+        };
+
+        let app, db;
+        let firebaseIniciado = false;
+        let remoteListenerActive = false;
+
+        async function iniciarFirebase() {
+            if (firebaseIniciado) return true;
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getDatabase(app);
+                firebaseIniciado = true;
+                return true;
+            } catch (e) {
+                console.warn('No se pudo inicializar Firebase en este entorno:', e);
+                return false;
+            }
+        }
+
+        window.dbModuleRef = (path) => ref(db, path);
+        window.firebaseSet = (r, val) => set(r, val);
+        window.firebaseGet = (r) => get(r);
+        window.firebaseOnValue = (r, cb) => onValue(r, cb);
+        window.iniciarFirebase = iniciarFirebase;
+    </script>
+
+    <script>
+        const STORAGE_KEY = 'cultivo_mesas_v2';
+        const NOTAS_SALES_KEY = 'cultivo_sales_notes_v1';
+        const NOTA_GENERAL_KEY = 'cultivo_nota_general_v1';
+        const NOTA_VEGETATIVO_KEY = 'cultivo_nota_vegetativo_v1';
+        let mesas = [];
+        let tabActual = 'activas';
+        let notasSalesTexto = '';
+
+        function togglePanel(panelId) {
+            const panel = document.getElementById(panelId);
+            if (!panel) return;
+            const estabaAbierto = panel.classList.contains('visible');
+            document.querySelectorAll('.panel-open').forEach(p => p.classList.remove('visible'));
+            if (!estabaAbierto) {
+                panel.classList.add('visible');
+                panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        function calcularSales() {
+            const input = document.getElementById('sales-litros-input');
+            let litros = parseFloat(input ? input.value : 100);
+            if (isNaN(litros) || litros <= 0) litros = 1;
+
+            const dosis = {
+                f1: { base: 1.2, sulfato: 0.6, nitrato: 0.8, mkp: 0.0 },
+                f2: { base: 1.0, sulfato: 0.6, nitrato: 0.6, mkp: 0.6 },
+                f3: { base: 0.8, sulfato: 0.6, nitrato: 0.4, mkp: 0.6 }
+            };
+
+            const fmt = (gramosPorLitro) => {
+                const total = (gramosPorLitro * litros).toFixed(1).replace(/\.0$/, '');
+                return `<span class="gramos">${total} g</span><span class="por-litro">(${gramosPorLitro.toFixed(1)} g/L)</span>`;
+            };
+
+            const setHtml = (id, val) => { const el = document.getElementById(id); if (el) el.innerHTML = val; };
+
+            setHtml('cell-base-f1', fmt(dosis.f1.base));
+            setHtml('cell-base-f2', fmt(dosis.f2.base));
+            setHtml('cell-base-f3', fmt(dosis.f3.base));
+
+            setHtml('cell-sulf-f1', fmt(dosis.f1.sulfato));
+            setHtml('cell-sulf-f2', fmt(dosis.f2.sulfato));
+            setHtml('cell-sulf-f3', fmt(dosis.f3.sulfato));
+
+            setHtml('cell-nitr-f1', fmt(dosis.f1.nitrato));
+            setHtml('cell-nitr-f2', fmt(dosis.f2.nitrato));
+            setHtml('cell-nitr-f3', fmt(dosis.f3.nitrato));
+
+            setHtml('cell-mkp-f1', fmt(dosis.f1.mkp));
+            setHtml('cell-mkp-f2', fmt(dosis.f2.mkp));
+            setHtml('cell-mkp-f3', fmt(dosis.f3.mkp));
+        }
+
+        function cargarNotasSalesLocal() {
+            notasSalesTexto = localStorage.getItem(NOTAS_SALES_KEY) || '';
+            const textarea = document.getElementById('sales-custom-notes');
+            if (textarea) textarea.value = notasSalesTexto;
+        }
+
+        async function guardarNotasSales() {
+            const textarea = document.getElementById('sales-custom-notes');
+            if (!textarea) return;
+            notasSalesTexto = textarea.value;
+            localStorage.setItem(NOTAS_SALES_KEY, notasSalesTexto);
+
+            try {
+                const ok = await window.iniciarFirebase();
+                if (ok && window.dbModuleRef && window.firebaseSet) {
+                    await window.firebaseSet(window.dbModuleRef('cultivoOficina/notasSales'), notasSalesTexto);
+                }
+            } catch (e) {
+                console.warn('No se pudo guardar notas de sales en Firebase:', e);
+            }
+            showToast('Nota de sales guardada');
+        }
+
+        function inicializarMesas() {
+            const guardadas = localStorage.getItem(STORAGE_KEY);
+            if (guardadas) {
+                try {
+                    mesas = JSON.parse(guardadas);
+                    mesas.forEach(m => { if (!m.notas) m.notas = []; });
+                } catch(e) {
+                    mesas = [];
+                }
+            }
+            
+            if (!mesas || mesas.length === 0) {
+                mesas = [];
+                for (let i = 1; i <= 6; i++) {
+                    mesas.push({
+                        id: i,
+                        nombre: `Mesa ${i}`,
+                        variedad: '',
+                        fechaInicio: '',
+                        diasEstimados: 60,
+                        diasLavado: 10,
+                        notas: []
+                    });
+                }
+                guardarMesasLocal();
+            }
+        }
+
+        function guardarMesasLocal() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(mesas));
+        }
+
+        async function guardarEnFirebase() {
+            guardarMesasLocal();
+            try {
+                const ok = await window.iniciarFirebase();
+                if (ok && window.dbModuleRef && window.firebaseSet) {
+                    await window.firebaseSet(window.dbModuleRef('cultivoOficina/mesas'), mesas);
+                    if (notasSalesTexto) {
+                        await window.firebaseSet(window.dbModuleRef('cultivoOficina/notasSales'), notasSalesTexto);
+                    }
+                }
+            } catch(e) {
+                console.warn('Error al sincronizar con Firebase:', e);
+            }
+        }
+
+        async function cargarDeFirebase() {
+            try {
+                const ok = await window.iniciarFirebase();
+                if (!ok) return;
+
+                const snapshot = await window.firebaseGet(window.dbModuleRef('cultivoOficina/mesas'));
+                if (snapshot.exists()) {
+                    mesas = snapshot.val();
+                    mesas.forEach(m => { if (!m.notas) m.notas = []; });
+                    guardarMesasLocal();
+                    renderMesas();
+                }
+
+                const snapSales = await window.firebaseGet(window.dbModuleRef('cultivoOficina/notasSales'));
+                if (snapSales.exists()) {
+                    notasSalesTexto = snapSales.val() || '';
+                    localStorage.setItem(NOTAS_SALES_KEY, notasSalesTexto);
+                    const textarea = document.getElementById('sales-custom-notes');
+                    if (textarea) textarea.value = notasSalesTexto;
+                }
+
+                const snapGeneral = await window.firebaseGet(window.dbModuleRef('cultivoOficina/notaGeneral'));
+                if (snapGeneral.exists()) {
+                    const val = snapGeneral.val() || '';
+                    localStorage.setItem(NOTA_GENERAL_KEY, val);
+                    const t = document.getElementById('nota-general-input');
+                    if (t) t.value = val;
+                }
+
+                const snapVegeta = await window.firebaseGet(window.dbModuleRef('cultivoOficina/notaVegetativo'));
+                if (snapVegeta.exists()) {
+                    const val = snapVegeta.val() || '';
+                    localStorage.setItem(NOTA_VEGETATIVO_KEY, val);
+                    const t = document.getElementById('nota-vegetativo-input');
+                    if (t) t.value = val;
+                }
+
+                if (!window.remoteListenerActive && window.firebaseOnValue) {
+                    window.remoteListenerActive = true;
+                    window.firebaseOnValue(window.dbModuleRef('cultivoOficina/mesas'), (snap) => {
+                        if (snap.exists()) {
+                            mesas = snap.val();
+                            mesas.forEach(m => { if (!m.notas) m.notas = []; });
+                            guardarMesasLocal();
+                            renderMesas();
+                        }
+                    });
+                }
+            } catch(e) {
+                console.warn('No se pudo descargar datos de Firebase:', e);
+            }
+        }
+
+        function parseFechaLocal(fechaStr) {
+            if (!fechaStr) return null;
+            const [y, m, d] = fechaStr.split('-').map(Number);
+            return new Date(y, m - 1, d);
+        }
+
+        function calcularDatosMesa(mesa) {
+            if (!mesa.fechaInicio) return null;
+            
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+            
+            const inicio = parseFechaLocal(mesa.fechaInicio);
+            if (!inicio) return null;
+            
+            const diffTime = hoy - inicio;
+            const diasFlora = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            
+            const diasEstimados = parseInt(mesa.diasEstimados) || 60;
+            const diasLavado = parseInt(mesa.diasLavado) || 10;
+            const diasRestantes = diasEstimados - diasFlora;
+            
+            const fechaCorte = new Date(inicio);
+            fechaCorte.setDate(fechaCorte.getDate() + diasEstimados - 1);
+            
+            const fechaLavado = new Date(fechaCorte);
+            fechaLavado.setDate(fechaLavado.getDate() - diasLavado);
+            
+            const enLavado = diasFlora >= (diasEstimados - diasLavado);
+            const porcentaje = Math.min(Math.max((diasFlora / diasEstimados) * 100, 0), 100);
+
+            return {
+                diasFlora: diasFlora > 0 ? diasFlora : 0,
+                diasRestantes,
+                fechaCorte: fechaCorte.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' }),
+                fechaLavado: fechaLavado.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' }),
+                enLavado,
+                porcentaje: porcentaje.toFixed(1)
+            };
+        }
+
+        function renderMesas() {
+            const container = document.getElementById('mesas-container');
+            container.innerHTML = '';
+
+            const mesasFiltradas = mesas.filter(m => {
+                if (tabActual === 'activas') return !!m.fechaInicio;
+                return true;
+            });
+
+            if (mesasFiltradas.length === 0) {
+                container.innerHTML = `<div style="text-align:center; color:#777; margin-top:30px; font-size:0.9rem;">No hay mesas ${tabActual === 'activas' ? 'en floración activa' : 'configuradas'}.</div>`;
+                return;
+            }
+
+            mesasFiltradas.forEach(mesa => {
+                const datos = calcularDatosMesa(mesa);
+                const card = document.createElement('div');
+                card.className = 'mesa-card';
+
+                let cuerpoHtml = '';
+
+                if (datos) {
+                    cuerpoHtml = `
+                        <div class="timer-container">
+                            <div class="dias-flora">Día ${datos.diasFlora}</div>
+                            <div class="dias-restantes">${datos.diasRestantes >= 0 ? `Faltan ${datos.diasRestantes} días para el corte` : `Pasada por ${Math.abs(datos.diasRestantes)} días`}</div>
+                        </div>
+
+                        <div class="progress-bar-container">
+                            <div class="progress-bar ${datos.enLavado ? 'warning' : ''}" style="width: ${datos.porcentaje}%;"></div>
+                        </div>
+
+                        ${datos.enLavado ? `<div class="lavado-box" style="display:block;">⚠️ ¡INICIAR LAVADO DE RAÍCES! (Desde: ${datos.fechaLavado})</div>` : ''}
+
+                        <div class="info-grid">
+                            <div><strong>Inicio:</strong> ${mesa.fechaInicio.split('-').reverse().slice(0,2).join('/')}</div>
+                            <div><strong>Corte Est.:</strong> ${datos.fechaCorte}</div>
+                            <div><strong>Genética:</strong> ${mesa.variedad || 'Sin esp.'}</div>
+                            <div><strong>Lavado:</strong> ${mesa.diasLavado || 10} días antes</div>
+                        </div>
+                    `;
+                } else {
+                    cuerpoHtml = `
+                        <div style="text-align:center; padding: 20px 0; color: #777; font-size:0.85rem;">
+                            Mesa vacía o en mantenimiento.<br>Configura una fecha para iniciar el ciclo.
+                        </div>
+                    `;
+                }
+
+                let notasHtml = '';
+                if (mesa.notas && mesa.notas.length > 0) {
+                    notasHtml = mesa.notas.map((n, index) => {
+                        const texto = typeof n === 'string' ? n : n.texto;
+                        return `
+                            <div class="note-item">
+                                <span class="note-text">${texto}</span>
+                                <button class="note-delete-btn" onclick="eliminarNota(${mesa.id}, ${index})">✕</button>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    notasHtml = `<div style="color:#666; font-size:0.75rem; font-style:italic;">Sin notas registradas.</div>`;
+                }
+
+                card.innerHTML = `
+                    <div class="mesa-header">
+                        <h2>${mesa.nombre} ${mesa.variedad ? `- ${mesa.variedad}` : ''}</h2>
+                        <span class="status-badge ${mesa.fechaInicio ? 'status-flora' : 'status-corte'}">
+                            ${mesa.fechaInicio ? 'En Flora' : 'Inactiva'}
+                        </span>
+                    </div>
+
+                    ${cuerpoHtml}
+
+                    <div class="notes-section">
+                        <div style="font-size:0.75rem; color:#aaa; font-weight:bold; margin-bottom:4px;">Notas y Tareas:</div>
+                        <div class="notes-list">${notasHtml}</div>
+                        <div class="note-input-container">
+                            <input type="text" id="input-nota-${mesa.id}" placeholder="Escribir nota..." onkeypress="handleNotaKeyPress(event, ${mesa.id})">
+                            <button onclick="agregarNota(${mesa.id})">Añadir</button>
+                        </div>
+                    </div>
+
+                    <div class="mesa-actions">
+                        <button class="btn-sec" onclick="abrirModal(${mesa.id})">⚙️ Configurar</button>
+                        ${mesa.fechaInicio ? `<button class="btn-sec" style="background:#553c10; color:#ffcc80;" onclick="copiarReporteMesa(${mesa.id})">📋 Copiar</button>` : ''}
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        function cambiarTab(tab) {
+            tabActual = tab;
+            document.getElementById('btn-tab-activas').className = `tab-btn ${tab === 'activas' ? 'active' : ''}`;
+            document.getElementById('btn-tab-todas').className = `tab-btn ${tab === 'todas' ? 'active' : ''}`;
+            renderMesas();
+        }
+
+        function abrirModal(id) {
+            const mesa = mesas.find(m => m.id === id);
+            if (!mesa) return;
+
+            document.getElementById('edit-id').value = mesa.id;
+            document.getElementById('modal-mesa-num').innerText = mesa.id;
+            document.getElementById('edit-variedad').value = mesa.variedad || '';
+            document.getElementById('edit-fecha-inicio').value = mesa.fechaInicio || '';
+            document.getElementById('edit-dias-flora').value = mesa.diasEstimados || 60;
+            document.getElementById('edit-dias-lavado').value = mesa.diasLavado || 10;
+
+            document.getElementById('modal-editar').style.display = 'flex';
+        }
+
+        function cerrarModal() {
+            document.getElementById('modal-editar').style.display = 'none';
+        }
+
+        async function guardarCambiosMesa() {
+            const id = parseInt(document.getElementById('edit-id').value);
+            const mesa = mesas.find(m => m.id === id);
+            if (!mesa) return;
+
+            mesa.variedad = document.getElementById('edit-variedad').value.trim();
+            mesa.fechaInicio = document.getElementById('edit-fecha-inicio').value;
+            mesa.diasEstimados = parseInt(document.getElementById('edit-dias-flora').value) || 60;
+            mesa.diasLavado = parseInt(document.getElementById('edit-dias-lavado').value) || 10;
+
+            cerrarModal();
+            renderMesas();
+            await guardarEnFirebase();
+            showToast(`Mesa ${id} actualizada`);
+        }
+
+        function handleNotaKeyPress(e, mesaId) {
+            if (e.key === 'Enter') {
+                agregarNota(mesaId);
+            }
+        }
+
+        async function agregarNota(mesaId) {
+            const input = document.getElementById(`input-nota-${mesaId}`);
+            const texto = input.value.trim();
+            if (!texto) return;
+
+            const mesa = mesas.find(m => m.id === mesaId);
+            if (!mesa) return;
+
+            if (!mesa.notas) mesa.notas = [];
+            mesa.notas.push({
+                texto: texto
+            });
+
+            input.value = '';
+            renderMesas();
+            await guardarEnFirebase();
+            showToast('Nota añadida');
+        }
+
+        async function eliminarNota(mesaId, noteIndex) {
+            const mesa = mesas.find(m => m.id === mesaId);
+            if (!mesa || !mesa.notas) return;
+
+            mesa.notas.splice(noteIndex, 1);
+            renderMesas();
+            await guardarEnFirebase();
+            showToast('Nota eliminada');
+        }
+
+        function copiarReporteMesa(mesaId) {
+            const mesa = mesas.find(m => m.id === mesaId);
+            if (!mesa) return;
+
+            const d = calcularDatosMesa(mesa);
+            if (!d) return;
+
+            let texto = `🌿 *REPORTE ${mesa.nombre.toUpperCase()}*\n`;
+            texto += `🌱 Variedad: ${mesa.variedad || 'N/A'}\n`;
+            texto += `⏱️ Estado: Día ${d.diasFlora} de flora\n`;
+            texto += `📅 Corte Estimado: ${d.fechaCorte} (${d.diasRestantes >= 0 ? `quedan ${d.diasRestantes}d` : 'cumplido'})\n`;
+            texto += `🚿 Lavado de raíces: ${d.enLavado ? '¡EN PROCESO/URGENTE!' : `desde el ${d.fechaLavado}`}\n`;
+            
+            if (mesa.notas && mesa.notas.length > 0) {
+                texto += `📝 *Notas:*\n`;
+                mesa.notas.forEach(n => {
+                    const txt = typeof n === 'string' ? n : n.texto;
+                    texto += ` - ${txt}\n`;
+                });
+            }
+
+            copiarAlPortapapeles(texto, `Reporte de Mesa ${mesa.id} copiado`);
+        }
+
+        function generarReporteGeneral() {
+            let texto = `🌿 *ESTADO GENERAL DEL CULTIVO - OFICINA*\n`;
+            texto += `📅 Fecha: ${new Date().toLocaleDateString('es-AR')}\n\n`;
+
+            const activas = mesas.filter(m => !!m.fechaInicio);
+            if (activas.length === 0) {
+                texto += `No hay mesas activas actualmente.\n`;
+            } else {
+                activas.forEach(m => {
+                    const d = calcularDatosMesa(m);
+                    texto += `🔹 *${m.nombre}* (${m.variedad || 'S/E'}): *Día ${d.diasFlora}* | Faltan: ${d.diasRestantes}d | Corte: ${d.fechaCorte} ${d.enLavado ? '⚠️ LAVADO' : ''}\n`;
+                    if (m.notas && m.notas.length > 0) {
+                        m.notas.forEach(n => {
+                            const txt = typeof n === 'string' ? n : n.texto;
+                            texto += `   └ 📝 ${txt}\n`;
+                        });
+                    }
+                });
+            }
+
+            const notaGen = localStorage.getItem(NOTA_GENERAL_KEY) || '';
+            if (notaGen.trim()) {
+                texto += `\n📝 *Notas Generales:*\n${notaGen.trim()}\n`;
+            }
+
+            const notaVeg = localStorage.getItem(NOTA_VEGETATIVO_KEY) || '';
+            if (notaVeg.trim()) {
+                texto += `\n🌱 *Vegetativo:*\n${notaVeg.trim()}\n`;
+            }
+
+            if (notasSalesTexto.trim()) {
+                texto += `\n🧪 *Notas de Sales / Agua:*\n${notasSalesTexto.trim()}\n`;
+            }
+
+            copiarAlPortapapeles(texto, 'Reporte general copiado');
+        }
+
+        function copiarAlPortapapeles(texto, mensajeOk) {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(texto).then(() => {
+                    showToast(mensajeOk);
+                }).catch(() => {
+                    fallbackCopiar(texto, mensajeOk);
+                });
+            } else {
+                fallbackCopiar(texto, mensajeOk);
+            }
+        }
+
+        function fallbackCopiar(texto, mensajeOk) {
+            const textArea = document.createElement("textarea");
+            textArea.value = texto;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-999999px";
+            textArea.style.top = "-999999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showToast(mensajeOk);
+            } catch (err) {
+                alert('No se pudo copiar automáticamente.');
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function showToast(mensaje) {
+            const toast = document.getElementById('toast');
+            toast.innerText = mensaje;
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 2500);
+        }
+
+        function cargarCopiasLocalesNotas() {
+            const general = localStorage.getItem(NOTA_GENERAL_KEY) || '';
+            const gEl = document.getElementById('nota-general-input');
+            if (gEl) gEl.value = general;
+
+            const vege = localStorage.getItem(NOTA_VEGETATIVO_KEY) || '';
+            const vEl = document.getElementById('nota-vegetativo-input');
+            if (vEl) vEl.value = vege;
+        }
+
+        async function guardarCopiaLocalNotasGenerales(texto) {
+            localStorage.setItem(NOTA_GENERAL_KEY, texto);
+            try {
+                const ok = await window.iniciarFirebase();
+                if (ok && window.dbModuleRef && window.firebaseSet) {
+                    await window.firebaseSet(window.dbModuleRef('cultivoOficina/notaGeneral'), texto);
+                }
+            } catch (e) {
+                console.warn('Error al guardar nota general:', e);
+            }
+            showToast('Nota general guardada');
+        }
+
+        async function guardarNotaVegetativo() {
+            const valor = document.getElementById('nota-vegetativo-input')?.value || '';
+            localStorage.setItem(NOTA_VEGETATIVO_KEY, valor);
+            try {
+                const ok = await window.iniciarFirebase();
+                if (ok && window.dbModuleRef && window.firebaseSet) {
+                    await window.firebaseSet(window.dbModuleRef('cultivoOficina/notaVegetativo'), valor);
+                }
+            } catch (e) {
+                console.warn('Error al guardar nota vegetativo:', e);
+            }
+            showToast('Nota de vegetativo guardada');
+        }
+
+        async function guardarNotaGeneral() {
+            const valor = document.getElementById('nota-general-input')?.value || '';
+            guardarCopiaLocalNotasGenerales(valor);
+        }
+
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
+
+        const AUTH_STORAGE_KEY = 'cultivo_user_v1';
+        
+        function abrirLogin() {
+            document.getElementById('modal-login').style.display = 'flex';
+            document.getElementById('login-user').value = '';
+            document.getElementById('login-pass').value = '';
+            document.getElementById('login-error').style.display = 'none';
+        }
+        function cerrarLogin() {
+            document.getElementById('modal-login').style.display = 'none';
+        }
+        function getSessionUser() {
+            try {
+                const s = JSON.parse(localStorage.getItem(AUTH_STORAGE_KEY) || 'null');
+                return s && s.user ? s.user : null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function compararCredencial(valGuardado, passPlano, passHash) {
+            if (valGuardado === undefined || valGuardado === null) return false;
+            if (typeof valGuardado === 'string' || typeof valGuardado === 'number') {
+                const s = String(valGuardado).trim();
+                return s === passPlano || s === passHash;
+            }
+            if (typeof valGuardado === 'object') {
+                const p = valGuardado.password || valGuardado.pass || valGuardado.clave || valGuardado.passHash || valGuardado.hash;
+                if (p !== undefined && p !== null) {
+                    const s = String(p).trim();
+                    return s === passPlano || s === passHash;
+                }
+            }
+            return false;
+        }
+
+        async function verificarUsuarioEnFirebase(user, pass) {
+            const conectado = await iniciarFirebase();
+            if (!conectado) throw new Error('No se pudo conectar con Firebase.');
+            const passHash = await sha256(pass);
+            
+            // 1. Probar rutas directas por usuario
+            const rutasDirectas = [
+                `usuarios/${user}`,
+                `users/${user}`,
+                `cultivoOficina/usuarios/${user}`,
+                `cultivoOficina/users/${user}`
+            ];
+            for (const ruta of rutasDirectas) {
+                try {
+                    const snap = await firebaseGet(dbModuleRef(ruta));
+                    if (snap.exists()) {
+                        if (compararCredencial(snap.val(), pass, passHash)) return true;
+                    }
+                } catch (e) {
+                    console.warn(`Consulta a ${ruta}:`, e);
+                }
+            }
+
+            // 2. Probar nodos de colección (usuarios / users)
+            const nodosColeccion = ['usuarios', 'users', 'cultivoOficina/usuarios', 'cultivoOficina/users'];
+            for (const nodo of nodosColeccion) {
+                try {
+                    const snap = await firebaseGet(dbModuleRef(nodo));
+                    if (snap.exists()) {
+                        const lista = snap.val();
+                        if (lista && typeof lista === 'object') {
+                            for (const key of Object.keys(lista)) {
+                                if (key.toLowerCase() === user.toLowerCase()) {
+                                    if (compararCredencial(lista[key], pass, passHash)) return true;
+                                }
+                            }
+                            if (Array.isArray(lista)) {
+                                for (const item of lista) {
+                                    if (item && typeof item === 'object') {
+                                        const u = (item.usuario || item.user || item.nombre || '').toLowerCase();
+                                        if (u === user.toLowerCase()) {
+                                            if (compararCredencial(item, pass, passHash)) return true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.warn(`Consulta a ${nodo}:`, e);
+                }
+            }
+
+            return false;
+        }
+
+        async function doLogin() {
+          const user = document.getElementById('login-user').value.trim().toLowerCase();
+          const pass = document.getElementById('login-pass').value || '';
+          const errEl = document.getElementById('login-error');
+          errEl.style.display = 'none';
+          if (!user || !pass) {
+              errEl.innerText = 'Completar usuario y contraseña';
+              errEl.style.display = 'block';
+              return;
+          }
+          
+          const submitBtn = document.querySelector('#modal-login button[onclick="doLogin()"]');
+          const originalText = submitBtn ? submitBtn.innerText : 'Ingresar';
+          if (submitBtn) { submitBtn.innerText = 'Verificando...'; submitBtn.disabled = true; }
+
+          try {
+            const esValido = await verificarUsuarioEnFirebase(user, pass);
+            if (esValido) {
+                localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ user, ts: Date.now() }));
+                cerrarLogin();
+                afterLogin();
+            } else {
+                errEl.innerText = 'Usuario o contraseña incorrectos';
+                errEl.style.display = 'block';
+            }
+          } catch (e) {
+            console.error('Error al verificar login:', e);
+            errEl.innerText = 'Error al conectar con la base de datos de usuarios.';
+            errEl.style.display = 'block';
+          } finally {
+            if (submitBtn) { submitBtn.innerText = originalText; submitBtn.disabled = false; }
+          }
+        }
+
+        function logout() {
+            localStorage.removeItem(AUTH_STORAGE_KEY);
+            location.reload();
+        }
+
+        async function afterLogin() {
+          const u = getSessionUser();
+          const disp = document.getElementById('current-user-display');
+          const btnIn = document.getElementById('btn-login-header');
+          const btnOut = document.getElementById('btn-logout-header');
+          if (u) {
+            if (disp) disp.innerText = u.toUpperCase();
+            if (btnIn) btnIn.style.display = 'none';
+            if (btnOut) btnOut.style.display = 'inline-block';
+          } else {
+            if (disp) disp.innerText = 'Invitado (Solo lectura)';
+            if (btnIn) btnIn.style.display = 'inline-block';
+            if (btnOut) btnOut.style.display = 'none';
+          }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            inicializarMesas();
+            calcularSales();
+            cargarNotasSalesLocal();
+            cargarCopiasLocalesNotas();
+            renderMesas();
+            afterLogin();
+            await cargarDeFirebase();
+        });
+    </script>
+</body>
+</html>
