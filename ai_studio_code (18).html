@@ -1,0 +1,1630 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ciclo Cultivo Oficina</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#121212">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --accent-color: #4CAF50;
+            --border-color: #333333;
+            --input-bg: #2d2d2d;
+            --input-border: #444444;
+            --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --success-color: #4ade80;
+            --danger-color: #ff5252;
+            --warning-color: #fbbf24;
+            --info-color: #38bdf8;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --transition-speed: 0.2s;
+        }
+
+        * {
+            box-sizing: border-box;
+            touch-action: manipulation;
+        }
+
+        body {
+            font-family: var(--font-stack);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 100vh;
+        }
+
+        .header-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 10px;
+            margin-bottom: 8px;
+            text-align: center;
+            justify-content: center;
+        }
+
+        .logo-cultivo {
+            font-size: 2.2rem;
+            line-height: 1;
+            filter: drop-shadow(0 0 8px rgba(74, 222, 128, 0.4));
+        }
+
+        h1 {
+            font-size: 1.4rem;
+            color: var(--accent-color);
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 800;
+        }
+
+        .top-controls {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 12px;
+        }
+
+        .user-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #1e1e1e;
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1px solid #333;
+            font-size: 0.8rem;
+        }
+
+        .user-badge {
+            color: var(--success-color);
+            font-weight: bold;
+        }
+
+        .btn-logout {
+            background: transparent;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            padding: 2px 5px;
+            font-size: 0.75rem;
+            border-radius: 4px;
+        }
+        .btn-logout:hover { color: #fff; background: #333; }
+
+        .quick-access {
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 15px;
+            background: #181818;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 10px;
+        }
+
+        .quick-access-title {
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #9ca3af;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .quick-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .quick-btn {
+            border: none;
+            border-radius: 10px;
+            padding: 10px 8px;
+            font-size: 0.82rem;
+            font-weight: bold;
+            color: #ffffff;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            min-height: 48px;
+            transition: transform 0.15s ease, opacity 0.15s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .quick-btn:active { transform: scale(0.98); }
+        .quick-btn .sub { font-size: 0.68rem; font-weight: normal; opacity: 0.85; }
+        .quick-btn.sales { background: linear-gradient(135deg, #f57c00, #fb8c00); }
+        .quick-btn.notes { background: linear-gradient(135deg, #1565c0, #1e88e5); }
+        .quick-btn.vegeta { background: linear-gradient(135deg, #2e7d32, #43a047); }
+        .quick-btn.report { background: linear-gradient(135deg, #00796b, #009688); }
+        .quick-btn.advisor { background: linear-gradient(135deg, #059669, #10b981); border: 1px solid #34d399; }
+        .quick-btn.advisor:hover { box-shadow: 0 0 12px rgba(52, 211, 153, 0.4); }
+
+        .app-view {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: fadeInView 0.2s ease-in-out;
+        }
+
+        @keyframes fadeInView {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .advisor-container {
+            width: 100%;
+            max-width: 680px;
+            margin: 0 auto 20px auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-sizing: border-box;
+        }
+
+        .advisor-header-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 14px;
+            padding: 10px 14px;
+            box-sizing: border-box;
+            gap: 10px;
+        }
+
+        .advisor-back-btn {
+            background: #2a2a2a !important;
+            border: 1px solid #444 !important;
+            color: #4ade80 !important;
+            padding: 8px 14px !important;
+            border-radius: 10px !important;
+            cursor: pointer;
+            font-size: 0.85rem !important;
+            font-weight: bold !important;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            width: auto !important;
+            min-height: 36px !important;
+            transition: all 0.2s ease;
+        }
+
+        .advisor-back-btn:hover {
+            background: #333 !important;
+            border-color: #4ade80 !important;
+        }
+
+        .advisor-badge-pill {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid #10b981;
+            color: #34d399;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+
+        .advisor-hero-card {
+            background: linear-gradient(145deg, #1b261e, #141c16);
+            border: 1px solid #1f3f2a;
+            border-radius: 16px;
+            padding: 16px;
+            box-sizing: border-box;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+        }
+
+        .advisor-hero-card h2 {
+            margin: 0 0 6px 0;
+            font-size: 1.15rem;
+            color: #4ade80;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .advisor-hero-card p {
+            margin: 0;
+            font-size: 0.84rem;
+            color: #ccc;
+            line-height: 1.45;
+        }
+
+        .advisor-chips-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .advisor-chip {
+            background: #202b23;
+            border: 1px solid #2e4d36;
+            color: #bbf7d0;
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-size: 0.76rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .advisor-chip:hover {
+            background: #2e4d36;
+            border-color: #4ade80;
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        .advisor-chat-window {
+            background: #181818;
+            border: 1px solid #2d2d2d;
+            border-radius: 16px;
+            padding: 14px;
+            min-height: 380px;
+            max-height: 520px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-sizing: border-box;
+            scroll-behavior: smooth;
+        }
+
+        .chat-msg {
+            display: flex;
+            flex-direction: column;
+            max-width: 88%;
+            border-radius: 14px;
+            padding: 12px 14px;
+            font-size: 0.88rem;
+            line-height: 1.5;
+            box-sizing: border-box;
+            word-break: break-word;
+            animation: fadeInMsg 0.2s ease-out;
+        }
+
+        @keyframes fadeInMsg {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .chat-msg.user {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #065f46, #047857);
+            color: #ffffff;
+            border-bottom-right-radius: 4px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+            border: 1px solid #10b981;
+        }
+
+        .chat-msg.bot {
+            align-self: flex-start;
+            background: #232323;
+            color: #e5e5e5;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+            border: 1px solid #383838;
+        }
+
+        .chat-msg-header {
+            font-size: 0.72rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            opacity: 0.85;
+        }
+
+        .chat-msg.user .chat-msg-header { color: #a7f3d0; }
+        .chat-msg.bot .chat-msg-header { color: #4ade80; }
+
+        .chat-msg-body p { margin: 0 0 6px 0; }
+        .chat-msg-body p:last-child { margin-bottom: 0; }
+        .chat-msg-body ul, .chat-msg-body ol { margin: 4px 0 8px 18px; padding: 0; }
+        .chat-msg-body li { margin-bottom: 3px; }
+        .chat-msg-body strong { color: #4ade80; }
+        .chat-msg.user .chat-msg-body strong { color: #ffffff; }
+
+        .chat-msg-body table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 8px 0;
+            font-size: 0.78rem;
+            background: #1c1c1c;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .chat-msg-body th, .chat-msg-body td {
+            border: 1px solid #444;
+            padding: 5px 8px;
+            text-align: left;
+        }
+
+        .chat-msg-body th {
+            background: #2b2b2b;
+            color: #4ade80;
+        }
+
+        .chat-msg-body code {
+            background: #141414;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #34d399;
+            font-family: monospace;
+            font-size: 0.85em;
+        }
+
+        .typing-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 10px;
+            background: #242424;
+            border-radius: 12px;
+            border: 1px solid #333;
+            width: fit-content;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: #4ade80;
+            border-radius: 50%;
+            animation: pulseDot 1.2s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes pulseDot {
+            0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        .advisor-input-bar {
+            background: #1c1c1c;
+            border: 1px solid #333;
+            border-radius: 16px;
+            padding: 10px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .advisor-textarea {
+            width: 100% !important;
+            margin: 0 !important;
+            background: #262626 !important;
+            border: 1px solid #444 !important;
+            border-radius: 10px !important;
+            color: #fff !important;
+            font-size: 0.88rem !important;
+            padding: 10px 12px !important;
+            min-height: 60px !important;
+            resize: none !important;
+            box-sizing: border-box !important;
+        }
+
+        .advisor-textarea:focus {
+            outline: none !important;
+            border-color: #10b981 !important;
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25) !important;
+        }
+
+        .advisor-btn-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .advisor-send-btn {
+            background: linear-gradient(135deg, #059669, #10b981) !important;
+            color: #ffffff !important;
+            border: none !important;
+            border-radius: 10px !important;
+            padding: 10px 20px !important;
+            font-weight: bold !important;
+            font-size: 0.88rem !important;
+            cursor: pointer !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            width: auto !important;
+            min-height: 38px !important;
+            transition: all 0.2s ease !important;
+            box-shadow: 0 3px 8px rgba(16, 185, 129, 0.3) !important;
+        }
+
+        .advisor-send-btn:hover {
+            opacity: 0.95 !important;
+            transform: translateY(-1px) !important;
+        }
+
+        .advisor-send-btn:disabled {
+            opacity: 0.5 !important;
+            cursor: not-allowed !important;
+            transform: none !important;
+        }
+
+        .advisor-clear-btn {
+            background: #2a2a2a !important;
+            border: 1px solid #444 !important;
+            color: #aaa !important;
+            border-radius: 10px !important;
+            padding: 8px 12px !important;
+            font-size: 0.78rem !important;
+            font-weight: normal !important;
+            cursor: pointer !important;
+            width: auto !important;
+            min-height: 36px !important;
+        }
+
+        .advisor-clear-btn:hover {
+            color: #ff8a80 !important;
+            border-color: #ff8a80 !important;
+        }
+
+        .advisor-quick-guide {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 14px;
+            padding: 12px;
+            box-sizing: border-box;
+        }
+
+        .advisor-guide-toggle {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #4ade80;
+            font-weight: bold;
+            font-size: 0.88rem;
+            user-select: none;
+        }
+
+        .advisor-guide-content {
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: #bbb;
+            line-height: 1.5;
+            display: none;
+        }
+
+        .advisor-guide-content.open { display: block; }
+
+        .panel-open {
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 12px;
+            display: none;
+        }
+
+        .panel-open.show { display: block; }
+
+        .sales-panel {
+            background: #1e1e1e;
+            border: 1px solid #f57c00;
+            border-radius: 12px;
+            padding: 12px;
+            width: 100%;
+        }
+
+        .sales-title {
+            color: #ffb74d;
+            font-size: 0.95rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .sales-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .sales-controls label {
+            font-size: 0.82rem;
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        .sales-litros {
+            width: 90px !important;
+            text-align: center;
+            font-size: 0.95rem !important;
+            font-weight: bold;
+            margin: 0 !important;
+            background: #121212 !important;
+            border: 1px solid #ff9800 !important;
+            color: #ffffff !important;
+            border-radius: 6px;
+            padding: 6px;
+        }
+
+        .sales-scroll {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .sales-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.78rem;
+            background: #121212;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .sales-table th, .sales-table td {
+            border: 1px solid #333333;
+            padding: 6px 4px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .sales-table th {
+            background: #2c2c2c;
+            color: #4dd0e1;
+            font-weight: bold;
+            font-size: 0.72rem;
+        }
+
+        .sales-table td { color: #ffffff; }
+        .sales-table .td-ec { font-weight: bold; color: #ffb74d; }
+        .sales-table .td-grow { color: #81c784; }
+        .sales-table .td-core { color: #ba68c8; }
+        .sales-note {
+            font-size: 0.68rem;
+            color: #9e9e9e;
+            margin-top: 6px;
+            text-align: center;
+            font-style: italic;
+        }
+
+        .panel-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
+
+        .columna-lado {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .columna-header {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 4px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .vegeta-container {
+            width: 100%;
+            max-width: 600px;
+            margin-top: 5px;
+            margin-bottom: 20px;
+        }
+
+        .mesa-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-color);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: transform var(--transition-speed), border-color var(--transition-speed);
+        }
+
+        .mesa-card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .mesa-card.active-flora {
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .mesa-card.vegeta {
+            border-left: 4px solid #81c784;
+            background: linear-gradient(180deg, #1e1e1e 0%, #172418 100%);
+        }
+
+        .mesa-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+            border-bottom: 1px solid #2a2a2a;
+            padding-bottom: 4px;
+        }
+
+        .mesa-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #ffffff;
+        }
+
+        .mesa-status-badge {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            background: #2a2a2a;
+            color: #aaa;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .mesa-status-badge.active {
+            background: rgba(74, 222, 128, 0.15);
+            color: var(--success-color);
+            border: 1px solid rgba(74, 222, 128, 0.3);
+        }
+
+        .metric-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .metric-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .metric-label {
+            font-size: 0.72rem;
+            color: #9ca3af;
+            font-weight: 500;
+        }
+
+        .metric-value {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #f3f4f6;
+            background: #181818;
+            padding: 4px 6px;
+            border-radius: 6px;
+            border: 1px solid #262626;
+            text-align: center;
+        }
+
+        .metric-value.highlight {
+            color: var(--accent-color);
+            border-color: rgba(74, 222, 128, 0.3);
+        }
+
+        .progress-container {
+            width: 100%;
+            background-color: #262626;
+            border-radius: 6px;
+            height: 6px;
+            overflow: hidden;
+            margin: 4px 0;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #16a34a, #4ade80);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-bar.overdue {
+            background: linear-gradient(90deg, #dc2626, #f87171);
+        }
+
+        .btn-edit {
+            background-color: transparent;
+            border: 1px solid #3a3a3a;
+            width: 100%;
+            margin-top: 4px;
+        }
+
+        .btn-edit:hover {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(3px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--border-color);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            border-bottom: 1px solid #2a2a2a;
+            padding-bottom: 10px;
+        }
+
+        .modal-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 0;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        label {
+            font-size: 0.8rem;
+            color: #9ca3af;
+            font-weight: 600;
+        }
+
+        input, select, textarea {
+            background-color: var(--input-bg);
+            border: 1px solid var(--input-border);
+            color: #ffffff;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            transition: border-color var(--transition-speed);
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-actions button {
+            flex: 1;
+        }
+
+        .bottom-controls {
+            width: 100%;
+            max-width: 600px;
+            margin-top: 10px;
+            margin-bottom: 30px;
+        }
+
+        .report-btn-main {
+            width: 100%;
+            background: linear-gradient(135deg, #00796b, #009688);
+            color: white;
+            font-size: 0.95rem;
+            font-weight: bold;
+            padding: 12px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 150, 136, 0.3);
+            border: none;
+        }
+
+        button {
+            background-color: #2a2a2a;
+            color: #e0e0e0;
+            border: 1px solid #3a3a3a;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-height: 38px;
+        }
+
+        button:hover {
+            background-color: #333333;
+            border-color: #4a4a4a;
+            color: #ffffff;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button.primary {
+            background-color: var(--accent-color);
+            color: #000000;
+            border: none;
+            font-weight: 700;
+        }
+
+        button.primary:hover {
+            background-color: #43a047;
+        }
+
+        @media (max-width: 480px) {
+            .panel-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="cultivo-view" class="app-view">
+        <div class="header-container">
+            <div class="logo-cultivo">🌱</div>
+            <h1>Ciclo Cultivo Oficina</h1>
+        </div>
+
+        <div class="top-controls">
+            <div class="user-bar" id="user-bar" style="display:none;"></div>
+        </div>
+        
+        <div class="quick-access">
+            <div class="quick-access-title">Accesos rápidos</div>
+            <div class="quick-grid">
+                <button class="quick-btn advisor" onclick="abrirAsesorIA()" style="grid-column: 1 / -1;" aria-label="Abrir asesor de IA Athena">
+                    🤖 Asesor Athena Ag (Gemini IA)<span class="sub">Dosis, tablas, EC/pH, Cleanse, Fade y consultas</span>
+                </button>
+                <button class="quick-btn sales" onclick="togglePanel('sales-panel')">🧪 Sales<span class="sub">Tabla EC / gramos</span></button>
+                <button class="quick-btn notes" onclick="togglePanel('notes-panel')">📝 Notas<span class="sub">Notas generales</span></button>
+                <button class="quick-btn vegeta" onclick="togglePanel('vegeta-panel')">🥦 Vegeta<span class="sub">Mesa especial</span></button>
+                <button class="quick-btn report" onclick="abrirModalReporte()">📋 Reporte<span class="sub">Tiempos de cultivo</span></button>
+            </div>
+        </div>
+
+        <div class="panel-open" id="sales-panel">
+            <div class="sales-panel">
+                <div class="sales-title">🧪 SALES = GRAMOS × 10L</div>
+                <div class="sales-controls">
+                    <label for="sales-litros">Litros:</label>
+                    <input id="sales-litros" class="sales-litros" type="number" min="0.1" step="0.1" value="10" inputmode="decimal" oninput="actualizarTablaSales()" aria-label="Cantidad de litros">
+                </div>
+                <div class="sales-scroll">
+                    <table class="sales-table" aria-label="Tabla de sales">
+                        <thead><tr><th>EC</th><th>GROW / BLOOM</th><th>CORE</th></tr></thead>
+                        <tbody id="sales-table-body"></tbody>
+                    </table>
+                </div>
+                <div class="sales-note">Modificá los litros y los gramos se recalculan automáticamente.</div>
+            </div>
+        </div>
+
+        <div class="panel-container">
+            <div class="columna-lado" id="col-lado-a">
+                <div class="columna-header">Lado A</div>
+            </div>
+            <div class="columna-lado" id="col-lado-b">
+                <div class="columna-header">Lado B</div>
+            </div>
+        </div>
+
+        <div class="panel-open" id="vegeta-panel">
+            <div class="vegeta-container" id="col-vegeta"></div>
+        </div>
+
+        <div class="panel-open" id="notes-panel">
+            <div class="mesa-card" id="notes-wrapper" style="border:1px dashed #4dd0e1; background:var(--card-bg);">
+                <strong style="color:#ffffff; display:block; margin-bottom:5px; font-size:0.9rem;">Notas generales</strong>
+                <textarea id="nota-general-input" placeholder="Escribí acá notas generales del cultivo..." style="min-height:120px; margin-bottom:8px;"></textarea>
+                <button style="background:#009688;" onclick="guardarNotaGeneral();" aria-label="Guardar notas generales">Guardar notas generales</button>
+            </div>
+        </div>
+
+        <div class="bottom-controls">
+            <button class="report-btn-main" onclick="abrirModalReporte()" aria-label="Generar reporte de tiempos">📋 Generar Reporte de Tiempos</button>
+        </div>
+    </div>
+
+    <!-- VISTA DEDICADA: ASESOR IA ATHENA -->
+    <div id="asesor-view" class="app-view" style="display:none;">
+        <div class="advisor-container">
+            <div class="advisor-header-bar">
+                <button class="advisor-back-btn" onclick="volverAlCultivo()" aria-label="Volver al cultivo">
+                    ⬅ Volver al Cultivo
+                </button>
+                <div class="advisor-badge-pill">
+                    ✨ Gemini IA
+                </div>
+            </div>
+
+            <div class="advisor-hero-card">
+                <h2>🌱 Asesor Especialista Athena Ag</h2>
+                <p>Tu asistente inteligente especializado en toda la línea <strong>Athena Nutrients</strong> (Pro Line, Blended, Cleanse, Fade, Balance, Stack, IPM), dosificaciones exactas en gramos o ml, curvas de EC, pH y corrección de fertirriego.</p>
+                
+                <div style="margin-top: 10px; font-size: 0.78rem; color: #a7f3d0; font-weight: bold;">
+                    ⚡ Consultas sugeridas (clic para preguntar directo):
+                </div>
+                <div class="advisor-chips-wrap">
+                    <button type="button" class="advisor-chip" onclick="usarPromptSugerido('¿Cómo preparar Athena Pro Line (Core + Grow o Bloom) y cuáles son las proporciones exactas?')">
+                        🧪 Preparar Pro Line
+                    </button>
+                    <button type="button" class="advisor-chip" onclick="usarPromptSugerido('¿Qué rangos de EC y pH debo manejar en vegetativo y cada fase de floración con Athena?')">
+                        📊 EC y pH por semana
+                    </button>
+                    <button type="button" class="advisor-chip" onclick="usarPromptSugerido('¿Cómo y en qué dosis se usa Athena Cleanse para riego diario y para limpieza/flush?')">
+                        💧 Dosis Athena Cleanse
+                    </button>
+                    <button type="button" class="advisor-chip" onclick="usarPromptSugerido('¿Cómo aplicar Athena Fade en las últimas semanas de floración y qué beneficios tiene?')">
+                        🌸 Uso de Athena Fade
+                    </button>
+                    <button type="button" class="advisor-chip" onclick="usarPromptSugerido('¿Cómo interpreto el Runoff (EC y pH de drenaje) si la EC de salida está muy alta?')">
+                        📈 Diagnóstico de Runoff
+                    </button>
+                    <button type="button" class="advisor-chip" onclick="usarPromptSugerido('¿Cuál es el orden exacto de mezcla al preparar el tanque de nutrientes con Athena?')">
+                        📋 Orden de mezcla
+                    </button>
+                </div>
+            </div>
+
+            <div class="advisor-chat-window" id="advisor-chat-window" aria-live="polite"></div>
+
+            <div class="advisor-input-bar">
+                <textarea id="advisor-user-input" class="advisor-textarea" placeholder="Escribí tu consulta sobre Athena Nutrients... (ej: ¿Cuántos gramos para 20 litros a 2.5 EC?)" rows="2"></textarea>
+                <div class="advisor-btn-row">
+                    <button type="button" class="advisor-clear-btn" onclick="limpiarChatIA()" title="Borrar conversación">
+                        🗑️ Limpiar Chat
+                    </button>
+                    <button type="button" id="advisor-send-btn" class="advisor-send-btn" onclick="enviarMensajeIA()" aria-label="Enviar pregunta al asesor">
+                        <span>Enviar</span> 🚀
+                    </button>
+                </div>
+            </div>
+
+            <div class="advisor-quick-guide">
+                <div class="advisor-guide-toggle" onclick="toggleGuiaAthena()">
+                    <span>📚 Tabla Rápida de Referencia Athena Pro Line</span>
+                    <span id="advisor-guide-icon">▼</span>
+                </div>
+                <div class="advisor-guide-content" id="advisor-guide-content">
+                    <p><strong>Proporciones estándar por cada 10 Litros de agua:</strong></p>
+                    <table style="width:100%; border-collapse:collapse; margin-bottom:8px; font-size:0.78rem;">
+                        <thead>
+                            <tr style="background:#262626; color:#4ade80;">
+                                <th style="padding:4px; border:1px solid #444;">EC</th>
+                                <th style="padding:4px; border:1px solid #444;">Grow / Bloom</th>
+                                <th style="padding:4px; border:1px solid #444;">Core</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td style="padding:4px; border:1px solid #444; text-align:center;">1.8</td><td style="padding:4px; border:1px solid #444; text-align:center;">11.1 g</td><td style="padding:4px; border:1px solid #444; text-align:center;">6.8 g</td></tr>
+                            <tr><td style="padding:4px; border:1px solid #444; text-align:center;">2.0</td><td style="padding:4px; border:1px solid #444; text-align:center;">12.9 g</td><td style="padding:4px; border:1px solid #444; text-align:center;">7.7 g</td></tr>
+                            <tr style="background:#1b3824;"><td style="padding:4px; border:1px solid #444; text-align:center; font-weight:bold; color:#4ade80;">2.5 (Estándar)</td><td style="padding:4px; border:1px solid #444; text-align:center; font-weight:bold;">16.5 g</td><td style="padding:4px; border:1px solid #444; text-align:center; font-weight:bold;">9.9 g</td></tr>
+                            <tr><td style="padding:4px; border:1px solid #444; text-align:center;">3.0 (Alto)</td><td style="padding:4px; border:1px solid #444; text-align:center;">20.3 g</td><td style="padding:4px; border:1px solid #444; text-align:center;">12.2 g</td></tr>
+                        </tbody>
+                    </table>
+                    <p style="margin:4px 0;"><strong>Orden de mezcla recomendado:</strong> 1° Agua limpia -> 2° Cleanse -> 3° Balance / Silicio -> 4° Pro Core -> 5° Pro Grow / Bloom -> 6° Stack -> 7° Ajustar pH a 5.8 - 6.2.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE EDICION -->
+    <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modal-title">Editar Mesa</h3>
+                <button onclick="cerrarModal()" style="min-height:auto; padding:4px 8px;">✕</button>
+            </div>
+            <div class="form-group">
+                <label for="input-variedad">Genética / Variedad:</label>
+                <input type="text" id="input-variedad" placeholder="Ej: Gorilla Glue, Gelato...">
+            </div>
+            <div class="form-group">
+                <label for="input-fecha">Fecha de inicio (Fase actual):</label>
+                <input type="date" id="input-fecha">
+            </div>
+            <div class="form-group">
+                <label for="input-dias">Días estimados de floración:</label>
+                <input type="number" id="input-dias" value="60">
+            </div>
+            <div class="form-group">
+                <label for="input-notas">Notas / Observaciones:</label>
+                <textarea id="input-notas" rows="3" placeholder="Riegos, plagas, podas..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button onclick="cerrarModal()">Cancelar</button>
+                <button class="primary" onclick="guardarMesa()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE REPORTE -->
+    <div class="modal" id="modal-report" role="dialog" aria-modal="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">📋 Reporte del Cultivo</h3>
+                <button onclick="cerrarModalReporte()" style="min-height:auto; padding:4px 8px;">✕</button>
+            </div>
+            <div class="form-group">
+                <textarea id="report-text-output" rows="12" style="font-family:monospace; font-size:0.8rem;" readonly></textarea>
+            </div>
+            <div class="modal-actions">
+                <button onclick="compartirWhatsApp()" style="background:#25D366; color:white; border:none;">📱 WhatsApp</button>
+                <button onclick="copiarReporte()">📋 Copiar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const DEFAULT_MESAS = {
+            'mesa-1': { id: 'mesa-1', nombre: 'Mesa 1 (Lado A)', variedad: 'Sin asignar', fecha: '', dias: 60, notas: '', lado: 'A' },
+            'mesa-2': { id: 'mesa-2', nombre: 'Mesa 2 (Lado A)', variedad: 'Sin asignar', fecha: '', dias: 60, notas: '', lado: 'A' },
+            'mesa-3': { id: 'mesa-3', nombre: 'Mesa 3 (Lado A)', variedad: 'Sin asignar', fecha: '', dias: 60, notas: '', lado: 'A' },
+            'mesa-4': { id: 'mesa-4', nombre: 'Mesa 4 (Lado B)', variedad: 'Sin asignar', fecha: '', dias: 60, notas: '', lado: 'B' },
+            'mesa-5': { id: 'mesa-5', nombre: 'Mesa 5 (Lado B)', variedad: 'Sin asignar', fecha: '', dias: 60, notas: '', lado: 'B' },
+            'mesa-6': { id: 'mesa-6', nombre: 'Mesa 6 (Lado B)', variedad: 'Sin asignar', fecha: '', dias: 60, notas: '', lado: 'B' },
+            'mesa-vegeta': { id: 'mesa-vegeta', nombre: 'Mesa Vegetativo', variedad: 'Esquejes / Madres', fecha: '', dias: 30, notas: '', lado: 'V' }
+        };
+
+        const TABLA_SALES_BASE = [
+            { ec: 1.0, grow: 5.7, core: 3.5 },
+            { ec: 1.5, grow: 8.9, core: 5.3 },
+            { ec: 1.8, grow: 11.1, core: 6.8 },
+            { ec: 2.0, grow: 12.9, core: 7.7 },
+            { ec: 2.2, grow: 14.5, core: 8.6 },
+            { ec: 2.5, grow: 16.5, core: 9.9 },
+            { ec: 2.8, grow: 18.8, core: 11.2 },
+            { ec: 3.0, grow: 20.3, core: 12.2 }
+        ];
+
+        let mesasData = { ...DEFAULT_MESAS };
+        let mesaEnEdicion = null;
+
+        function getCachedData() {
+            try {
+                const s = localStorage.getItem('cultivo_data_v1');
+                if (s) return JSON.parse(s);
+            } catch (e) {}
+            return DEFAULT_MESAS;
+        }
+
+        function saveCachedData(data) {
+            try {
+                localStorage.setItem('cultivo_data_v1', JSON.stringify(data));
+            } catch (e) {}
+        }
+
+        function getCachedGeneralNotes() {
+            return localStorage.getItem('cultivo_notes_v1') || '';
+        }
+
+        function saveCachedGeneralNotes(n) {
+            localStorage.setItem('cultivo_notes_v1', n);
+        }
+
+        function togglePanel(id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.toggle('show');
+        }
+
+        function actualizarTablaSales() {
+            const input = document.getElementById('sales-litros');
+            const litros = parseFloat(input?.value) || 10;
+            const tbody = document.getElementById('sales-table-body');
+            if (!tbody) return;
+
+            const factor = litros / 10;
+            tbody.innerHTML = TABLA_SALES_BASE.map(row => `
+                <tr>
+                    <td class="td-ec">${row.ec.toFixed(1)}</td>
+                    <td class="td-grow">${(row.grow * factor).toFixed(1)} g</td>
+                    <td class="td-core">${(row.core * factor).toFixed(1)} g</td>
+                </tr>
+            `).join('');
+        }
+
+        function calcularDiasTranscurridos(fechaStr) {
+            if (!fechaStr) return 0;
+            const diff = new Date().getTime() - new Date(fechaStr).getTime();
+            return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
+        }
+
+        function renderizarMesas() {
+            const colA = document.getElementById('col-lado-a');
+            const colB = document.getElementById('col-lado-b');
+            const colV = document.getElementById('col-vegeta');
+
+            if (colA) colA.innerHTML = '<div class="columna-header">Lado A</div>';
+            if (colB) colB.innerHTML = '<div class="columna-header">Lado B</div>';
+            if (colV) colV.innerHTML = '';
+
+            Object.values(mesasData).forEach(mesa => {
+                const diasTrans = calcularDiasTranscurridos(mesa.fecha);
+                const diasTot = mesa.dias || 60;
+                const pct = Math.min(100, Math.round((diasTrans / diasTot) * 100));
+                const esOverdue = diasTrans > diasTot;
+
+                const card = document.createElement('div');
+                card.className = `mesa-card ${mesa.lado === 'V' ? 'vegeta' : (mesa.fecha ? 'active-flora' : '')}`;
+                card.innerHTML = `
+                    <div class="mesa-header">
+                        <span class="mesa-title">${mesa.nombre}</span>
+                        <span class="mesa-status-badge ${mesa.fecha ? 'active' : ''}">${mesa.fecha ? 'En curso' : 'Vacía'}</span>
+                    </div>
+                    <div class="metric-row">
+                        <div class="metric-col">
+                            <span class="metric-label">Genética</span>
+                            <span class="metric-value highlight">${mesa.variedad || 'Sin asignar'}</span>
+                        </div>
+                        <div class="metric-col">
+                            <span class="metric-label">Días</span>
+                            <span class="metric-value">${mesa.fecha ? `${diasTrans} / ${diasTot}` : '-'}</span>
+                        </div>
+                    </div>
+                    ${mesa.fecha ? `
+                    <div class="progress-container">
+                        <div class="progress-bar ${esOverdue ? 'overdue' : ''}" style="width: ${pct}%;"></div>
+                    </div>` : ''}
+                    ${mesa.notas ? `<div style="font-size:0.72rem; color:#aaa; font-style:italic;">📝 ${mesa.notas}</div>` : ''}
+                    <button class="btn-edit" onclick="abrirModal('${mesa.id}')">✏️ Editar mesa</button>
+                `;
+
+                if (mesa.lado === 'A' && colA) colA.appendChild(card);
+                else if (mesa.lado === 'B' && colB) colB.appendChild(card);
+                else if (colV) colV.appendChild(card);
+            });
+        }
+
+        function abrirModal(id) {
+            mesaEnEdicion = id;
+            const m = mesasData[id];
+            if (!m) return;
+            document.getElementById('modal-title').innerText = `Editar ${m.nombre}`;
+            document.getElementById('input-variedad').value = m.variedad === 'Sin asignar' ? '' : m.variedad;
+            document.getElementById('input-fecha').value = m.fecha || '';
+            document.getElementById('input-dias').value = m.dias || 60;
+            document.getElementById('input-notas').value = m.notas || '';
+            document.getElementById('modal').style.display = 'flex';
+        }
+
+        function cerrarModal() {
+            document.getElementById('modal').style.display = 'none';
+            mesaEnEdicion = null;
+        }
+
+        function guardarMesa() {
+            if (!mesaEnEdicion || !mesasData[mesaEnEdicion]) return;
+            mesasData[mesaEnEdicion].variedad = document.getElementById('input-variedad').value.trim() || 'Sin asignar';
+            mesasData[mesaEnEdicion].fecha = document.getElementById('input-fecha').value;
+            mesasData[mesaEnEdicion].dias = parseInt(document.getElementById('input-dias').value) || 60;
+            mesasData[mesaEnEdicion].notas = document.getElementById('input-notas').value.trim();
+            saveCachedData(mesasData);
+            renderizarMesas();
+            cerrarModal();
+        }
+
+        function guardarNotaGeneral() {
+            const input = document.getElementById('nota-general-input');
+            if (input) {
+                saveCachedGeneralNotes(input.value);
+                alert('Notas generales guardadas');
+            }
+        }
+
+        function generarTextoReporte() {
+            let t = `🌱 REPORTE DE CULTIVO OFICINA - ${new Date().toLocaleDateString()}\n\n`;
+            Object.values(mesasData).forEach(m => {
+                const dias = calcularDiasTranscurridos(m.fecha);
+                t += `📌 ${m.nombre}\n`;
+                t += `• Genética: ${m.variedad}\n`;
+                t += `• Estado: ${m.fecha ? `Día ${dias} de ${m.dias}` : 'Sin cultivo'}\n`;
+                if (m.notas) t += `• Notas: ${m.notas}\n`;
+                t += `\n`;
+            });
+            const notas = getCachedGeneralNotes();
+            if (notas) t += `📝 NOTAS GENERALES:\n${notas}\n`;
+            return t;
+        }
+
+        function abrirModalReporte() {
+            const salida = document.getElementById('report-text-output');
+            if (salida) salida.value = generarTextoReporte();
+            document.getElementById('modal-report').style.display = 'flex';
+        }
+
+        function cerrarModalReporte() {
+            document.getElementById('modal-report').style.display = 'none';
+        }
+
+        function compartirWhatsApp() {
+            const texto = encodeURIComponent(document.getElementById('report-text-output')?.value || '');
+            window.open(`https://wa.me/?text=${texto}`, '_blank');
+        }
+
+        function copiarReporte() {
+            const out = document.getElementById('report-text-output');
+            if (out) {
+                out.select();
+                navigator.clipboard.writeText(out.value);
+                alert('Reporte copiado al portapapeles');
+            }
+        }
+
+        /* ASESOR IA ATHENA (GEMINI) */
+        const ATHENA_CHAT_STORAGE_KEY = 'athena_chat_history_v1';
+        let chatHistorial = [];
+        let asesorCargando = false;
+
+        const MENSAJE_BIENVENIDA = `👋 **¡Hola! Soy tu Asesor Especialista en Athena Nutrients.**
+
+Puedo ayudarte con:
+* 🧪 **Dosis exactas de Athena Pro Line:** Gramos de *Core*, *Grow* y *Bloom* según tus litros y EC deseada.
+* 🌿 **Línea Athena Blended:** Dosis de Grow A/B, Bloom A/B y aditivos en ml/L o ml/galón.
+* 💧 **Athena Cleanse:** Protocolo de mantenimiento anti-patógenos, descalcificación de líneas y flush profundo.
+* 🌸 **Athena Fade:** Cómo usarlo al final de floración para eliminar nitrógeno y mejorar calidad.
+* 🛡️ **Athena Balance, Stack e IPM:** Protección contra plagas, manejo de silicio y bioestimulantes.
+* 📊 **Manejo de Runoff / EC de drenaje:** Diagnóstico de acumulación de sales o deficiencias.
+
+*¿Qué necesitas consultar o calcular hoy para tu cultivo?*`;
+
+        function cargarHistorialChat() {
+            try {
+                const guardado = localStorage.getItem(ATHENA_CHAT_STORAGE_KEY);
+                if (guardado) {
+                    chatHistorial = JSON.parse(guardado);
+                } else {
+                    chatHistorial = [{ role: 'model', text: MENSAJE_BIENVENIDA, ts: Date.now() }];
+                }
+            } catch (e) {
+                chatHistorial = [{ role: 'model', text: MENSAJE_BIENVENIDA, ts: Date.now() }];
+            }
+            renderizarChat();
+        }
+
+        function guardarHistorialChat() {
+            try {
+                localStorage.setItem(ATHENA_CHAT_STORAGE_KEY, JSON.stringify(chatHistorial));
+            } catch (e) {}
+        }
+
+        function escaparHTML(texto) {
+            if (!texto) return '';
+            return texto
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function formatearMarkdown(texto) {
+            if (!texto) return '';
+            let html = escaparHTML(texto);
+
+            const lineas = html.split('\n');
+            let enTabla = false;
+            let tablaHtml = '';
+            let lineasProcesadas = [];
+
+            for (let i = 0; i < lineas.length; i++) {
+                let linea = lineas[i].trim();
+                if (linea.startsWith('|') && linea.endsWith('|')) {
+                    if (!enTabla) {
+                        enTabla = true;
+                        tablaHtml = '<table>';
+                    }
+                    if (linea.includes('---')) continue;
+                    const celdas = linea.split('|').filter((_, idx, arr) => idx > 0 && idx < arr.length - 1);
+                    const tag = tablaHtml === '<table>' ? 'th' : 'td';
+                    tablaHtml += '<tr>' + celdas.map(c => `<${tag}>${c.trim()}</${tag}>`).join('') + '</tr>';
+                } else {
+                    if (enTabla) {
+                        enTabla = false;
+                        tablaHtml += '</table>';
+                        lineasProcesadas.push(tablaHtml);
+                        tablaHtml = '';
+                    }
+                    lineasProcesadas.push(linea);
+                }
+            }
+            if (enTabla) {
+                tablaHtml += '</table>';
+                lineasProcesadas.push(tablaHtml);
+            }
+            html = lineasProcesadas.join('\n');
+
+            html = html
+                .replace(/^### (.*$)/gim, '<strong style="color:#4ade80; display:block; margin:6px 0 2px 0; font-size:0.95rem;">$1</strong>')
+                .replace(/^## (.*$)/gim, '<strong style="color:#34d399; display:block; margin:8px 0 4px 0; font-size:1.02rem;">$1</strong>')
+                .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+                .replace(/`([^`]+)`/gim, '<code>$1</code>')
+                .replace(/^\* (.*$)/gim, '<li style="margin-left:14px;">$1</li>')
+                .replace(/^- (.*$)/gim, '<li style="margin-left:14px;">$1</li>')
+                .replace(/\n\n+/g, '<br><br>')
+                .replace(/\n/g, '<br>');
+
+            return html;
+        }
+
+        function renderizarChat() {
+            const chatWin = document.getElementById('advisor-chat-window');
+            if (!chatWin) return;
+
+            let html = '';
+            chatHistorial.forEach((msg) => {
+                const esUser = msg.role === 'user';
+                const nombre = esUser ? '👤 Vos' : '🌱 Athena IA';
+                const hora = msg.ts ? new Date(msg.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+
+                html += `
+                    <div class="chat-msg ${esUser ? 'user' : 'bot'}">
+                        <div class="chat-msg-header">
+                            <span>${nombre}</span>
+                            <span style="opacity:0.6; font-size:0.68rem; margin-left:auto;">${hora}</span>
+                        </div>
+                        <div class="chat-msg-body">
+                            ${formatearMarkdown(msg.text)}
+                        </div>
+                    </div>
+                `;
+            });
+
+            if (asesorCargando) {
+                html += `
+                    <div class="chat-msg bot" style="align-self: flex-start;">
+                        <div class="chat-msg-header">
+                            <span>🌱 Athena IA</span>
+                        </div>
+                        <div class="typing-indicator">
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                            <span style="font-size:0.75rem; color:#aaa; margin-left:4px;">Analizando consulta...</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            chatWin.innerHTML = html;
+            chatWin.scrollTop = chatWin.scrollHeight;
+        }
+
+        async function enviarMensajeIA(textoDirecto) {
+            if (asesorCargando) return;
+            const input = document.getElementById('advisor-user-input');
+            const texto = (textoDirecto || (input ? input.value : '')).trim();
+
+            if (!texto) return;
+            if (input) input.value = '';
+
+            chatHistorial.push({ role: 'user', text: texto, ts: Date.now() });
+            guardarHistorialChat();
+            asesorCargando = true;
+            renderizarChat();
+
+            const sendBtn = document.getElementById('advisor-send-btn');
+            if (sendBtn) sendBtn.disabled = true;
+
+            const GEMINI_DIRECT_KEY = 'AQ.Ab8RN6JHDXqL8yvZLAuDeZKZdW2k1Rt3ARo57BWK1nnlpkWFIQ';
+            const ATHENA_PROMPT = `Eres el Asesor Especialista Oficial en Nutrientes Athena Ag. Experto en cultivo de cannabis y fertirriego. Responde en español, claro y conciso. Tablas con dosis de Athena Pro Line (Core, Grow, Bloom), Athena Blended, Cleanse, Fade, Balance, Stack e IPM, EC y pH.`;
+
+            try {
+                let respuesta = '';
+
+                try {
+                    const historyPayload = chatHistorial
+                        .slice(0, -1)
+                        .map(m => ({ role: m.role, text: m.text }));
+
+                    const resp = await fetch('/api/advisor/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: texto, history: historyPayload })
+                    });
+
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        if (data.reply) respuesta = data.reply;
+                    }
+                } catch (e) {}
+
+                if (!respuesta) {
+                    const contentsArray = [];
+                    chatHistorial.slice(0, -1).slice(-8).forEach(h => {
+                        if (h.role && h.text) {
+                            contentsArray.push({
+                                role: h.role === 'user' ? 'user' : 'model',
+                                parts: [{ text: String(h.text) }]
+                            });
+                        }
+                    });
+                    contentsArray.push({
+                        role: 'user',
+                        parts: [{ text: texto }]
+                    });
+
+                    const directResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_DIRECT_KEY}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            system_instruction: { parts: [{ text: ATHENA_PROMPT }] },
+                            contents: contentsArray,
+                            generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
+                        })
+                    });
+
+                    if (directResp.ok) {
+                        const directData = await directResp.json();
+                        respuesta = directData.candidates?.[0]?.content?.parts?.[0]?.text;
+                    } else {
+                        const errData = await directResp.json().catch(() => ({}));
+                        throw new Error(errData.error?.message || `Error HTTP ${directResp.status}`);
+                    }
+                }
+
+                if (!respuesta) throw new Error("No se obtuvo respuesta.");
+
+                chatHistorial.push({ role: 'model', text: respuesta, ts: Date.now() });
+            } catch (err) {
+                chatHistorial.push({
+                    role: 'model',
+                    text: `⚠️ **Error:** ${err.message || 'No se pudo conectar con el Asesor IA'}.\n\nPor favor, verifica tu conexión a internet o intenta nuevamente.`,
+                    ts: Date.now()
+                });
+            } finally {
+                asesorCargando = false;
+                if (sendBtn) sendBtn.disabled = false;
+                guardarHistorialChat();
+                renderizarChat();
+            }
+        }
+
+        function usarPromptSugerido(prompt) {
+            const input = document.getElementById('advisor-user-input');
+            if (input) {
+                input.value = prompt;
+                input.focus();
+            }
+            enviarMensajeIA(prompt);
+        }
+
+        function limpiarChatIA() {
+            if (!confirm('¿Deseas reiniciar la conversación con el Asesor Athena?')) return;
+            chatHistorial = [{ role: 'model', text: MENSAJE_BIENVENIDA, ts: Date.now() }];
+            guardarHistorialChat();
+            renderizarChat();
+        }
+
+        function toggleGuiaAthena() {
+            const content = document.getElementById('advisor-guide-content');
+            const icon = document.getElementById('advisor-guide-icon');
+            if (!content) return;
+            const isOpen = content.classList.contains('open');
+            if (isOpen) {
+                content.classList.remove('open');
+                if (icon) icon.innerText = '▼';
+            } else {
+                content.classList.add('open');
+                if (icon) icon.innerText = '▲';
+            }
+        }
+
+        function abrirAsesorIA() {
+            const cultivoView = document.getElementById('cultivo-view');
+            const asesorView = document.getElementById('asesor-view');
+            if (cultivoView) cultivoView.style.display = 'none';
+            if (asesorView) asesorView.style.display = 'flex';
+            window.location.hash = 'asesor-ia';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            cargarHistorialChat();
+            setTimeout(() => {
+                const input = document.getElementById('advisor-user-input');
+                if (input) input.focus();
+            }, 150);
+        }
+
+        function volverAlCultivo() {
+            const cultivoView = document.getElementById('cultivo-view');
+            const asesorView = document.getElementById('asesor-view');
+            if (asesorView) asesorView.style.display = 'none';
+            if (cultivoView) cultivoView.style.display = 'flex';
+            if (window.location.hash === '#asesor-ia') {
+                history.pushState("", document.title, window.location.pathname + window.location.search);
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        window.addEventListener('hashchange', () => {
+            if (window.location.hash === '#asesor-ia') abrirAsesorIA();
+            else volverAlCultivo();
+        });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            mesasData = getCachedData();
+            renderizarMesas();
+            actualizarTablaSales();
+
+            const notesInput = document.getElementById('nota-general-input');
+            if (notesInput) notesInput.value = getCachedGeneralNotes();
+
+            const inputAdvisor = document.getElementById('advisor-user-input');
+            if (inputAdvisor) {
+                inputAdvisor.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        enviarMensajeIA();
+                    }
+                });
+            }
+
+            if (window.location.hash === '#asesor-ia') {
+                abrirAsesorIA();
+            }
+        });
+    </script>
+</body>
+</html>
