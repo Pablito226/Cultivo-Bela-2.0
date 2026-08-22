@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Asesor Athena Nutrients - IA Experto</title>
+  <style>
+    :root {
+      --bg-color: #121212;
+      --card-bg: #1e1e1e;
+      --text-color: #ffffff;
+      --accent: #00bfa5;
+      --accent-hover: #00897b;
+      --user-msg: #2e7d32;
+      --assistant-msg: #263238;
+      --border-color: #333333;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      overflow: hidden;
+    }
+
+    header {
+      background-color: var(--card-bg);
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      z-index: 10;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .back-btn {
+      background: #2a2a2a;
+      border: 1px solid #444;
+      color: #fff;
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+
+    .back-btn:hover {
+      background: #3a3a3a;
+    }
+
+    .header-title {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header-title h1 {
+      font-size: 1.05rem;
+      color: var(--accent);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .header-title .subtitle {
+      font-size: 0.75rem;
+      color: #888;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      color: #aaa;
+      background: #111;
+      border: 1px solid #333;
+      padding: 4px 8px;
+      border-radius: 20px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #f59e0b;
+    }
+
+    .status-dot.active {
+      background-color: #10b981;
+    }
+
+    /* Modal / Config Api Key */
+    .api-key-banner {
+      background: #1b2820;
+      border-bottom: 1px solid #00bfa540;
+      padding: 10px 16px;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      animation: slideDown 0.3s ease;
+    }
+
+    .api-key-banner.visible {
+      display: flex;
+    }
+
+    @keyframes slideDown {
+      from { transform: translateY(-100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .api-key-banner input {
+      background: #121212;
+      border: 1px solid #444;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      width: 100%;
+    }
+
+    .api-key-banner .actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .api-key-banner button {
+      background: var(--accent);
+      color: #000;
+      font-weight: 600;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+
+    .api-key-banner .hint {
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+
+    /* Chat Container */
+    #chat-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      scroll-behavior: smooth;
+    }
+
+    .message {
+      max-width: 85%;
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-size: 0.92rem;
+      line-height: 1.45;
+      word-wrap: break-word;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message.user {
+      align-self: flex-end;
+      background-color: var(--user-msg);
+      color: #ffffff;
+      border-bottom-right-radius: 2px;
+    }
+
+    .message.assistant {
+      align-self: flex-start;
+      background-color: var(--assistant-msg);
+      color: #e0e0e0;
+      border: 1px solid var(--border-color);
+      border-bottom-left-radius: 2px;
+    }
+
+    .message.assistant strong {
+      color: #80cbc4;
+    }
+
+    .message.assistant code {
+      background: #182024;
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.85em;
+      color: #a7f3d0;
+    }
+
+    .message.assistant pre {
+      background: #182024;
+      padding: 8px;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin: 6px 0;
+    }
+
+    .message.assistant ul, .message.assistant ol {
+      margin-left: 20px;
+      margin-top: 4px;
+      margin-bottom: 4px;
+    }
+
+    .typing {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 12px 16px;
+    }
+
+    .typing span {
+      width: 6px;
+      height: 6px;
+      background: #80cbc4;
+      border-radius: 50%;
+      animation: bounce 1.4s infinite ease-in-out both;
+    }
+
+    .typing span:nth-child(1) { animation-delay: -0.32s; }
+    .typing span:nth-child(2) { animation-delay: -0.16s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
+
+    /* Sugerencias Rápidas */
+    .quick-chips {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 8px 16px;
+      background: #161616;
+      border-top: 1px solid #282828;
+      scrollbar-width: none;
+    }
+
+    .quick-chips::-webkit-scrollbar {
+      display: none;
+    }
+
+    .chip {
+      background: #242424;
+      border: 1px solid #383838;
+      color: #cfcfcf;
+      padding: 6px 12px;
+      border-radius: 16px;
+      font-size: 0.75rem;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .chip:hover {
+      background: #333;
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    /* Input Footer */
+    footer {
+      background-color: var(--card-bg);
+      border-top: 1px solid var(--border-color);
+      padding: 10px 14px;
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      z-index: 10;
+    }
+
+    textarea {
+      flex: 1;
+      background: #292929;
+      border: 1px solid #444;
+      color: #fff;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: 0.92rem;
+      font-family: inherit;
+      resize: none;
+      max-height: 120px;
+      min-height: 42px;
+      line-height: 1.3;
+      outline: none;
+    }
+
+    textarea:focus {
+      border-color: var(--accent);
+    }
+
+    .send-btn {
+      background: var(--accent);
+      border: none;
+      color: #000;
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.2s, transform 0.1s;
+      flex-shrink: 0;
+    }
+
+    .send-btn:hover {
+      background: var(--accent-hover);
+    }
+
+    .send-btn:active {
+      transform: scale(0.95);
+    }
+
+    .send-btn:disabled {
+      background: #444;
+      color: #888;
+      cursor: not-allowed;
+    }
+
+    .send-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-left">
+      <a href="index.html" class="back-btn">⬅ Volver</a>
+      <div class="header-title">
+        <h1>🌱 Asesor Athena</h1>
+        <span class="subtitle">Nutrición & Cultivo Profesional</span>
+      </div>
+    </div>
+    <div class="status-badge" id="btn-toggle-config" style="cursor: pointer;" title="Configurar API Key">
+      <div class="status-dot" id="status-dot"></div>
+      <span id="connection-status">Comprobando...</span>
+      <span style="font-size: 0.7rem; opacity: 0.7;">⚙️</span>
+    </div>
+  </header>
+
+  <!-- BANNER API KEY -->
+  <div class="api-key-banner" id="api-key-section">
+    <div style="font-size: 0.85rem; font-weight: bold; color: #34d399;">🔑 Configurar API Key de Gemini (Google AI Studio)</div>
+    <div style="font-size: 0.8rem; color: #a7f3d0; margin-bottom: 8px;">
+      ☁️ <strong>Base de datos Firebase:</strong> <code>https://cultivo-oficina-default-rtdb.firebaseio.com/</code>
+    </div>
+    <textarea id="api-key-input" rows="2" style="width:100%;box-sizing:border-box;background:#242424;border:1px solid #444;color:#fff;border-radius:8px;padding:8px;font-family:monospace;font-size:0.85rem;" placeholder="Pegá acá tu API key de Google AI Studio (AIzaSy...). Podés ingresar varias separadas por coma para rotación automática."></textarea>
+    <div class="hint">
+      Al guardar la clave acá, se almacena en tu base de datos de Firebase. <strong>Ningún usuario necesitará ingresarla manualmente</strong> y el asesor funcionará automáticamente para todos. Si tenés varias claves, separalas por coma para evitar límites de cuota.
+    </div>
+    <div class="actions">
+      <button id="btn-guardar-firebase" onclick="guardarApiKeyEnFirebase()">💾 Guardar en Firebase</button>
+      <button onclick="guardarApiKeyLocal()" style="background:#444; color:#fff;">Solo en este celular</button>
+      <button onclick="toggleConfigBanner()" style="background:transparent; color:#888;">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- CONTENEDOR DE CHAT -->
+  <div id="chat-container">
+    <div id="chat-messages" style="display: flex; flex-direction: column; gap: 12px;">
+      <div class="message assistant">
+        👋 ¡Hola! Soy tu <strong>Asesor Técnico de Athena Nutrients</strong>.<br><br>
+        Puedo ayudarte con:<br>
+        • Tablas de dosificación (Pro Line y Blended)<br>
+        • Manejo óptimo de EC y pH según la semana<br>
+        • Diagnóstico de excesos, carencias o bloqueos<br>
+        • Riego, sustrato de coco y lavado de sales (Fade / Cleanse)<br><br>
+        ¿En qué etapa o duda te puedo dar una mano hoy?
+      </div>
+    </div>
+  </div>
+
+  <!-- CHIPS DE CONSULTAS RÁPIDAS -->
+  <div class="quick-chips">
+    <div class="chip" onclick="usarChip('¿Qué EC y pH recomiendas para semana 3 de flora?')">🌸 Semana 3 Flora (EC/pH)</div>
+    <div class="chip" onclick="usarChip('¿Cómo se usa Athena Cleanse para riego y lavado?')">💧 Uso de Cleanse</div>
+    <div class="chip" onclick="usarChip('¿Cómo corrijo puntas quemadas y exceso de sales?')">⚠️ Puntas quemadas / Exceso</div>
+    <div class="chip" onclick="usarChip('¿Cómo preparar el batch mix de Athena Pro Line?')">🧪 Mezcla Pro Line</div>
+    <div class="chip" onclick="usarChip('¿Cuándo y cómo aplicar Athena Fade al final?')">🍂 Uso de Fade</div>
+  </div>
+
+  <!-- FOOTER / INPUT -->
+  <footer>
+    <textarea id="chat-input" placeholder="Preguntale al Asesor Athena..." rows="1" onkeydown="handleKeyDown(event)"></textarea>
+    <button class="send-btn" id="btn-enviar" onclick="enviarMensaje()" title="Enviar mensaje">
+      <svg viewBox="0 0 24 24">
+        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+      </svg>
+    </button>
+  </footer>
+
+  <script>
+    const SYSTEM_PROMPT = `Sos un Asesor Agrónomo Experto especializado exclusivamente en la línea de fertilizantes Athena Nutrients (Athena Pro Line y Blended Line) y cultivo intensivo de alta precisión (indoor, coco, lana de roca e hidroponía).
+Tu objetivo es guiar a los cultivadores en:
+• Dosificación exacta, preparación de mezclas concentradas y diluciones en tanque.
+• Líneas Athena: Pro Core, Pro Bloom, Pro Grow, Balance, Cleanse, Stack, CaMg, PK, Fade.
+• pH recomendado: 5.5 - 6.5 (ideal 5.8 - 6.2).
+• EC recomendado por fase: vegetativo 1.2 - 1.8, floración temprana 1.8 - 2.2, floración media 2.2 - 2.6, floración tardía 2.0 - 2.4, flush < 0.5.
+• Problemas comunes: quemadura de puntas (exceso), clorosis (deficiencia), bloqueo de nutrientes por pH incorrecto.
+• Siempre respondé en español (es-419), con tono conciso, profesional y directo. Usá emojis cuando ayuden a la claridad.`;
+
+    // Modelos en cascada priorizados por mayor límite de cuota gratis y velocidad
+    const MODEL_CASCADE = [
+      'gemini-3.1-flash-lite',
+      'gemini-2.5-flash',
+      'gemini-3.7-flash',
+      'gemini-flash-latest',
+      'gemini-3.6-flash'
+    ];
+
+    const FIREBASE_DB_URL = "https://cultivo-oficina-default-rtdb.firebaseio.com";
+    const STORAGE_KEY = 'athena_api_key_firebase_backup';
+    const CACHE_STORAGE_KEY = 'athena_query_cache_v1';
+
+    let apiKeysList = [];
+    let currentKeyIndex = 0;
+    let apiKey = '';
+    let isKeyConfigured = false;
+    let historial = [];
+    let retryTimer = null;
+
+    // Cache local en memoria y localStorage para respuestas idénticas
+    let responseCache = {};
+    try {
+      responseCache = JSON.parse(localStorage.getItem(CACHE_STORAGE_KEY) || '{}');
+    } catch (e) {
+      responseCache = {};
+    }
+
+    function saveCache(q, a) {
+      try {
+        const key = q.trim().toLowerCase();
+        responseCache[key] = { answer: a, ts: Date.now() };
+        const keys = Object.keys(responseCache);
+        if (keys.length > 50) {
+          delete responseCache[keys[0]];
+        }
+        localStorage.setItem(CACHE_STORAGE_KEY, JSON.stringify(responseCache));
+      } catch (e) {}
+    }
+
+    function getCache(q) {
+      try {
+        const key = q.trim().toLowerCase();
+        const item = responseCache[key];
+        if (item && (Date.now() - item.ts < 24 * 60 * 60 * 1000)) {
+          return item.answer;
+        }
+      } catch (e) {}
+      return null;
+    }
+
+    const apiKeySection = document.getElementById('api-key-section');
+    const statusBadge = document.getElementById('connection-status');
+    const statusDot = document.getElementById('status-dot');
+
+    function setStatus(text, active = false) {
+      statusBadge.innerText = text;
+      if (active) {
+        statusDot.classList.add('active');
+      } else {
+        statusDot.classList.remove('active');
+      }
+    }
+
+    function toggleConfigBanner() {
+      apiKeySection.classList.toggle('visible');
+      if (apiKeySection.classList.contains('visible')) {
+        document.getElementById('api-key-input').value = apiKeysList.length > 0 ? apiKeysList.join(',\n') : (apiKey || '');
+        document.getElementById('api-key-input').focus();
+      }
+    }
+
+    function extraerClaves(str) {
+      if (!str || typeof str !== 'string') return [];
+      return str.split(/[\n,;]+/)
+        .map(k => k.trim())
+        .filter(k => k.length >= 15);
+    }
+
+    function buscarClavesEnObjeto(obj) {
+      if (!obj) return [];
+      let found = [];
+      if (typeof obj === 'string') {
+        const keys = extraerClaves(obj);
+        if (keys.length > 0) return keys;
+      }
+      if (typeof obj === 'object') {
+        for (const prop of ['geminiApiKey', 'apiKey', 'key', 'api_key']) {
+          if (typeof obj[prop] === 'string') {
+            const keys = extraerClaves(obj[prop]);
+            if (keys.length > 0) found.push(...keys);
+          }
+        }
+        for (const k of Object.keys(obj)) {
+          if (typeof obj[k] === 'object' || typeof obj[k] === 'string') {
+            const sub = buscarClavesEnObjeto(obj[k]);
+            if (sub.length > 0) found.push(...sub);
+          }
+        }
+      }
+      return Array.from(new Set(found));
+    }
+
+    function actualizarClavesActivas(claves) {
+      if (!claves || claves.length === 0) return false;
+      apiKeysList = Array.from(new Set(claves));
+      currentKeyIndex = 0;
+      apiKey = apiKeysList[0];
+      localStorage.setItem(STORAGE_KEY, apiKeysList.join(','));
+      isKeyConfigured = true;
+      const countMsg = apiKeysList.length > 1 ? ` (${apiKeysList.length} claves activas con rotación)` : '';
+      setStatus(`Listo · Conectado${countMsg}`, true);
+      apiKeySection.classList.remove('visible');
+      return true;
+    }
+
+    async function verificarApiKeyCentral() {
+      try {
+        const localResp = await fetch('/api/gemini/key');
+        if (localResp.ok) {
+          const keyData = await localResp.json();
+          if (keyData && keyData.apiKey) {
+            const claves = extraerClaves(keyData.apiKey);
+            if (actualizarClavesActivas(claves)) return true;
+          }
+        }
+      } catch (e) {
+        console.warn('Servidor local /api/gemini/key no disponible:', e.message);
+      }
+
+      try {
+        const rutas = [
+          `${FIREBASE_DB_URL}/cultivoOficina/geminiApiKey.json`,
+          `${FIREBASE_DB_URL}/cultivoOficina/datos/geminiApiKey.json`,
+          `${FIREBASE_DB_URL}/cultivoOficina/config/geminiApiKey.json`,
+          `${FIREBASE_DB_URL}/cultivoOficina/apiKey.json`,
+          `${FIREBASE_DB_URL}/cultivoOficina/config.json`,
+          `${FIREBASE_DB_URL}/cultivoOficina/datos.json`,
+          `${FIREBASE_DB_URL}/cultivoOficina.json`
+        ];
+
+        for (const ruta of rutas) {
+          try {
+            const resp = await fetch(ruta);
+            if (resp.ok) {
+              const data = await resp.json();
+              const retrieved = buscarClavesEnObjeto(data);
+              if (retrieved.length > 0 && actualizarClavesActivas(retrieved)) {
+                return true;
+              }
+            }
+          } catch (e) {
+            // Continuar con la siguiente ruta
+          }
+        }
+      } catch (err) {
+        console.warn('No se pudo verificar Firebase central:', err);
+      }
+
+      const cachedKeys = localStorage.getItem(STORAGE_KEY);
+      if (cachedKeys) {
+        const claves = extraerClaves(cachedKeys);
+        if (actualizarClavesActivas(claves)) return true;
+      }
+
+      setStatus('Clave no configurada', false);
+      apiKeySection.classList.add('visible');
+      return false;
+    }
+
+    async function guardarApiKeyEnFirebase() {
+      const val = document.getElementById('api-key-input').value.trim();
+      const claves = extraerClaves(val);
+      if (claves.length === 0) {
+        return alert('Por favor ingresá al menos una API Key válida de Google AI Studio (ej: AIzaSy...).');
+      }
+
+      const btn = document.getElementById('btn-guardar-firebase');
+      btn.disabled = true;
+      btn.innerText = 'Guardando en Firebase...';
+
+      const valorAGuardar = claves.join(',');
+
+      try {
+        await fetch(`${FIREBASE_DB_URL}/cultivoOficina/datos/geminiApiKey.json`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(valorAGuardar)
+        });
+
+        await fetch(`${FIREBASE_DB_URL}/cultivoOficina/geminiApiKey.json`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(valorAGuardar)
+        });
+
+        actualizarClavesActivas(claves);
+        document.getElementById('api-key-input').value = '';
+        alert(`✅ ¡${claves.length} API Key(s) guardada(s) exitosamente en Firebase!\n\nEl asesor ahora rotará modelos y claves automáticamente para evitar límites de cuota.`);
+      } catch (err) {
+        alert('⚠️ Error al guardar en Firebase: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = '💾 Guardar en Firebase';
+      }
+    }
+
+    function guardarApiKeyLocal() {
+      const val = document.getElementById('api-key-input').value.trim();
+      const claves = extraerClaves(val);
+      if (claves.length === 0) return alert('Ingresá una clave válida.');
+      actualizarClavesActivas(claves);
+      alert('Clave guardada localmente en este navegador.');
+    }
+
+    document.getElementById('btn-toggle-config').addEventListener('click', toggleConfigBanner);
+
+    function escaparHTML(texto) {
+      const div = document.createElement('div');
+      div.innerText = texto;
+      return div.innerHTML;
+    }
+
+    function formatearTextoMarkdown(texto) {
+      let f = escaparHTML(texto);
+      f = f.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      f = f.replace(/\*(.*?)\*/g, '<em>$1</em>');
+      f = f.replace(/`([^`]+)`/g, '<code>$1</code>');
+      f = f.replace(/\n\n/g, '<br><br>');
+      f = f.replace(/\n•/g, '<br>•');
+      f = f.replace(/\n-/g, '<br>-');
+      f = f.replace(/\n/g, '<br>');
+      return f;
+    }
+
+    function agregarMensajeHTML(html, tipo = 'assistant') {
+      const container = document.getElementById('chat-messages');
+      const div = document.createElement('div');
+      div.className = `message ${tipo}`;
+      div.innerHTML = html;
+      container.appendChild(div);
+      const scrollBox = document.getElementById('chat-container');
+      scrollBox.scrollTop = scrollBox.scrollHeight;
+      return div;
+    }
+
+    function agregarMensajeTexto(texto, tipo = 'assistant') {
+      const html = tipo === 'assistant' ? formatearTextoMarkdown(texto) : escaparHTML(texto);
+      return agregarMensajeHTML(html, tipo);
+    }
+
+    function mostrarTyping(mensaje) {
+      let el = document.getElementById('typing-indicator');
+      if (!el) {
+        const container = document.getElementById('chat-messages');
+        el = document.createElement('div');
+        el.id = 'typing-indicator';
+        el.className = 'message assistant typing';
+        container.appendChild(el);
+      }
+      if (mensaje) {
+        el.innerHTML = `<span style="font-size:0.8rem;color:#a7f3d0;font-style:italic;">${escaparHTML(mensaje)}</span> <span></span><span></span><span></span>`;
+      } else {
+        el.innerHTML = '<span></span><span></span><span></span>';
+      }
+      const container = document.getElementById('chat-messages');
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function ocultarTyping() {
+      const el = document.getElementById('typing-indicator');
+      if (el) el.remove();
+    }
+
+    function extraerSegundosEspera(errorMsg) {
+      if (!errorMsg) return 15;
+      const match = errorMsg.match(/retry in\s+([0-9.]+)\s*s/i) || errorMsg.match(/wait\s+([0-9.]+)\s*s/i);
+      if (match && match[1]) {
+        return Math.ceil(parseFloat(match[1])) + 1;
+      }
+      return 15;
+    }
+
+    async function llamarGeminiConCascada(contents) {
+      const keysToTry = apiKeysList.length > 0 ? apiKeysList : [apiKey];
+      let ultimoError = null;
+      let segundosEsperaMinimos = 15;
+
+      for (let kIndex = 0; kIndex < keysToTry.length; kIndex++) {
+        const keyActual = keysToTry[(currentKeyIndex + kIndex) % keysToTry.length];
+
+        for (let mIndex = 0; mIndex < MODEL_CASCADE.length; mIndex++) {
+          const modelo = MODEL_CASCADE[mIndex];
+
+          try {
+            mostrarTyping(mIndex > 0 ? `Consultando modelo rápido (${modelo})...` : '');
+
+            const payload = {
+              contents: contents,
+              generationConfig: {
+                temperature: 0.6,
+                maxOutputTokens: 1500
+              }
+            };
+
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${keyActual}`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-goog-api-key': keyActual
+              },
+              body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+              const data = await res.json();
+              const respuesta = data.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (respuesta) {
+                currentKeyIndex = (currentKeyIndex + kIndex) % keysToTry.length;
+                return { success: true, text: respuesta, model: modelo };
+              }
+            }
+
+            const errorData = await res.json().catch(() => ({}));
+            const errMsg = errorData.error?.message || `HTTP ${res.status}`;
+            ultimoError = errMsg;
+
+            if (res.status === 429 || errMsg.toLowerCase().includes('quota') || errMsg.toLowerCase().includes('resource has been exhausted')) {
+              const segs = extraerSegundosEspera(errMsg);
+              segundosEsperaMinimos = Math.min(segundosEsperaMinimos, segs);
+              console.warn(`Cuota agotada en ${modelo} (clave ${kIndex + 1}). Intentando siguiente modelo alternativo...`);
+              continue;
+            }
+
+            if (res.status === 400 || res.status === 403) {
+              console.warn(`Clave ${kIndex + 1} no autorizada (${errMsg}). Probando siguiente clave...`);
+              break;
+            }
+
+          } catch (fetchErr) {
+            console.warn(`Error de red al llamar a ${modelo}:`, fetchErr.message);
+            ultimoError = fetchErr.message;
+          }
+        }
+      }
+
+      return {
+        success: false,
+        error: ultimoError || 'Límite de solicitudes alcanzado en todos los modelos disponibles',
+        waitTime: segundosEsperaMinimos
+      };
+    }
+
+    async function enviarMensaje() {
+      const input = document.getElementById('chat-input');
+      const btn = document.getElementById('btn-enviar');
+      const texto = input.value.trim();
+
+      if (!texto) return;
+
+      if (retryTimer) {
+        clearInterval(retryTimer);
+        retryTimer = null;
+      }
+
+      if (!apiKey && apiKeysList.length === 0) {
+        await verificarApiKeyCentral();
+      }
+
+      if (!apiKey && apiKeysList.length === 0) {
+        apiKeySection.classList.add('visible');
+        agregarMensajeHTML('⚠️ <strong>Atención:</strong> No se detectó ninguna API key en Firebase ni en la configuración local. Por favor configurala arriba.', 'assistant');
+        return;
+      }
+
+      const cacheHit = getCache(texto);
+      if (cacheHit) {
+        agregarMensajeTexto(texto, 'user');
+        input.value = '';
+        input.style.height = 'auto';
+        historial.push({ role: 'user', text: texto });
+        historial.push({ role: 'model', text: cacheHit });
+        agregarMensajeTexto(cacheHit, 'assistant');
+        return;
+      }
+
+      agregarMensajeTexto(texto, 'user');
+      input.value = '';
+      input.style.height = 'auto';
+      btn.disabled = true;
+      mostrarTyping();
+
+      const contents = [
+        { role: 'user', parts: [{ text: SYSTEM_PROMPT }] },
+        { role: 'model', parts: [{ text: 'Entendido. Estoy listo para asesorar sobre Athena Nutrients de forma clara y precisa.' }] }
+      ];
+
+      historial.slice(-4).forEach(h => {
+        contents.push({ role: h.role, parts: [{ text: h.text }] });
+      });
+
+      contents.push({ role: 'user', parts: [{ text: texto }] });
+
+      const resultado = await llamarGeminiConCascada(contents);
+
+      if (resultado.success) {
+        ocultarTyping();
+        const respuesta = resultado.text;
+        historial.push({ role: 'user', text: texto });
+        historial.push({ role: 'model', text: respuesta });
+        saveCache(texto, respuesta);
+        agregarMensajeTexto(respuesta, 'assistant');
+        btn.disabled = false;
+        input.focus();
+      } else {
+        const waitSeconds = resultado.waitTime || 20;
+        let count = waitSeconds;
+        
+        mostrarTyping(`⏳ Límite temporal de cuota. Reintentando automáticamente en ${count}s...`);
+
+        retryTimer = setInterval(async () => {
+          count--;
+          if (count > 0) {
+            mostrarTyping(`⏳ Límite temporal de cuota. Reintentando automáticamente en ${count}s...`);
+          } else {
+            clearInterval(retryTimer);
+            retryTimer = null;
+            mostrarTyping('🔄 Reintentando consulta...');
+            
+            const reintento = await llamarGeminiConCascada(contents);
+            ocultarTyping();
+            
+            if (reintento.success) {
+              const respuesta = reintento.text;
+              historial.push({ role: 'user', text: texto });
+              historial.push({ role: 'model', text: respuesta });
+              saveCache(texto, respuesta);
+              agregarMensajeTexto(respuesta, 'assistant');
+            } else {
+              agregarMensajeHTML(
+                `⚠️ <strong>Límite temporal alcanzado en la API:</strong> ${escaparHTML(reintento.error)}<br><br>` +
+                `💡 <strong>Tip para evitar este error:</strong> En Google AI Studio la cuota gratuita es por clave. Podés ingresar varias claves separadas por coma en el botón ⚙️ <em>Clave Firebase</em> para que rote automáticamente, o esperar 1 minuto antes de enviar la siguiente consulta.`,
+                'assistant'
+              );
+            }
+            btn.disabled = false;
+            input.focus();
+          }
+        }, 1000);
+      }
+    }
+
+    function usarChip(texto) {
+      document.getElementById('chat-input').value = texto;
+      enviarMensaje();
+    }
+
+    function handleKeyDown(event) {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        enviarMensaje();
+      }
+    }
+
+    const textarea = document.getElementById('chat-input');
+    textarea.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      verificarApiKeyCentral();
+    });
+  </script>
+</body>
+</html>
