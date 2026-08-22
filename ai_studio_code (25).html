@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Asesor Athena Nutrients - Ciclo Cultivo</title>
+  <style>
+    :root {
+      --bg-color: #121212;
+      --card-bg: #1e1e1e;
+      --card-bg-2: #242424;
+      --text-color: #ffffff;
+      --text-muted: #aaaaaa;
+      --accent: #00bfa5;
+      --accent-hover: #00897b;
+      --accent-dark: #004d40;
+      --athena-gold: #ffb74d;
+      --border-color: #333333;
+      --user-bubble: #004d40;
+      --assistant-bubble: #252525;
+      --system-bubble: #1a2733;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 720px;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      height: 100dvh;
+      background-color: var(--card-bg);
+      border-left: 1px solid var(--border-color);
+      border-right: 1px solid var(--border-color);
+    }
+
+    /* HEADER */
+    .chat-header {
+      padding: 12px 16px;
+      background: linear-gradient(135deg, #002d25 0%, #004d40 100%);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-volver {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.2s;
+    }
+
+    .btn-volver:hover {
+      background: rgba(255,255,255,0.2);
+    }
+
+    .header-info h1 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .header-info h1 .badge {
+      background: var(--accent);
+      color: #000;
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    .header-info p {
+      font-size: 0.75rem;
+      color: #a7f3d0;
+    }
+
+    .status-pill {
+      font-size: 0.72rem;
+      padding: 4px 8px;
+      border-radius: 12px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #ccc;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #777;
+    }
+
+    .status-dot.online { background: #00e676; box-shadow: 0 0 6px #00e676; }
+    .status-dot.error { background: #ff5252; }
+
+    /* CONTEXT BAR (info rápida del cultivo) */
+    .context-bar {
+      padding: 8px 14px;
+      background: #181818;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      overflow-x: auto;
+      flex-shrink: 0;
+    }
+
+    .context-tag {
+      background: #282828;
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid #3a3a3a;
+      white-space: nowrap;
+      color: #ddd;
+    }
+
+    .context-tag strong {
+      color: var(--athena-gold);
+    }
+
+    /* SUGGESTION PILLS */
+    .suggestions-container {
+      padding: 8px 12px;
+      background: #151515;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      flex-shrink: 0;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .suggestions-container::-webkit-scrollbar {
+      display: none;
+    }
+
+    .suggestion-pill {
+      background: #242424;
+      border: 1px solid #3a3a3a;
+      color: #e0e0e0;
+      padding: 5px 10px;
+      border-radius: 14px;
+      font-size: 0.75rem;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .suggestion-pill:hover {
+      background: var(--accent-dark);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    /* CHAT AREA */
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background-color: #161616;
+    }
+
+    .message {
+      display: flex;
+      flex-direction: column;
+      max-width: 88%;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message.user {
+      align-self: flex-end;
+    }
+
+    .message.assistant {
+      align-self: flex-start;
+    }
+
+    .message.system {
+      align-self: center;
+      max-width: 95%;
+    }
+
+    .message-meta {
+      font-size: 0.68rem;
+      color: #888;
+      margin-bottom: 3px;
+      padding: 0 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .message.user .message-meta {
+      justify-content: flex-end;
+    }
+
+    .message-bubble {
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-size: 0.88rem;
+      line-height: 1.45;
+      word-break: break-word;
+    }
+
+    .message.user .message-bubble {
+      background: linear-gradient(135deg, #004d40, #00695c);
+      color: #fff;
+      border-bottom-right-radius: 3px;
+      border: 1px solid rgba(0, 191, 165, 0.3);
+    }
+
+    .message.assistant .message-bubble {
+      background: var(--card-bg-2);
+      color: #ececec;
+      border-bottom-left-radius: 3px;
+      border: 1px solid #333;
+    }
+
+    .message.system .message-bubble {
+      background: var(--system-bubble);
+      color: #90caf9;
+      border: 1px solid #1e3a5f;
+      font-size: 0.8rem;
+      text-align: center;
+      border-radius: 10px;
+      padding: 8px 12px;
+    }
+
+    /* Markdown-like styling inside assistant bubbles */
+    .message.assistant .message-bubble p {
+      margin-bottom: 8px;
+    }
+    .message.assistant .message-bubble p:last-child {
+      margin-bottom: 0;
+    }
+    .message.assistant .message-bubble ul,
+    .message.assistant .message-bubble ol {
+      margin: 6px 0 8px 18px;
+    }
+    .message.assistant .message-bubble li {
+      margin-bottom: 4px;
+    }
+    .message.assistant .message-bubble strong {
+      color: var(--athena-gold);
+    }
+    .message.assistant .message-bubble em {
+      color: #80cbc4;
+    }
+    .message.assistant .message-bubble code {
+      background: #1a1a1a;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.82rem;
+      color: #a7f3d0;
+      border: 1px solid #333;
+    }
+    .message.assistant .message-bubble table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8px 0;
+      font-size: 0.78rem;
+    }
+    .message.assistant .message-bubble th,
+    .message.assistant .message-bubble td {
+      border: 1px solid #444;
+      padding: 4px 6px;
+      text-align: left;
+    }
+    .message.assistant .message-bubble th {
+      background: #1f2937;
+      color: var(--athena-gold);
+    }
+
+    /* TYPING INDICATOR */
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 10px 14px;
+      background: var(--card-bg-2);
+      border-radius: 14px;
+      border-bottom-left-radius: 3px;
+      border: 1px solid #333;
+      align-self: flex-start;
+      max-width: 70px;
+    }
+
+    .typing-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      opacity: 0.4;
+      animation: typing 1.2s infinite ease-in-out;
+    }
+
+    .typing-dot:nth-child(1) { animation-delay: 0s; }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typing {
+      0%, 100% { opacity: 0.3; transform: scale(0.8); }
+      50% { opacity: 1; transform: scale(1.15); }
+    }
+
+    /* INPUT AREA */
+    .chat-input-container {
+      padding: 10px 12px;
+      background: #1a1a1a;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+    }
+
+    .chat-textarea {
+      flex: 1;
+      background: #252525;
+      border: 1px solid #444;
+      color: #fff;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      resize: none;
+      max-height: 100px;
+      min-height: 42px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .chat-textarea:focus {
+      border-color: var(--accent);
+    }
+
+    .btn-send {
+      background: linear-gradient(135deg, #00bfa5, #00897b);
+      color: #000;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      width: 44px;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+
+    .btn-send:hover:not(:disabled) {
+      opacity: 0.95;
+      transform: scale(1.03);
+    }
+
+    .btn-send:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn-send svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    .input-hint {
+      font-size: 0.68rem;
+      color: #777;
+      text-align: center;
+    }
+
+    /* MODAL DE ERROR / CONFIGURACION */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 999;
+    }
+
+    .modal-overlay.visible {
+      display: flex;
+    }
+
+    .modal-card {
+      background: #222;
+      border: 1px solid #444;
+      border-radius: 14px;
+      padding: 18px;
+      max-width: 420px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .modal-card h2 {
+      font-size: 1.05rem;
+      color: #ff5252;
+    }
+
+    .modal-card p {
+      font-size: 0.85rem;
+      color: #ccc;
+      line-height: 1.4;
+    }
+
+    .modal-card .btn-modal {
+      align-self: flex-end;
+      background: var(--accent);
+      color: #000;
+      font-weight: 700;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    /* SCROLLBAR GENERAL */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #161616;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #444;
+    }
+  </style>
+
+  <!-- FIREBASE SDKs (compat para simplificar integración con tu base) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <!-- HEADER -->
+    <header class="chat-header">
+      <div class="header-left">
+        <a href="index.html" class="btn-volver" title="Volver al panel principal">
+          ← Volver
+        </a>
+        <div class="header-info">
+          <h1>
+            Asesor Athena
+            <span class="badge">PRO LINE</span>
+          </h1>
+          <p>Experto en nutrición mineral y tablas Athena</p>
+        </div>
+      </div>
+      <div id="status-pill" class="status-pill">
+        <span id="status-dot" class="status-dot"></span>
+        <span id="status-text">Conectando...</span>
+      </div>
+    </header>
+
+    <!-- BARRA DE CONTEXTO DEL CULTIVO ACTUAL -->
+    <div class="context-bar" id="context-bar">
+      <div class="context-tag">Fase: <strong id="ctx-fase">Cargando...</strong></div>
+      <div class="context-tag">Semana: <strong id="ctx-semana">-</strong></div>
+      <div class="context-tag">Día: <strong id="ctx-dia">-</strong></div>
+      <div class="context-tag">Línea: <strong>Athena PRO (Sales)</strong></div>
+    </div>
+
+    <!-- SUGERENCIAS RÁPIDAS -->
+    <div class="suggestions-container">
+      <button class="suggestion-pill" onclick="usarSugerencia('¿Cuáles son las dosis exactas en gramos/litro para la semana actual?')">
+        📊 Dosis de la semana actual
+      </button>
+      <button class="suggestion-pill" onclick="usarSugerencia('¿Cuál es el rango óptimo de pH y EC para la fase en la que estoy?')">
+        🎯 pH y EC recomendados
+      </button>
+      <button class="suggestion-pill" onclick="usarSugerencia('¿Cómo preparo el stock concentrado de Core, Bloom y Grow?')">
+        🧪 Preparación de concentrados
+      </button>
+      <button class="suggestion-pill" onclick="usarSugerencia('Tengo las puntas quemadas y hojas verde oscuro, ¿qué puede ser?')">
+        ⚠️ Diagnóstico de hojas
+      </button>
+      <button class="suggestion-pill" onclick="usarSugerencia('¿En qué momento exacto debo aplicar Fade y dejar el Core?')">
+        🍂 Cuándo usar Fade
+      </button>
+      <button class="suggestion-pill" onclick="usarSugerencia('¿Cómo aplico Cleanse para limpieza de raíces e irrigación?')">
+        🧼 Uso de Cleanse
+      </button>
+    </div>
+
+    <!-- ÁREA DE MENSAJES -->
+    <div class="chat-messages" id="chat-messages">
+      <!-- Los mensajes se agregan dinámicamente -->
+    </div>
+
+    <!-- INPUT DE CHAT -->
+    <div class="chat-input-container">
+      <div class="input-row">
+        <textarea
+          id="chat-input"
+          class="chat-textarea"
+          placeholder="Preguntale al Asesor Athena sobre dosis, mezclas, pH, EC, carencias..."
+          rows="1"
+          onkeydown="manejarEnter(event)"
+          oninput="autoResize(this)"
+        ></textarea>
+        <button id="btn-enviar" class="btn-send" onclick="enviarMensaje()" title="Enviar mensaje">
+          <svg viewBox="0 0 24 24">
+            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="input-hint">
+        Presioná Enter para enviar, Shift+Enter para salto de línea
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MODAL DE CONFIGURACIÓN FALTANTE -->
+  <div id="modal-error" class="modal-overlay">
+    <div class="modal-card">
+      <h2 id="modal-title">Configuración Requerida</h2>
+      <p id="modal-msg">No se encontró la API Key de Gemini en Firebase. Por favor configúrala desde el panel principal o en la base de datos para habilitar el asesor.</p>
+      <button class="btn-modal" onclick="cerrarModal()">Entendido</button>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // 1. CONOCIMIENTO BASE DE ATHENA NUTRIENTS
+    // ==========================================
+    const ATHENA_KNOWLEDGE = `
+Sos el "Asesor Athena Nutrients", un agrónomo y experto técnico de máxima precisión especializado exclusivamente en la línea de fertilizantes Athena Nutrients (especialmente Athena PRO Line - sales en polvo, y complementos Fade, Cleanse, Balance, Stack, CaMg).
+
+Tu objetivo es responder dudas sobre nutrición, preparación de mezclas, tablas de dosificación, resolución de problemas (excesos, carencias, bloqueo de nutrientes), manejo de pH, EC (electroconductividad), runoff (drenaje) y rutinas de riego en sustrato inerte (coco, lana de roca) y tierra.
+
+REGLAS DE ORO DE ATHENA:
+1. ORDEN DE MEZCLA EN TANQUE / RESERVORIO:
+   - Paso 1: Agua base (preferentemente osmosis o agua limpia con EC < 0.2).
+   - Paso 2: Cleanse (0.5 a 1 ml/L para mantener líneas limpias y prevenir patógenos).
+   - Paso 3: Athena Balance si se usa agua RO pura para agregar tampones.
+   - Paso 4: Athena PRO Core (OBLIGATORIO disolver primero y mezclar bien antes de cualquier otra sal).
+   - Paso 5: Athena PRO Grow (en vegetativo) O Athena PRO Bloom (en floración). NUNCA mezclar Grow y Bloom juntos.
+   - Paso 6: Suplementos si aplican (ej. Stack, CaMg si el agua base es muy blanda).
+   - Paso 7: Ajustar pH al rango final (5.8 - 6.2 en hidro/coco; 6.2 - 6.5 en tierra).
+
+2. TABLA OFICIAL ATHENA PRO LINE (Dosificaciones estándar por cada 1 Litro de agua final):
+   - VEGETATIVO TEMPRANO / CLONES ENRAIZADOS (EC ~1.6 - 1.8):
+     * Pro Core: 1.0 g/L
+     * Pro Grow: 1.6 g/L
+     * Cleanse: 0.5 ml/L
+   - VEGETATIVO MEDIO / TARDÍO (EC ~2.0 - 2.4):
+     * Pro Core: 1.2 g/L
+     * Pro Grow: 2.0 g/L
+     * Cleanse: 0.5 - 1.0 ml/L
+   - FLORACIÓN SEMANAS 1 A 3 (Transición y estiramiento, EC ~2.4 - 2.8):
+     * Pro Core: 1.2 g/L
+     * Pro Bloom: 2.0 g/L
+     * Cleanse: 0.5 - 1.0 ml/L
+   - FLORACIÓN SEMANAS 4 A 6 (Engorde pleno, EC ~2.6 - 3.0):
+     * Pro Core: 1.2 - 1.4 g/L
+     * Pro Bloom: 2.2 - 2.4 g/L
+     * Cleanse: 0.5 - 1.0 ml/L
+   - FLORACIÓN SEMANA 7 A COSECHA (Fase de maduración / Fade):
+     * REEMPLAZAR Pro Core por Athena FADE (2.5 a 4.0 ml/L).
+     * Pro Bloom: 2.0 - 2.4 g/L
+     * Cleanse: 1.0 ml/L
+     * Nota crítica: Al entrar en Fase Fade, se retira completamente el Core para cortar el Nitrógeno y forzar a la planta a consumir sus reservas, mejorando resina, terpenos y aroma.
+
+3. PREPARACIÓN DE STOCK CONCENTRADO (Líquido madre para dosificadores Dosatron / Bluelab):
+   - Concentrado estándar Athena: 900 gramos de polvo disueltos en agua tibia hasta alcanzar exactamente 1 Galón (3.785 L) de volumen total.
+   - Dosificación de stock concentrado en tanque final: aproximadamente 10 a 15 ml por galón (2.6 a 4 ml por litro) según la EC deseada.
+
+4. MANEJO DE PH Y RUNOFF:
+   - Rango pH ideal en sustrato inerte (coco / perlita / lana): 5.8 - 6.2.
+   - Runoff (drenaje) objetivo: 10% a 20% del volumen regado.
+   - La EC del runoff no debería superar en más de 0.5 - 1.0 mS/cm la EC de entrada. Si sube demasiado, aumentar porcentaje de drenaje o hacer un pase de Athena Cleanse a 2 ml/L.
+
+ESTILO DE RESPUESTA:
+- Directo, técnico pero claro, práctico y conciso.
+- Cuando des dosis, especificá siempre gramos por litro (g/L) y el equivalente aproximado de EC.
+- Sé empático con el cultivador y priorizá la salud de la planta y la precisión de las sales.
+`;
+
+    // ==========================================
+    // 2. VARIABLES DE ESTADO
+    // ==========================================
+    let apiKey = '';
+    let db = null;
+    let cultivoContexto = {
+      fase: 'Vegetativo',
+      semana: 1,
+      dia: 1
+    };
+    let historial = [];
+    let isGenerating = false;
+
+    // ==========================================
+    // 3. INICIALIZACIÓN Y CONEXIÓN CON FIREBASE
+    // ==========================================
+    window.addEventListener('DOMContentLoaded', async () => {
+      inicializarFirebase();
+    });
+
+    function actualizarStatus(tipo, texto) {
+      const dot = document.getElementById('status-dot');
+      const text = document.getElementById('status-text');
+      dot.className = 'status-dot ' + (tipo === 'online' ? 'online' : tipo === 'error' ? 'error' : '');
+      text.textContent = texto;
+    }
+
+    function inicializarFirebase() {
+      try {
+        let firebaseConfig = null;
+
+        // 1. Intentar leer del localStorage si el usuario ya lo guardó en la app
+        const storedConfig = localStorage.getItem('firebaseConfig');
+        if (storedConfig) {
+          try { firebaseConfig = JSON.parse(storedConfig); } catch(e){}
+        }
+
+        // 2. Si no, buscar la configuración global que usa index.html
+        if (!firebaseConfig && window.firebaseConfig) {
+          firebaseConfig = window.firebaseConfig;
+        }
+
+        // 3. Fallback de búsqueda en window.__FIREBASE_CONFIG__
+        if (!firebaseConfig && window.__FIREBASE_CONFIG__) {
+          firebaseConfig = window.__FIREBASE_CONFIG__;
+        }
+
+        if (!firebaseConfig) {
+          // Si no hay configuración instanciada, revisar si Firebase ya fue inicializado por otra página
+          if (firebase.apps.length > 0) {
+            db = firebase.database();
+            cargarDatosFirebase();
+            return;
+          }
+
+          // Ver si hay API Key local directa para desarrollo/backup
+          const localKey = localStorage.getItem('gemini_api_key');
+          if (localKey) {
+            apiKey = localKey;
+            actualizarStatus('online', 'Athena Listo (Local)');
+            mostrarMensajeBienvenida();
+            return;
+          }
+
+          actualizarStatus('error', 'Sin Config Firebase');
+          mostrarModal('Configuración no detectada', 'No se pudo conectar con Firebase para leer la API key. Podés volver a la pantalla principal o ingresar tu API Key de Gemini.');
+          return;
+        }
+
+        if (!firebase.apps.length) {
+          firebase.initializeApp(firebaseConfig);
+        }
+        db = firebase.database();
+        cargarDatosFirebase();
+
+      } catch (err) {
+        console.error('Error al inicializar Firebase:', err);
+        actualizarStatus('error', 'Error Firebase');
+      }
+    }
+
+    function cargarDatosFirebase() {
+      if (!db) return;
+
+      actualizarStatus('', 'Cargando datos...');
+
+      // 1. Cargar API Key desde Firebase
+      db.ref('configuracion/gemini_api_key').once('value')
+        .then(snapshot => {
+          const val = snapshot.val();
+          if (val) {
+            apiKey = val.trim();
+            actualizarStatus('online', 'Athena En Línea');
+          } else {
+            // Intentar buscar en ruta alternativa
+            db.ref('config/gemini_key').once('value').then(snap2 => {
+              if (snap2.val()) {
+                apiKey = snap2.val().trim();
+                actualizarStatus('online', 'Athena En Línea');
+              } else {
+                actualizarStatus('error', 'Falta API Key');
+                mostrarModal('API Key de Gemini no encontrada', 'No se encontró la clave en Firebase (configuracion/gemini_api_key). Asegurate de guardarla en la sección de configuración.');
+              }
+            });
+          }
+        })
+        .catch(err => {
+          console.warn('Error leyendo API Key de Firebase:', err);
+          actualizarStatus('error', 'Error de lectura');
+        });
+
+      // 2. Cargar contexto del cultivo actual
+      db.ref('cultivo_actual').on('value', snapshot => {
+        const data = snapshot.val();
+        if (data) {
+          if (data.fase) cultivoContexto.fase = data.fase;
+          if (data.semana) cultivoContexto.semana = data.semana;
+          if (data.dia) cultivoContexto.dia = data.dia;
+
+          document.getElementById('ctx-fase').textContent = cultivoContexto.fase;
+          document.getElementById('ctx-semana').textContent = 'Sem ' + cultivoContexto.semana;
+          document.getElementById('ctx-dia').textContent = 'Día ' + cultivoContexto.dia;
+        } else {
+          document.getElementById('ctx-fase').textContent = 'General';
+          document.getElementById('ctx-semana').textContent = '-';
+          document.getElementById('ctx-dia').textContent = '-';
+        }
+      });
+
+      mostrarMensajeBienvenida();
+    }
+
+    // ==========================================
+    // 4. LÓGICA DE MENSAJES Y CHAT
+    // ==========================================
+    function mostrarMensajeBienvenida() {
+      const contenedor = document.getElementById('chat-messages');
+      contenedor.innerHTML = '';
+
+      agregarMensajeHTML(
+        `🌿 <strong>¡Hola! Soy tu Asesor Técnico de Athena Nutrients.</strong><br><br>` +
+        `Tengo sincronizado el estado de tu cultivo y las tablas de sales <strong>Athena PRO Line</strong>.<br>` +
+        `Podés preguntarme sobre:<br>` +
+        `• Dosis exactas en g/L según la semana y fase actual.<br>` +
+        `• Preparación y orden de mezcla en reservorio.<br>` +
+        `• Manejo de <strong>Fade</strong>, <strong>Cleanse</strong> y ajuste de pH/EC.<br>` +
+        `• Corrección de carencias o excesos nutricionales.<br><br>` +
+        `<em>¿En qué te puedo asesorar hoy?</em>`,
+        'assistant'
+      );
+    }
+
+    function usarSugerencia(texto) {
+      const input = document.getElementById('chat-input');
+      input.value = texto;
+      enviarMensaje();
+    }
+
+    function autoResize(textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = Math.min(textarea.scrollHeight, 100) + 'px';
+    }
+
+    function manejarEnter(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        enviarMensaje();
+      }
+    }
+
+    function escaparHTML(texto) {
+      const div = document.createElement('div');
+      div.textContent = texto;
+      return div.innerHTML;
+    }
+
+    // Formateador simple de Markdown a HTML para las respuestas del asesor
+    function formatearRespuesta(texto) {
+      let html = escaparHTML(texto);
+
+      // Negrita **texto**
+      html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      // Cursiva *texto*
+      html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+      // Código `codigo`
+      html = html.replace(/`(.*?)`/g, '<code>$1</code>');
+      // Listas con viñetas
+      html = html.replace(/^\s*[-•]\s+(.*)$/gm, '<li>$1</li>');
+      html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+      // Saltos de línea
+      html = html.replace(/\n\n/g, '</p><p>');
+      html = html.replace(/\n/g, '<br>');
+
+      return `<p>${html}</p>`;
+    }
+
+    function agregarMensajeHTML(htmlContenido, tipo) {
+      const contenedor = document.getElementById('chat-messages');
+      const msgDiv = document.createElement('div');
+      msgDiv.className = `message ${tipo}`;
+
+      const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const remitente = tipo === 'user' ? 'Vos' : tipo === 'assistant' ? 'Asesor Athena' : 'Sistema';
+
+      msgDiv.innerHTML = `
+        <div class="message-meta">
+          <span>${remitente}</span> • <span>${hora}</span>
+        </div>
+        <div class="message-bubble">
+          ${htmlContenido}
+        </div>
+      `;
+
+      contenedor.appendChild(msgDiv);
+      contenedor.scrollTop = contenedor.scrollHeight;
+    }
+
+    function mostrarTyping() {
+      const contenedor = document.getElementById('chat-messages');
+      const typingDiv = document.createElement('div');
+      typingDiv.id = 'typing-indicator';
+      typingDiv.className = 'typing-indicator';
+      typingDiv.innerHTML = `
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      `;
+      contenedor.appendChild(typingDiv);
+      contenedor.scrollTop = contenedor.scrollHeight;
+    }
+
+    function ocultarTyping() {
+      const el = document.getElementById('typing-indicator');
+      if (el) el.remove();
+    }
+
+    // ==========================================
+    // 5. MOTOR DE CONSULTAS A GEMINI CON RESILIENCIA
+    // ==========================================
+    async function llamarGeminiConFallback(key, contents, systemPrompt) {
+      // Modelos oficiales vigentes: Gemini 3.7 Flash -> Flash Latest -> 3.1 Flash Lite
+      const models = ['gemini-3.7-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite'];
+      let lastError = null;
+
+      // 1. Intentar backend local si está activo
+      try {
+        const localRes = await fetch('/api/athena-chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents, systemPrompt, apiKey: key })
+        });
+        if (localRes.ok) {
+          const json = await localRes.json();
+          if (json.text) {
+            return { ok: true, text: json.text, modelUsado: json.model || 'servidor' };
+          }
+        }
+      } catch (localErr) {
+        // Backend no activo (por ej. si se usa solo en cliente estático)
+      }
+
+      // 2. Llamada directa a la API de Google con rotación de modelos y reintentos veloces
+      for (let m = 0; m < models.length; m++) {
+        const model = models[m];
+        const maxRetries = 2;
+
+        for (let retry = 0; retry < maxRetries; retry++) {
+          try {
+            const payload = {
+              contents: contents,
+              systemInstruction: systemPrompt ? { parts: [{ text: systemPrompt }] } : undefined,
+              generationConfig: { temperature: 0.6, maxOutputTokens: 2048 }
+            };
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+            const res = await fetch(url, {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'X-goog-api-key': key 
+              },
+              body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+              const data = await res.json();
+              const respuesta = data.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (respuesta) {
+                return { ok: true, text: respuesta, modelUsado: model };
+              }
+            }
+
+            const err = await res.json().catch(() => ({}));
+            const msg = err.error?.message || err.error || `HTTP ${res.status}`;
+            lastError = { status: res.status, message: msg, model };
+
+            // Si la key es inválida (400), abortar directamente
+            if (res.status === 400 && msg.toLowerCase().includes('api key')) {
+              return { ok: false, error: lastError };
+            }
+
+            // Si hay sobrecarga/demanda alta, reintentar o pasar al siguiente modelo
+            const esSobrecarga = res.status === 429 || res.status === 503 || res.status === 500 ||
+              msg.toLowerCase().includes('demand') ||
+              msg.toLowerCase().includes('overloaded') ||
+              msg.toLowerCase().includes('exhausted') ||
+              msg.toLowerCase().includes('try again') ||
+              msg.toLowerCase().includes('temporary');
+
+            if (esSobrecarga) {
+              if (retry < maxRetries - 1) {
+                await new Promise(r => setTimeout(r, 800));
+                continue;
+              }
+              break;
+            } else {
+              break;
+            }
+          } catch (netErr) {
+            lastError = { status: 0, message: netErr.message, model };
+            if (retry < maxRetries - 1) {
+              await new Promise(r => setTimeout(r, 600));
+              continue;
+            }
+          }
+        }
+      }
+
+      return { 
+        ok: false, 
+        error: lastError || { status: 500, message: 'No se pudo conectar con el modelo tras varios reintentos.' } 
+      };
+    }
+
+    async function enviarMensaje() {
+      const input = document.getElementById('chat-input');
+      const btn = document.getElementById('btn-enviar');
+      const texto = input.value.trim();
+
+      if (!texto || isGenerating) return;
+
+      if (!apiKey) {
+        mostrarModal('API Key no disponible', 'No se ha detectado la API key de Gemini. Verificá que esté guardada en Firebase.');
+        return;
+      }
+
+      // 1. Mostrar mensaje del usuario
+      agregarMensajeHTML(escaparHTML(texto), 'user');
+      input.value = '';
+      input.style.height = 'auto';
+
+      isGenerating = true;
+      btn.disabled = true;
+      mostrarTyping();
+
+      // 2. Construir el prompt del sistema enriquecido con el contexto en vivo
+      const dynamicSystemPrompt = `${ATHENA_KNOWLEDGE}\n\nCONTEXTO EN TIEMPO REAL DEL CULTIVO:\n- Fase actual: ${cultivoContexto.fase}\n- Semana: ${cultivoContexto.semana}\n- Día: ${cultivoContexto.dia}\nTené en cuenta este contexto al responder si el usuario no especifica otra fase.`;
+
+      // 3. Consulta directa y ágil
+      const contents = [
+        { role: 'user', parts: [{ text: texto }] }
+      ];
+
+      try {
+        const resultado = await llamarGeminiConFallback(apiKey, contents, dynamicSystemPrompt);
+
+        ocultarTyping();
+
+        if (!resultado.ok) {
+          const err = resultado.error;
+          const msg = err.message || `Error HTTP ${err.status}`;
+          let ayuda = '';
+          if (err.status === 400 && msg.toLowerCase().includes('key')) {
+            ayuda = '<br><br>💡 Verificá que la API key guardada en Firebase sea válida.';
+          } else if (err.status === 429) {
+            ayuda = '<br><br>💡 Se alcanzó el límite de solicitudes. Intentá nuevamente en unos momentos.';
+          }
+          agregarMensajeHTML(`⚠️ <strong>Error:</strong> ${escaparHTML(msg)}${ayuda}`, 'assistant');
+          return;
+        }
+
+        const respuesta = resultado.text;
+
+        // Guardar en historial visual
+        historial.push({ role: 'user', text: texto });
+        historial.push({ role: 'model', text: respuesta });
+
+        // Mostrar respuesta formateada
+        agregarMensajeHTML(formatearRespuesta(respuesta), 'assistant');
+
+      } catch (err) {
+        ocultarTyping();
+        console.error('Error enviando mensaje a Gemini:', err);
+        agregarMensajeHTML(`⚠️ <strong>Error inesperado:</strong> ${escaparHTML(err.message)}`, 'assistant');
+      } finally {
+        isGenerating = false;
+        btn.disabled = false;
+        input.focus();
+      }
+    }
+
+    // ==========================================
+    // 6. CONTROL DE MODAL
+    // ==========================================
+    function mostrarModal(titulo, mensaje) {
+      document.getElementById('modal-title').textContent = titulo;
+      document.getElementById('modal-msg').textContent = mensaje;
+      document.getElementById('modal-error').classList.add('visible');
+    }
+
+    function cerrarModal() {
+      document.getElementById('modal-error').classList.remove('visible');
+    }
+  </script>
+</body>
+</html>
