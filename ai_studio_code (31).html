@@ -1,0 +1,1629 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Registro de Corte y Secado - Cultivo Oficina</title>
+  <style>
+    :root {
+      --bg-color: #121212;
+      --card-bg: #1e1e1e;
+      --card-inner: #262626;
+      --text-color: #ffffff;
+      --text-muted: #aaaaaa;
+      --accent: #4caf50;
+      --accent-corte: #f4511e;
+      --accent-corte-light: #ff7043;
+      --accent-dry: #69f0ae;
+      --accent-water: #42a5f5;
+      --border-color: #333333;
+      --border-highlight: #444444;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      padding: 12px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .header-nav {
+      width: 100%;
+      max-width: 720px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding: 4px 0;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #222;
+      border: 1px solid var(--border-color);
+      color: #e0e0e0;
+      text-decoration: none;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-weight: bold;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .back-btn:hover {
+      background: #333;
+      transform: translateY(-1px);
+    }
+
+    .sync-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.75rem;
+      color: #81c784;
+      background: rgba(46, 125, 50, 0.2);
+      border: 1px solid #2e7d32;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .page-title-box {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .page-icon {
+      font-size: 2.2rem;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    h1 {
+      font-size: 1.35rem;
+      color: var(--accent-corte-light);
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+
+    .page-subtitle {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    .main-container {
+      width: 100%;
+      max-width: 720px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+      gap: 10px;
+    }
+
+    .card-title {
+      font-size: 1.02rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Multi-mesa selector chips */
+    .mesa-selector-box {
+      margin-bottom: 14px;
+      background: #1b1b1b;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+
+    .mesa-chips-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #ffb74d;
+      margin-bottom: 8px;
+    }
+
+    .mesa-chips-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .mesa-chip {
+      background: #272727;
+      border: 1px solid #444;
+      color: #ccc;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: bold;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .mesa-chip:hover {
+      background: #333;
+      border-color: #666;
+    }
+
+    .mesa-chip.selected {
+      background: linear-gradient(135deg, #d84315, #f4511e);
+      border-color: #ff7043;
+      color: #fff;
+      box-shadow: 0 2px 6px rgba(244, 81, 30, 0.35);
+    }
+
+    .mesa-chip.vegeta.selected {
+      background: linear-gradient(135deg, #2e7d32, #43a047);
+      border-color: #81c784;
+    }
+
+    .mesas-selected-preview {
+      font-size: 0.75rem;
+      color: #a5d6a7;
+      margin-top: 6px;
+      font-weight: 600;
+    }
+
+    /* Top Grid Inputs */
+    .top-form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    @media (max-width: 520px) {
+      .top-form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #ccc;
+    }
+
+    input, select, textarea {
+      background: var(--card-inner);
+      border: 1px solid var(--border-highlight);
+      border-radius: 10px;
+      color: #fff;
+      padding: 9px 11px;
+      font-size: 0.92rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent-corte-light);
+      box-shadow: 0 0 0 2px rgba(244, 81, 30, 0.25);
+    }
+
+    /* Strains Section */
+    .strains-section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 12px 0 8px 0;
+      color: #ffb74d;
+      font-size: 0.88rem;
+      font-weight: bold;
+    }
+
+    .strains-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .strain-row {
+      background: #232323;
+      border: 1px solid #383838;
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: grid;
+      grid-template-columns: 2fr 1fr 1.5fr auto;
+      gap: 8px;
+      align-items: center;
+      transition: border-color 0.2s;
+    }
+
+    .strain-row:hover {
+      border-color: #555;
+    }
+
+    .strain-col {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .strain-col label {
+      font-size: 0.72rem;
+      color: #aaa;
+      white-space: nowrap;
+    }
+
+    .strain-col input {
+      padding: 7px 9px;
+      font-size: 0.88rem;
+      border-radius: 8px;
+    }
+
+    .strain-calc-preview {
+      font-size: 0.72rem;
+      color: var(--accent-dry);
+      margin-top: 2px;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    .btn-remove-row {
+      background: transparent;
+      border: none;
+      color: #ff5252;
+      font-size: 1.15rem;
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 8px;
+      line-height: 1;
+      margin-top: 14px;
+    }
+
+    .btn-remove-row:hover {
+      background: rgba(255, 82, 82, 0.2);
+    }
+
+    @media (max-width: 540px) {
+      .strain-row {
+        grid-template-columns: 1fr 1fr auto;
+        gap: 8px 6px;
+      }
+      .strain-col.cepa-col {
+        grid-column: 1 / 3;
+      }
+      .btn-remove-row {
+        margin-top: 0;
+        grid-column: 3;
+        grid-row: 1 / 3;
+        align-self: center;
+      }
+    }
+
+    .btn-add-strain {
+      width: 100%;
+      background: rgba(244, 81, 30, 0.12);
+      border: 1px dashed var(--accent-corte);
+      color: var(--accent-corte-light);
+      padding: 10px;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 0.88rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-add-strain:hover {
+      background: rgba(244, 81, 30, 0.22);
+      transform: translateY(-1px);
+    }
+
+    /* Live Summary Hero Box */
+    .results-hero {
+      background: linear-gradient(145deg, #1b271f, #16201a);
+      border: 1px solid #2e7d32;
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-top: 14px;
+      box-shadow: 0 4px 14px rgba(46, 125, 50, 0.2);
+    }
+
+    .hero-label {
+      font-size: 0.75rem;
+      color: #a5d6a7;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 2px;
+    }
+
+    .hero-value {
+      font-size: 2rem;
+      font-weight: 900;
+      color: #69f0ae;
+      text-align: center;
+      line-height: 1.1;
+      margin-bottom: 4px;
+    }
+
+    .hero-sub {
+      font-size: 0.8rem;
+      color: #c8e6c9;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    @media (max-width: 480px) {
+      .stats-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .stats-grid .stat-card:last-child {
+        grid-column: 1 / -1;
+      }
+    }
+
+    .stat-card {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 9px;
+      padding: 8px;
+      text-align: center;
+    }
+
+    .stat-card-title {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .stat-card-value {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .stat-card-value.green { color: #81c784; }
+    .stat-card-value.water { color: var(--accent-water); }
+    .stat-card-value.plant { color: #ffca28; }
+
+    /* Action Buttons */
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      flex: 1;
+      min-width: 130px;
+      padding: 11px 14px;
+      border-radius: 10px;
+      border: none;
+      font-weight: bold;
+      font-size: 0.88rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+
+    .btn:hover {
+      opacity: 0.92;
+      transform: translateY(-1px);
+    }
+
+    .btn-save {
+      background: linear-gradient(135deg, #d84315, #f4511e);
+      color: #fff;
+    }
+
+    .btn-secondary {
+      background: #2a2a2a;
+      border: 1px solid var(--border-highlight);
+      color: #e0e0e0;
+    }
+
+    .btn-whatsapp {
+      background: #1b5e20;
+      border: 1px solid #2e7d32;
+      color: #a5d6a7;
+    }
+
+    /* History & Harvest Records */
+    .history-card {
+      margin-top: 4px;
+    }
+
+    .history-empty {
+      text-align: center;
+      padding: 24px 10px;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+
+    .harvest-entry {
+      background: #222;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
+      transition: border-color 0.2s;
+    }
+
+    .harvest-entry:hover {
+      border-color: #444;
+    }
+
+    .harvest-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #333;
+      padding-bottom: 8px;
+      margin-bottom: 8px;
+    }
+
+    .harvest-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .badge-mesa {
+      background: #332015;
+      color: #ff8a65;
+      border: 1px solid #d84315;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 800;
+      font-size: 0.8rem;
+    }
+
+    .badge-mesa.vegeta {
+      background: #1b3a22;
+      color: #81c784;
+      border-color: #2e7d32;
+    }
+
+    .badge-date {
+      color: #bbb;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .harvest-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn-action-icon {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 4px 6px;
+      border-radius: 6px;
+      color: #aaa;
+    }
+
+    .btn-action-icon:hover {
+      background: #333;
+      color: #fff;
+    }
+
+    .btn-delete {
+      color: #ff5252;
+    }
+    .btn-delete:hover {
+      background: rgba(255, 82, 82, 0.2);
+    }
+
+    .strains-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+      margin: 6px 0;
+    }
+
+    .strains-table th {
+      text-align: left;
+      color: #888;
+      padding: 4px 6px;
+      border-bottom: 1px solid #2e2e2e;
+      font-weight: 600;
+      font-size: 0.72rem;
+    }
+
+    .strains-table td {
+      padding: 6px;
+      border-bottom: 1px solid #282828;
+    }
+
+    .strain-tag {
+      font-weight: bold;
+      color: #ffcc80;
+    }
+
+    .harvest-totals {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #191919;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 0.78rem;
+      color: #aaa;
+      margin-top: 6px;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .harvest-totals strong {
+      color: #fff;
+    }
+
+    .harvest-notes-text {
+      font-size: 0.76rem;
+      color: #9e9e9e;
+      font-style: italic;
+      margin-top: 6px;
+      padding: 4px 8px;
+      background: #181818;
+      border-left: 2px solid #555;
+      border-radius: 4px;
+    }
+
+    .search-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-5px);
+    }
+
+    /* Modal de confirmación para eliminar */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.78);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 16px;
+    }
+
+    .modal-dialog {
+      background: #202020;
+      border: 1px solid #3d3d3d;
+      border-radius: 18px;
+      max-width: 420px;
+      width: 100%;
+      padding: 22px 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+      text-align: center;
+      animation: modalFadeIn 0.2s ease-out;
+    }
+
+    @keyframes modalFadeIn {
+      from { transform: scale(0.94); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-dialog-icon {
+      font-size: 2.5rem;
+      margin-bottom: 8px;
+      line-height: 1;
+    }
+
+    .modal-dialog-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .modal-dialog-desc {
+      font-size: 0.85rem;
+      color: #bbb;
+      margin-bottom: 18px;
+      line-height: 1.45;
+    }
+
+    .modal-dialog-item-box {
+      background: #171717;
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 18px;
+      font-size: 0.82rem;
+      color: #ffb74d;
+      text-align: left;
+    }
+
+    .modal-dialog-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .modal-btn {
+      flex: 1;
+      padding: 11px 14px;
+      border-radius: 10px;
+      border: none;
+      font-weight: bold;
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .modal-btn-cancel {
+      background: #333;
+      color: #ddd;
+      border: 1px solid #444;
+    }
+
+    .modal-btn-cancel:hover {
+      background: #444;
+    }
+
+    .modal-btn-danger {
+      background: linear-gradient(135deg, #d32f2f, #f44336);
+      color: #fff;
+      box-shadow: 0 3px 8px rgba(211, 47, 47, 0.4);
+    }
+
+    .modal-btn-danger:hover {
+      opacity: 0.92;
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <div class="header-nav">
+    <a href="index.html" class="back-btn">⬅ Volver al Inicio</a>
+    <div id="sync-badge" class="sync-badge">🟢 Firebase Conectado</div>
+  </div>
+
+  <div class="page-title-box">
+    <div class="page-icon">✂️</div>
+    <h1>Registro de Corte y Secado</h1>
+    <div class="page-subtitle">Anotación de cosechas · Selección de múltiples mesas · Sincronizado en Firebase</div>
+  </div>
+
+  <div class="main-container">
+    <!-- Form Card -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">🌱 Datos del Corte</span>
+        <button class="btn btn-secondary" style="min-width:auto; padding:5px 10px; font-size:0.75rem;" onclick="limpiarFormulario()">Limpiar</button>
+      </div>
+
+      <!-- Selector de múltiples mesas con chips -->
+      <div class="mesa-selector-box">
+        <div class="mesa-chips-title">
+          <span>🏷️ Mesas cortadas (Tocá para seleccionar una o varias):</span>
+          <button type="button" style="background:none; border:none; color:#ff8a65; font-size:0.72rem; cursor:pointer; text-decoration:underline;" onclick="limpiarMesas()">Desmarcar todas</button>
+        </div>
+
+        <div class="mesa-chips-group" id="mesa-chips-container">
+          <div class="mesa-chip" onclick="toggleMesaChip(this, 'Mesa A1')">Mesa A1</div>
+          <div class="mesa-chip" onclick="toggleMesaChip(this, 'Mesa A2')">Mesa A2</div>
+          <div class="mesa-chip" onclick="toggleMesaChip(this, 'Mesa A3')">Mesa A3</div>
+          <div class="mesa-chip" onclick="toggleMesaChip(this, 'Mesa A4')">Mesa A4</div>
+          <div class="mesa-chip" onclick="toggleMesaChip(this, 'Mesa A5')">Mesa A5</div>
+          <div class="mesa-chip" onclick="toggleMesaChip(this, 'Mesa A6')">Mesa A6</div>
+          <div class="mesa-chip" onclick="toggleMesaChip(this, 'Mesa B1')">Mesa B1</div>
+          <div class="mesa-chip" onclick="toggleMesaChip(this, 'Mesa B2')">Mesa B2</div>
+          <div class="mesa-chip" onclick="toggleMesaChip(this, 'Mesa B3')">Mesa B3</div>
+          <div class="mesa-chip" onclick="toggleMesaChip(this, 'Mesa B4')">Mesa B4</div>
+          <div class="mesa-chip" onclick="toggleMesaChip(this, 'Mesa B5')">Mesa B5</div>
+          <div class="mesa-chip" onclick="toggleMesaChip(this, 'Mesa B6')">Mesa B6</div>
+          <div class="mesa-chip vegeta" onclick="toggleMesaChip(this, 'Mesa Vegeta')">🥦 Vegeta</div>
+        </div>
+
+        <div class="mesas-selected-preview" id="mesas-selected-label">
+          Mesas seleccionadas: <span style="color:#aaa;">Ninguna (Corte General)</span>
+        </div>
+      </div>
+
+      <div class="top-form-grid">
+        <div class="form-group">
+          <label for="fecha-corte">📅 Fecha de Corte:</label>
+          <input type="date" id="fecha-corte" oninput="recalcularTodo()">
+        </div>
+
+        <div class="form-group">
+          <label for="factor-corte">⚙️ Factor de Secado:</label>
+          <select id="factor-corte" onchange="recalcularTodo()">
+            <option value="0.22" selected>0.22 (22% - Estándar flores manicuradas)</option>
+            <option value="0.20">0.20 (20% - Flores aireadas / mayor merma)</option>
+            <option value="0.24">0.24 (24% - Flores densas / tallos incluidos)</option>
+            <option value="0.25">0.25 (25% - Corte con ramas medianas)</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="grid-column: 1 / -1;">
+          <label for="notas-corte">📝 Notas del corte (Opcional):</label>
+          <input type="text" id="notas-corte" placeholder="Ej: HASH sin pesar, tricomas al 20% ámbar, secado lento...">
+        </div>
+      </div>
+
+      <!-- Strains List Section -->
+      <div class="strains-section-title">
+        <span>🧬 Cepas / Variedades cortadas:</span>
+        <span style="font-size:0.75rem; color:#aaa; font-weight:normal;">Podés ingresar sumas (ej: 263 + 1256)</span>
+      </div>
+
+      <div class="strains-list" id="strains-container">
+        <!-- Filas dinámicas generadas aquí -->
+      </div>
+
+      <button type="button" class="btn-add-strain" onclick="agregarFilaCepa()">
+        ➕ Agregar otra Cepa / Variedad
+      </button>
+
+      <!-- Resumen Hero -->
+      <div class="results-hero">
+        <div class="hero-label">Rendimiento Seco Total Estimado</div>
+        <div class="hero-value" id="res-total-seco">0 g</div>
+        <div class="hero-sub" id="res-formula-sub">Suma de todas las cepas calculadas al 22%</div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-card-title">⚖️ Total Verde</div>
+            <div class="stat-card-value green" id="res-total-verde">0 g</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-title">🪴 Total Plantas</div>
+            <div class="stat-card-value plant" id="res-total-plantas">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-title">💧 Merma Agua (78%)</div>
+            <div class="stat-card-value water" id="res-total-agua">0 g</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-save" onclick="guardarCorte()">💾 Guardar en Firebase</button>
+        <button class="btn btn-whatsapp" onclick="compartirWhatsApp()">💬 Compartir WhatsApp</button>
+        <button class="btn btn-secondary" onclick="copiarResumen()">📋 Copiar</button>
+      </div>
+    </div>
+
+    <!-- Datalist para autocompletar cepas conocidas -->
+    <datalist id="cepas-populares">
+      <option value="Mascarpone">
+      <option value="Runtz Carlton">
+      <option value="Runtz">
+      <option value="Lemon Orange">
+      <option value="Lemon Haze">
+      <option value="Kushie">
+      <option value="Cookies">
+      <option value="Vanilla">
+      <option value="Kakle Snack">
+      <option value="Pink Lemonade">
+      <option value="Gelato">
+      <option value="Gorilla Glue">
+      <option value="Mimosa">
+      <option value="Hash">
+    </datalist>
+
+    <!-- History Card -->
+    <div class="card history-card">
+      <div class="card-header">
+        <span class="card-title">📜 Historial de Cortes en Firebase</span>
+        <button class="btn btn-secondary" style="min-width:auto; padding:4px 8px; font-size:0.75rem;" onclick="exportarHistorial()">Exportar JSON</button>
+      </div>
+
+      <div class="search-bar">
+        <input type="text" id="filtro-busqueda" placeholder="🔍 Buscar por mesa o cepa (ej: A1, Mascarpone, Runtz)..." oninput="filtrarHistorial()">
+      </div>
+
+      <div id="history-summary" style="font-size:0.82rem; color:#81c784; margin-bottom:10px; display:none; background:#1b271f; padding:8px 12px; border-radius:8px; border:1px solid #2e7d32;">
+        <!-- Totales calculados -->
+      </div>
+
+      <div id="history-list-container">
+        <!-- Lista de tarjetas de corte -->
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">Notificación</div>
+
+  <!-- Modal de confirmación para eliminar corte (Sin depender de window.confirm) -->
+  <div id="modal-confirm-delete" class="modal-overlay" onclick="cerrarModalDelete(event)">
+    <div class="modal-dialog" onclick="event.stopPropagation()">
+      <div class="modal-dialog-icon">🗑️</div>
+      <div class="modal-dialog-title">¿Eliminar registro de corte?</div>
+      <div class="modal-dialog-desc">Esta acción borrará el registro del historial y de la base de datos de Firebase de forma permanente.</div>
+      <div id="modal-delete-info" class="modal-dialog-item-box">
+        <!-- Info del corte -->
+      </div>
+      <div class="modal-dialog-actions">
+        <button type="button" class="modal-btn modal-btn-cancel" onclick="cerrarModalDelete()">Cancelar</button>
+        <button type="button" class="modal-btn modal-btn-danger" id="btn-confirm-delete" onclick="confirmarEliminarCorte()">Sí, eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const STORAGE_KEY = 'cultivo_historial_cortes_v2';
+    // URL autorizada con permisos de lectura y escritura
+    const FIREBASE_BASE_URL = "https://cultivo-oficina-default-rtdb.firebaseio.com/cultivoOficina/datos/cortes";
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyDfn3GMrVVNeHl0VT_H03pOXApmV4Q2Yyg",
+      authDomain: "cultivo-oficina.firebaseapp.com",
+      databaseURL: "https://cultivo-oficina-default-rtdb.firebaseio.com",
+      projectId: "cultivo-oficina",
+      storageBucket: "cultivo-oficina.firebasestorage.app",
+      messagingSenderId: "226128922982",
+      appId: "1:226128922982:web:81cb9814c5d107e4f260a7",
+      measurementId: "G-JTGH6W87MY"
+    };
+
+    let db = null;
+    let cortesDbRef = null;
+    let listaCortes = [];
+    let mesasSeleccionadas = [];
+
+    // Manejo de chips de mesas
+    window.toggleMesaChip = function(el, nombreMesa) {
+      const idx = mesasSeleccionadas.indexOf(nombreMesa);
+      if (idx >= 0) {
+        mesasSeleccionadas.splice(idx, 1);
+        el.classList.remove('selected');
+      } else {
+        mesasSeleccionadas.push(nombreMesa);
+        el.classList.add('selected');
+      }
+      actualizarPreviewMesas();
+    };
+
+    window.limpiarMesas = function() {
+      mesasSeleccionadas = [];
+      document.querySelectorAll('.mesa-chip').forEach(c => c.classList.remove('selected'));
+      actualizarPreviewMesas();
+    };
+
+    function actualizarPreviewMesas() {
+      const label = document.getElementById('mesas-selected-label');
+      if (!label) return;
+      if (mesasSeleccionadas.length === 0) {
+        label.innerHTML = `Mesas seleccionadas: <span style="color:#aaa;">Ninguna (Corte General)</span>`;
+      } else {
+        const chipsHtml = mesasSeleccionadas.map(m => `<span style="background:#d84315; color:#fff; padding:2px 6px; border-radius:4px; margin-right:4px; font-weight:bold;">${m}</span>`).join(' ');
+        label.innerHTML = `Mesas seleccionadas (${mesasSeleccionadas.length}): ${chipsHtml}`;
+      }
+    }
+
+    // Cargar datos directamente de Firebase usando REST API
+    async function cargarDesdeFirebaseREST() {
+      try {
+        const res = await fetch(`${FIREBASE_BASE_URL}.json`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && typeof data === 'object') {
+            listaCortes = Object.keys(data).map(k => {
+              const item = data[k] || {};
+              return {
+                ...item,
+                id: (item && item.id) ? String(item.id) : String(k)
+              };
+            }).sort((a, b) => {
+              const dateA = new Date(a.fecha || 0).getTime();
+              const dateB = new Date(b.fecha || 0).getTime();
+              return dateB - dateA || (Number(b.id || 0) - Number(a.id || 0));
+            });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(listaCortes));
+            renderHistorial(listaCortes);
+            actualizarBadgeConexion(true);
+            return true;
+          }
+        }
+      } catch (err) {
+        console.warn("Fallo lectura REST inicial de Firebase:", err);
+      }
+      return false;
+    }
+
+    function actualizarBadgeConexion(conectado) {
+      const badge = document.getElementById('sync-badge');
+      if (badge) {
+        if (conectado) {
+          badge.innerHTML = '🟢 Firebase Conectado';
+          badge.style.color = '#81c784';
+          badge.style.borderColor = '#2e7d32';
+        } else {
+          badge.innerHTML = '⚠️ Modo Local';
+          badge.style.color = '#ffb74d';
+          badge.style.borderColor = '#ff9800';
+        }
+      }
+    }
+
+    // Iniciar Firebase SDK en tiempo real
+    function iniciarFirebase() {
+      try {
+        const app = initializeApp(FIREBASE_CONFIG);
+        db = getDatabase(app);
+        // Ruta autorizada: cultivoOficina/datos/cortes
+        cortesDbRef = ref(db, 'cultivoOficina/datos/cortes');
+
+        // Escuchar en tiempo real
+        onValue(cortesDbRef, (snapshot) => {
+          const data = snapshot.val();
+          if (data && typeof data === 'object') {
+            listaCortes = Object.keys(data).map(k => {
+              const item = data[k] || {};
+              return {
+                ...item,
+                id: (item && item.id) ? String(item.id) : String(k)
+              };
+            }).sort((a, b) => {
+              const dateA = new Date(a.fecha || 0).getTime();
+              const dateB = new Date(b.fecha || 0).getTime();
+              return dateB - dateA || (Number(b.id || 0) - Number(a.id || 0));
+            });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(listaCortes));
+          } else {
+            listaCortes = obtenerHistorialLocal();
+          }
+          renderHistorial(listaCortes);
+          actualizarBadgeConexion(true);
+        }, (err) => {
+          console.warn("Error en escucha realtime Firebase:", err);
+          cargarDesdeFirebaseREST();
+        });
+        return true;
+      } catch (e) {
+        console.warn("Error al inicializar Firebase SDK:", e);
+        cargarDesdeFirebaseREST();
+        return false;
+      }
+    }
+
+    // Inicialización al cargar la página
+    document.addEventListener('DOMContentLoaded', () => {
+      const today = new Date().toISOString().split('T')[0];
+      const dateEl = document.getElementById('fecha-corte');
+      if (dateEl && !dateEl.value) {
+        dateEl.value = today;
+      }
+      
+      // Crear primera fila por defecto
+      agregarFilaCepa('Mascarpone', 1, '');
+
+      // Cargar local primero para respuesta instantánea
+      cargarHistorialLocal();
+      recalcularTodo();
+
+      // Cargar desde Firebase
+      cargarDesdeFirebaseREST();
+      iniciarFirebase();
+    });
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      if (!toast) return;
+      toast.innerText = msg;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2500);
+    }
+
+    // Función que evalúa sumas matemáticas como "263 + 1256"
+    function parsePesoInput(val) {
+      if (!val) return 0;
+      val = String(val).trim().replace(/,/g, '.');
+      if (!val) return 0;
+      
+      try {
+        const parts = val.split('+');
+        let total = 0;
+        for (const p of parts) {
+          const num = parseFloat(p.trim());
+          if (!isNaN(num) && num > 0) {
+            total += num;
+          }
+        }
+        return total;
+      } catch (e) {
+        const direct = parseFloat(val);
+        return isNaN(direct) ? 0 : direct;
+      }
+    }
+
+    window.agregarFilaCepa = function(nombre = '', plantas = 1, peso = '') {
+      const id = 'cepa_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+      const container = document.getElementById('strains-container');
+      if (!container) return;
+
+      const row = document.createElement('div');
+      row.className = 'strain-row';
+      row.id = id;
+
+      row.innerHTML = `
+        <div class="strain-col cepa-col">
+          <label>🧬 Cepa / Variedad:</label>
+          <input type="text" list="cepas-populares" class="input-nombre-cepa" placeholder="Ej: Mascarpone, Runtz..." value="${nombre}" oninput="recalcularTodo()">
+        </div>
+        <div class="strain-col">
+          <label>🪴 Plantas:</label>
+          <input type="number" class="input-plantas-cepa" min="1" step="1" value="${plantas}" oninput="recalcularTodo()">
+        </div>
+        <div class="strain-col">
+          <label>⚖️ Peso Verde (g):</label>
+          <input type="text" class="input-peso-cepa" placeholder="Ej: 1310 o 263+1256" value="${peso}" oninput="recalcularTodo()">
+          <div class="strain-calc-preview preview-seco">Seco: 0 g</div>
+        </div>
+        <button type="button" class="btn-remove-row" title="Eliminar cepa" onclick="eliminarFilaCepa('${id}')">✕</button>
+      `;
+
+      container.appendChild(row);
+      recalcularTodo();
+    };
+
+    window.eliminarFilaCepa = function(rowId) {
+      const container = document.getElementById('strains-container');
+      const rows = container.querySelectorAll('.strain-row');
+      if (rows.length <= 1) {
+        showToast('⚠️ Debe haber al menos una cepa en el corte');
+        return;
+      }
+      const el = document.getElementById(rowId);
+      if (el) el.remove();
+      recalcularTodo();
+    };
+
+    window.recalcularTodo = function() {
+      const factor = parseFloat(document.getElementById('factor-corte').value) || 0.22;
+      const container = document.getElementById('strains-container');
+      if (!container) return;
+
+      const rows = container.querySelectorAll('.strain-row');
+      let totalVerde = 0;
+      let totalPlantas = 0;
+      let totalSeco = 0;
+
+      rows.forEach(row => {
+        const pesoRaw = row.querySelector('.input-peso-cepa').value;
+        const plantas = parseInt(row.querySelector('.input-plantas-cepa').value, 10) || 1;
+        const pesoGramos = parsePesoInput(pesoRaw);
+        const secoGramos = pesoGramos * factor;
+        const previewEl = row.querySelector('.preview-seco');
+
+        if (previewEl) {
+          if (pesoGramos > 0) {
+            const porPlanta = plantas > 0 ? (secoGramos / plantas) : 0;
+            previewEl.innerText = `≈ ${secoGramos.toFixed(1)} g seco (${porPlanta.toFixed(1)} g/pl.)`;
+          } else {
+            previewEl.innerText = `Seco: 0 g`;
+          }
+        }
+
+        totalVerde += pesoGramos;
+        totalPlantas += plantas;
+        totalSeco += secoGramos;
+      });
+
+      const totalAgua = totalVerde - totalSeco;
+      const pctSeco = Math.round(factor * 100);
+
+      // Actualizar Resumen Hero
+      const resSecoEl = document.getElementById('res-total-seco');
+      const resVerdeEl = document.getElementById('res-total-verde');
+      const resPlantasEl = document.getElementById('res-total-plantas');
+      const resAguaEl = document.getElementById('res-total-agua');
+      const resSubEl = document.getElementById('res-formula-sub');
+
+      if (totalVerde > 0) {
+        if (totalSeco >= 1000) {
+          resSecoEl.innerText = `${(totalSeco/1000).toFixed(2)} kg (${totalSeco.toFixed(1)} g)`;
+        } else {
+          resSecoEl.innerText = `${totalSeco.toFixed(1)} g`;
+        }
+
+        if (totalVerde >= 1000) {
+          resVerdeEl.innerText = `${(totalVerde/1000).toFixed(2)} kg (${totalVerde.toFixed(0)} g)`;
+        } else {
+          resVerdeEl.innerText = `${totalVerde.toFixed(1)} g`;
+        }
+
+        resSubEl.innerText = `${totalVerde.toLocaleString('es-AR')} g verde en ${rows.length} ${rows.length === 1 ? 'cepa' : 'cepas'} × factor ${factor} (${pctSeco}%)`;
+      } else {
+        resSecoEl.innerText = '0 g';
+        resVerdeEl.innerText = '0 g';
+        resSubEl.innerText = `Ingresá los pesos de las cepas para calcular el ${pctSeco}% estimado`;
+      }
+
+      resPlantasEl.innerText = totalPlantas;
+      resAguaEl.innerText = `${totalAgua.toFixed(1)} g`;
+    };
+
+    function obtenerDatosFormulario() {
+      const fecha = document.getElementById('fecha-corte').value || new Date().toISOString().split('T')[0];
+      const factor = parseFloat(document.getElementById('factor-corte').value) || 0.22;
+      const notas = document.getElementById('notas-corte').value.trim();
+
+      const container = document.getElementById('strains-container');
+      const rows = container.querySelectorAll('.strain-row');
+      
+      const cepas = [];
+      let totalVerde = 0;
+      let totalPlantas = 0;
+      let totalSeco = 0;
+
+      rows.forEach(row => {
+        const nombre = row.querySelector('.input-nombre-cepa').value.trim() || 'Sin variedad';
+        const plantas = parseInt(row.querySelector('.input-plantas-cepa').value, 10) || 1;
+        const pesoRaw = row.querySelector('.input-peso-cepa').value;
+        const pesoGramos = parsePesoInput(pesoRaw);
+        const pesoSeco = pesoGramos * factor;
+
+        cepas.push({
+          nombre,
+          plantas,
+          pesoInputOriginal: pesoRaw,
+          pesoVerde: pesoGramos,
+          pesoSeco: pesoSeco,
+          secoPorPlanta: plantas > 0 ? (pesoSeco / plantas) : 0
+        });
+
+        totalVerde += pesoGramos;
+        totalPlantas += plantas;
+        totalSeco += pesoSeco;
+      });
+
+      return {
+        id: Date.now().toString(),
+        fecha,
+        mesas: [...mesasSeleccionadas],
+        mesaTexto: mesasSeleccionadas.length > 0 ? mesasSeleccionadas.join(', ') : 'General',
+        factor,
+        notas,
+        cepas,
+        totalVerde,
+        totalPlantas,
+        totalSeco,
+        creadoEn: new Date().toISOString()
+      };
+    }
+
+    window.guardarCorte = async function() {
+      const data = obtenerDatosFormulario();
+
+      if (data.totalVerde <= 0) {
+        showToast('⚠️ Ingresá al menos un peso verde para guardar');
+        return;
+      }
+
+      // 1. Guardar localmente inmediatamente
+      listaCortes = [data, ...listaCortes.filter(x => String(x.id) !== String(data.id))];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(listaCortes));
+      renderHistorial(listaCortes);
+
+      let guardadoEnFirebase = false;
+
+      // 2. Guardar vía REST API directamente a Firebase (100% fiable)
+      try {
+        const res = await fetch(`${FIREBASE_BASE_URL}/${data.id}.json`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        if (res.ok) {
+          guardadoEnFirebase = true;
+        }
+      } catch (e) {
+        console.warn("Fallo guardado REST Firebase:", e);
+      }
+
+      // 3. Guardar vía Firebase SDK si está disponible
+      if (db) {
+        try {
+          const itemRef = ref(db, 'cultivoOficina/datos/cortes/' + data.id);
+          await set(itemRef, data);
+          guardadoEnFirebase = true;
+        } catch (err) {
+          console.warn("Fallo guardado SDK Firebase:", err);
+        }
+      }
+
+      if (guardadoEnFirebase) {
+        showToast('✅ ¡Corte guardado en Firebase!');
+        actualizarBadgeConexion(true);
+      } else {
+        showToast('💾 Guardado localmente (sin conexión)');
+      }
+
+      // Reiniciar formulario para el próximo
+      limpiarFormulario();
+    };
+
+    window.limpiarFormulario = function() {
+      limpiarMesas();
+      document.getElementById('notas-corte').value = '';
+      const container = document.getElementById('strains-container');
+      container.innerHTML = '';
+      agregarFilaCepa('', 1, '');
+      recalcularTodo();
+    };
+
+    function obtenerHistorialLocal() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function cargarHistorialLocal() {
+      listaCortes = obtenerHistorialLocal();
+      renderHistorial(listaCortes);
+    }
+
+    window.filtrarHistorial = function() {
+      const query = (document.getElementById('filtro-busqueda').value || '').toLowerCase().trim();
+      if (!query) {
+        renderHistorial(listaCortes);
+        return;
+      }
+      const filtrados = listaCortes.filter(item => {
+        const mesasStr = (item.mesaTexto || (item.mesas ? item.mesas.join(' ') : '') || item.mesa || '').toLowerCase();
+        const notas = (item.notas || '').toLowerCase();
+        const tieneCepa = (item.cepas || []).some(c => (c.nombre || '').toLowerCase().includes(query));
+        return mesasStr.includes(query) || notas.includes(query) || tieneCepa;
+      });
+      renderHistorial(filtrados);
+    };
+
+    function renderHistorial(hist) {
+      const container = document.getElementById('history-list-container');
+      const summary = document.getElementById('history-summary');
+      if (!container) return;
+
+      if (!hist || hist.length === 0) {
+        container.innerHTML = `<div class="history-empty">No hay cortes registrados aún en Firebase. Anotá los datos de la cosecha arriba y tocá en "Guardar en Firebase".</div>`;
+        if (summary) summary.style.display = 'none';
+        return;
+      }
+
+      let grandTotalVerde = 0;
+      let grandTotalSeco = 0;
+      let grandTotalPlantas = 0;
+
+      container.innerHTML = hist.map(item => {
+        const totalVerde = item.totalVerde || 0;
+        const totalSeco = item.totalSeco || 0;
+        const totalPlantas = item.totalPlantas || 1;
+        grandTotalVerde += totalVerde;
+        grandTotalSeco += totalSeco;
+        grandTotalPlantas += totalPlantas;
+
+        // Renderizar tags de mesas
+        let mesasHtml = '';
+        if (Array.isArray(item.mesas) && item.mesas.length > 0) {
+          mesasHtml = item.mesas.map(m => `<span class="badge-mesa ${m.includes('Vegeta') ? 'vegeta' : ''}">${m}</span>`).join(' ');
+        } else if (item.mesaTexto) {
+          mesasHtml = `<span class="badge-mesa">${item.mesaTexto}</span>`;
+        } else if (item.mesa) {
+          mesasHtml = `<span class="badge-mesa">${item.mesa}</span>`;
+        } else {
+          mesasHtml = `<span class="badge-mesa" style="background:#222; border-color:#555; color:#aaa;">Corte</span>`;
+        }
+
+        const dateStr = item.fecha || '-';
+
+        const filasCepas = (item.cepas || []).map(c => `
+          <tr>
+            <td class="strain-tag">${c.nombre || 'Sin variedad'}</td>
+            <td style="text-align:center;">${c.plantas || 1} pl.</td>
+            <td style="font-weight:bold;">${(c.pesoVerde || 0).toLocaleString('es-AR')} g</td>
+            <td style="color:#69f0ae; font-weight:bold;">${(c.pesoSeco || 0).toFixed(1)} g</td>
+            <td style="color:#ffca28; font-size:0.75rem;">${(c.secoPorPlanta || 0).toFixed(1)} g/pl.</td>
+          </tr>
+        `).join('');
+
+        const notasHtml = item.notas ? `<div class="harvest-notes-text">📝 ${item.notas}</div>` : '';
+
+        return `
+          <div class="harvest-entry">
+            <div class="harvest-header">
+              <div class="harvest-meta">
+                ${mesasHtml}
+                <span class="badge-date">📅 ${dateStr}</span>
+              </div>
+              <div class="harvest-actions">
+                <button class="btn-action-icon" title="Copiar resumen" onclick="copiarItemHistorial('${item.id}')">📋</button>
+                <button class="btn-action-icon btn-delete" title="Eliminar corte" onclick="solicitarEliminar('${item.id}')">🗑️</button>
+              </div>
+            </div>
+
+            <table class="strains-table">
+              <thead>
+                <tr>
+                  <th>Cepa</th>
+                  <th style="text-align:center;">Plantas</th>
+                  <th>Peso Verde</th>
+                  <th>Seco Est. (22%)</th>
+                  <th>Rendimiento</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${filasCepas}
+              </tbody>
+            </table>
+
+            <div class="harvest-totals">
+              <span>Plantas: <strong>${totalPlantas}</strong></span>
+              <span>Total Verde: <strong>${(totalVerde >= 1000 ? (totalVerde/1000).toFixed(2) + ' kg' : totalVerde.toLocaleString('es-AR') + ' g')}</strong></span>
+              <span>Seco Est: <strong style="color:#69f0ae;">${(totalSeco >= 1000 ? (totalSeco/1000).toFixed(2) + ' kg' : totalSeco.toFixed(1) + ' g')}</strong></span>
+            </div>
+            ${notasHtml}
+          </div>
+        `;
+      }).join('');
+
+      if (summary) {
+        summary.style.display = 'block';
+        summary.innerHTML = `📊 <strong>Totales acumulados (${hist.length} registros):</strong> ${grandTotalPlantas} plantas · Verde: <strong>${(grandTotalVerde/1000).toFixed(2)} kg</strong> · Seco est: <strong>${(grandTotalSeco/1000).toFixed(2)} kg (${grandTotalSeco.toFixed(1)} g)</strong>`;
+      }
+    }
+
+    let idCorteAEliminar = null;
+
+    window.solicitarEliminar = function(id) {
+      idCorteAEliminar = String(id);
+      const item = listaCortes.find(x => String(x.id) === String(id));
+      const infoEl = document.getElementById('modal-delete-info');
+      
+      if (infoEl) {
+        if (item) {
+          const mesa = item.mesaTexto || (Array.isArray(item.mesas) ? item.mesas.join(', ') : item.mesa) || 'General';
+          const fecha = item.fecha || 'Sin fecha';
+          const seco = item.totalSeco ? `${item.totalSeco.toFixed(1)} g seco` : '';
+          const cepas = (item.cepas || []).map(c => c.nombre).filter(Boolean).join(', ');
+          infoEl.innerHTML = `
+            <div><strong>🏷️ Mesa:</strong> ${mesa}</div>
+            <div><strong>📅 Fecha:</strong> ${fecha}</div>
+            ${cepas ? `<div><strong>🧬 Cepas:</strong> ${cepas}</div>` : ''}
+            ${seco ? `<div><strong>🌿 Seco est.:</strong> ${seco}</div>` : ''}
+          `;
+        } else {
+          infoEl.innerHTML = `ID: ${id}`;
+        }
+      }
+
+      const modal = document.getElementById('modal-confirm-delete');
+      if (modal) {
+        modal.style.display = 'flex';
+      } else {
+        // Fallback directo si el modal no existiese
+        ejecutarEliminacion(id);
+      }
+    };
+
+    window.cerrarModalDelete = function(event) {
+      if (event && event.target && event.target.id !== 'modal-confirm-delete' && !event.target.classList.contains('modal-btn-cancel')) {
+        return;
+      }
+      idCorteAEliminar = null;
+      const modal = document.getElementById('modal-confirm-delete');
+      if (modal) modal.style.display = 'none';
+    };
+
+    window.confirmarEliminarCorte = async function() {
+      if (!idCorteAEliminar) return;
+      const id = idCorteAEliminar;
+      idCorteAEliminar = null;
+      const modal = document.getElementById('modal-confirm-delete');
+      if (modal) modal.style.display = 'none';
+      await ejecutarEliminacion(id);
+    };
+
+    window.eliminarRegistro = function(id) {
+      solicitarEliminar(id);
+    };
+
+    async function ejecutarEliminacion(id) {
+      const idStr = String(id);
+      
+      // 1. Eliminar de memoria y localStorage inmediatamente para respuesta visual instantánea
+      listaCortes = listaCortes.filter(item => String(item.id) !== idStr);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(listaCortes));
+      renderHistorial(listaCortes);
+
+      let eliminado = false;
+
+      // 2. REST API Firebase
+      try {
+        const res = await fetch(`${FIREBASE_BASE_URL}/${idStr}.json`, { method: 'DELETE' });
+        if (res.ok) {
+          eliminado = true;
+        }
+      } catch (e) {
+        console.warn("Fallo eliminación REST Firebase:", e);
+      }
+
+      // 3. SDK Firebase
+      if (db) {
+        try {
+          const itemRef = ref(db, 'cultivoOficina/datos/cortes/' + idStr);
+          await remove(itemRef);
+          eliminado = true;
+        } catch (err) {
+          console.warn("Fallo eliminación SDK Firebase:", err);
+        }
+      }
+
+      if (eliminado) {
+        showToast('🗑️ Registro eliminado de Firebase');
+      } else {
+        showToast('🗑️ Registro eliminado localmente');
+      }
+    }
+
+    function armarTextoResumen(item) {
+      const pct = Math.round((item.factor || 0.22) * 100);
+      let lineas = [];
+      lineas.push(`✂️ *CORTE DE CULTIVO - ${item.fecha}*`);
+      const mesasLabel = item.mesaTexto || (Array.isArray(item.mesas) ? item.mesas.join(', ') : item.mesa);
+      if (mesasLabel) lineas.push(`🏷️ *${mesasLabel}*`);
+      lineas.push(`----------------------------------`);
+      
+      (item.cepas || []).forEach(c => {
+        lineas.push(`🌱 *${c.nombre}*: ${c.plantas || 1} pl. ➔ ${c.pesoVerde.toLocaleString('es-AR')} g verde ➔ ${c.pesoSeco.toFixed(1)} g seco`);
+      });
+
+      lineas.push(`----------------------------------`);
+      lineas.push(`📊 *TOTALES:*`);
+      lineas.push(`🪴 Total Plantas: ${item.totalPlantas}`);
+      lineas.push(`⚖️ Total Verde: ${item.totalVerde >= 1000 ? (item.totalVerde/1000).toFixed(2) + ' kg' : item.totalVerde.toLocaleString('es-AR') + ' g'}`);
+      lineas.push(`🌿 Seco Estimado (${pct}%): ${item.totalSeco >= 1000 ? (item.totalSeco/1000).toFixed(2) + ' kg' : item.totalSeco.toFixed(1) + ' g'}`);
+      if (item.notas) lineas.push(`📝 Notas: ${item.notas}`);
+
+      return lineas.join('\n');
+    }
+
+    window.copiarResumen = function() {
+      const data = obtenerDatosFormulario();
+      if (data.totalVerde <= 0) {
+        showToast('⚠️ Ingresá datos para copiar el resumen');
+        return;
+      }
+      const txt = armarTextoResumen(data);
+      navigator.clipboard.writeText(txt).then(() => {
+        showToast('📋 ¡Resumen copiado al portapapeles!');
+      }).catch(() => {
+        showToast('No se pudo copiar automáticamente');
+      });
+    };
+
+    window.compartirWhatsApp = function() {
+      const data = obtenerDatosFormulario();
+      if (data.totalVerde <= 0) {
+        showToast('⚠️ Ingresá datos para compartir');
+        return;
+      }
+      const txt = encodeURIComponent(armarTextoResumen(data));
+      window.open(`https://wa.me/?text=${txt}`, '_blank');
+    };
+
+    window.copiarItemHistorial = function(id) {
+      const item = listaCortes.find(x => String(x.id) === String(id));
+      if (!item) return;
+      const txt = armarTextoResumen(item);
+      navigator.clipboard.writeText(txt).then(() => {
+        showToast('📋 Resumen de corte copiado');
+      });
+    };
+
+    window.exportarHistorial = function() {
+      const hist = listaCortes && listaCortes.length > 0 ? listaCortes : obtenerHistorialLocal();
+      if (hist.length === 0) {
+        showToast('⚠️ No hay historial para exportar');
+        return;
+      }
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(hist, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `cortes_cultivo_${new Date().toISOString().split('T')[0]}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showToast('📥 Historial exportado');
+    };
+  </script>
+</body>
+</html>
