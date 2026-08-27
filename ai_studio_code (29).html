@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ciclo Cultivo Oficina v2.8 - Notas sin fecha</title>
+    <style>
+        :root { 
+            --bg-color: #121212; 
+            --card-bg: #1e1e1e; 
+            --text-color: #ffffff; 
+            --accent: #4caf50; 
+            --alert: #ff5252; 
+            --notes-color: #ffb74d; 
+        }
+        body { 
+            font-family: sans-serif; 
+            background-color: var(--bg-color); 
+            color: var(--text-color); 
+            padding: 10px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            margin: 0; 
+        }
+        
+        .header-container { text-align: center; margin-bottom: 15px; margin-top: 10px; }
+        .logo-cultivo { font-size: 2.5rem; margin: 0; padding: 0; line-height: 1; }
+        h1 { font-size: 1.3rem; color: var(--accent); margin: 5px 0 0 0; font-weight: bold; }
+        
+        .top-controls {
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 12px;
+        }
+
+        .user-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            background: #1b1b1b;
+            border: 1px solid #333;
+            border-radius: 14px;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            box-sizing: border-box;
+        }
+
+        .user-bar span {
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        .quick-access {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 15px auto;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 16px;
+            padding: 12px;
+            box-sizing: border-box;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.22);
+        }
+
+        .quick-access-title {
+            text-align: center;
+            color: #cfcfcf;
+            font-weight: bold;
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+        }
+
+        .quick-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .quick-btn {
+            border: none;
+            border-radius: 14px;
+            padding: 14px 10px;
+            cursor: pointer;
+            width: 100%;
+            color: #fff;
+            font-weight: bold;
+            font-size: 0.9rem;
+            min-height: 64px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+            transition: transform 0.15s ease, opacity 0.2s ease;
+        }
+
+        .quick-btn:hover { transform: translateY(-1px); opacity: 0.95; }
+        .quick-btn .sub { font-size: 0.72rem; opacity: 0.85; font-weight: 500; }
+        .quick-btn.sales { background: linear-gradient(135deg, #6a4c93, #8e5bbd); }
+        .quick-btn.notes { background: linear-gradient(135deg, #1565c0, #1e88e5); }
+        .quick-btn.vegeta { background: linear-gradient(135deg, #2e7d32, #43a047); }
+        .quick-btn.report { background: linear-gradient(135deg, #00796b, #009688); }
+        .quick-btn.corte { background: linear-gradient(135deg, #d84315, #f4511e); }
+        .quick-btn.athena { background: linear-gradient(135deg, #004d40, #00bfa5); }
+        .quick-btn.athena:hover, .quick-btn.corte:hover { opacity: 0.95; transform: translateY(-1px); }
+
+        .panel-open {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 15px auto;
+            display: none;
+        }
+        .panel-open.visible { display: block; }
+        
+        /* --- TABLA DE SALES / CALCULADORA --- */
+        .sales-panel {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 15px auto;
+            background: #1b1b1b;
+            border: 1px solid #444;
+            border-radius: 12px;
+            padding: 10px;
+            box-sizing: border-box;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+        }
+
+        .sales-title {
+            text-align: center;
+            color: #ffb74d;
+            font-weight: bold;
+            font-size: 1.05rem;
+            margin: 0 0 8px 0;
+        }
+
+        .sales-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+
+        .sales-controls label {
+            display: inline;
+            margin: 0;
+            color: #ddd;
+            font-weight: bold;
+        }
+
+        .sales-litros {
+            width: 90px !important;
+            margin: 0 !important;
+            padding: 7px 8px !important;
+            text-align: center;
+            font-weight: bold;
+            background: #292929 !important;
+        }
+
+        .sales-scroll {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border-radius: 8px;
+        }
+
+        .sales-table {
+            width: 100%;
+            min-width: 470px;
+            border-collapse: collapse;
+            font-size: 0.78rem;
+            background: #242424;
+        }
+
+        .sales-table th,
+        .sales-table td {
+            border: 1px solid #555;
+            padding: 6px 5px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .sales-table th {
+            background: #303030;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .sales-table td:first-child {
+            color: #ffcc80;
+            font-weight: bold;
+        }
+
+        .sales-table .gramos {
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .sales-table .calidad {
+            color: #81c784;
+            font-size: 0.72rem;
+            display: block;
+        }
+
+        .sales-foot {
+            margin-top: 6px;
+            font-size: 0.75rem;
+            color: #aaa;
+            text-align: center;
+        }
+        
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .grid-sala {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            background-color: #1a1a1a;
+            padding: 10px;
+            border-radius: 12px;
+            border: 1px solid #333;
+        }
+
+        .sala-title {
+            grid-column: span 3;
+            text-align: center;
+            font-weight: bold;
+            color: #888;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.8rem;
+        }
+
+        .card { 
+            background-color: var(--card-bg); 
+            border: 1px solid #333;
+            border-radius: 8px; 
+            padding: 8px; 
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 195px;
+            box-sizing: border-box;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .card.vegeta-card {
+            border: 1px solid #2e7d32;
+            background-color: #172418;
+            min-height: 230px;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 15px auto;
+            box-sizing: border-box;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #444;
+            padding-bottom: 4px;
+            margin-bottom: 6px;
+        }
+
+        .mesa-name { font-weight: bold; font-size: 1rem; color: #fff; }
+        
+        .timer-container {
+            text-align: center;
+            background: #252525;
+            padding: 4px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+        }
+        
+        .timer-dias { font-size: 1.1rem; font-weight: bold; color: var(--accent); line-height: 1.1; }
+        .timer-semanas { font-size: 0.75rem; color: #aaa; }
+        .status-badge { font-size: 0.7rem; font-weight: bold; margin-top: 2px; }
+
+        .progress-bar-container {
+            width: 100%;
+            background-color: #333;
+            border-radius: 4px;
+            height: 6px;
+            margin: 4px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--accent);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .inputs-container {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 0.75rem;
+        }
+
+        label { color: #888; margin-bottom: 1px; font-size: 0.7rem; }
+        
+        input, select { 
+            background: #2c2c2c; 
+            border: 1px solid #444; 
+            color: #fff; 
+            padding: 4px; 
+            border-radius: 4px; 
+            font-size: 0.75rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .btn-corte {
+            background-color: #333;
+            border: 1px solid #555;
+            color: #fff;
+            padding: 4px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            margin-top: 6px;
+            width: 100%;
+            font-weight: bold;
+        }
+        .btn-corte:hover { background-color: #444; }
+
+        .btn-notas {
+            background-color: #262626;
+            border: 1px solid #4a4a4a;
+            color: var(--notes-color);
+            padding: 4px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            margin-top: 4px;
+            width: 100%;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+        .btn-notas:hover { background-color: #333; }
+        .btn-notas.has-notes { border-color: var(--notes-color); background-color: #332617; }
+
+        .notes-panel {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 15px auto;
+            background: #1e1e1e;
+            border: 1px solid #444;
+            border-radius: 12px;
+            padding: 12px;
+            box-sizing: border-box;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .notes-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .notes-title {
+            color: var(--notes-color);
+            font-weight: bold;
+            font-size: 0.95rem;
+        }
+
+        .notes-textarea {
+            width: 100%;
+            min-height: 90px;
+            background: #282828;
+            border: 1px solid #444;
+            border-radius: 8px;
+            color: #fff;
+            padding: 8px;
+            font-family: sans-serif;
+            font-size: 0.85rem;
+            box-sizing: border-box;
+            resize: vertical;
+        }
+
+        .notes-status {
+            font-size: 0.72rem;
+            color: #888;
+            margin-top: 4px;
+            text-align: right;
+        }
+
+        /* Modal de notas específicas */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: #1e1e1e;
+            padding: 15px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            border: 1px solid #444;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .modal-title { font-weight: bold; color: var(--accent); }
+        .close-btn { color: #aaa; font-size: 1.2rem; cursor: pointer; border: none; background: none; }
+        
+        .modal-textarea {
+            width: 100%;
+            height: 120px;
+            background: #2c2c2c;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 8px;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-family: sans-serif;
+            resize: none;
+            font-size: 0.85rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+
+        .save-note-btn {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+
+        .reporte-btn {
+            background-color: #00897b;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: bold;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+        .reporte-btn:hover { background-color: #00796b; }
+
+        .reporte-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.8rem;
+        }
+        .reporte-table th, .reporte-table td {
+            border: 1px solid #444;
+            padding: 6px 8px;
+            text-align: left;
+        }
+        .reporte-table th {
+            background-color: #2c2c2c;
+            color: var(--accent);
+        }
+        .reporte-table tr:nth-child(even) {
+            background-color: #252525;
+        }
+
+        .sync-status {
+            font-size: 0.75rem;
+            text-align: center;
+            margin-top: 10px;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-container">
+        <div class="logo-cultivo">🌱</div>
+        <h1>Ciclo Cultivo Oficina</h1>
+    </div>
+
+    <!-- Modal de Login -->
+    <div id="login-modal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 300px; text-align: center;">
+            <div class="modal-header">
+                <span class="modal-title">🔐 Iniciar Sesión</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+                <input type="text" id="login-user" placeholder="Usuario" style="text-align: center;">
+                <input type="password" id="login-pass" placeholder="Contraseña" style="text-align: center;">
+                <div id="login-error" style="color: var(--alert); font-size: 0.75rem; display: none;"></div>
+                <button class="save-note-btn" onclick="procesarLogin()">Ingresar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="top-controls">
+        <div class="user-bar">
+            <span>👤 Usuario: <strong id="current-user-display" style="color: #fff;">-</strong></span>
+            <button class="btn-corte" style="margin: 0; width: auto; padding: 4px 10px;" onclick="cerrarSesion()">Cerrar sesión</button>
+        </div>
+    </div>
+
+    <!-- ACCESOS RÁPIDOS EN GRID 2X2 -->
+    <div class="quick-access">
+        <div class="quick-access-title">⚡ Accesos Rápidos</div>
+        <div class="quick-grid">
+            <button class="quick-btn sales" onclick="togglePanel('sales-panel')">🧂 Sales Athena<span class="sub">Calculadora Pro Line</span></button>
+            <button class="quick-btn notes" onclick="togglePanel('notes-panel')">📝 Notas<span class="sub">Notas generales</span></button>
+            <button class="quick-btn vegeta" onclick="togglePanel('vegeta-panel')">🥦 Vegeta<span class="sub">Mesa especial</span></button>
+            <button class="quick-btn report" onclick="abrirModalReporte()">📋 Reporte<span class="sub">Tiempos de cultivo</span></button>
+            <button class="quick-btn corte" onclick="window.location.href = 'corte.html'">✂️ Corte<span class="sub">calculadora de corte</span></button>
+            <button class="quick-btn athena" onclick="window.open('asesor-athena.html', '_blank')">🤖 Asesor IA<span class="sub">Athena Nutrients · Gemini</span></button>
+        </div>
+    </div>
+
+    <!-- PANEL DE SALES (OCULTO POR DEFECTO) -->
+    <div id="sales-panel" class="panel-open">
+        <div class="sales-panel">
+            <div class="sales-title">🧂 Athena Pro Line - Gramos por Litro</div>
+            <div class="sales-controls">
+                <label for="litros-sales">Litros de agua:</label>
+                <input type="number" id="litros-sales" class="sales-litros" value="20" min="1" step="1" oninput="calcularSales()">
+            </div>
+            <div class="sales-scroll">
+                <table class="sales-table">
+                    <thead>
+                        <tr>
+                            <th>Etapa / Modo</th>
+                            <th>CORE</th>
+                            <th>GROW</th>
+                            <th>BLOOM</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sales-table-body">
+                        <!-- Se llena dinámicamente con JS -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="sales-foot">Calculado automáticamente según los litros ingresados.</div>
+        </div>
+    </div>
+
+    <!-- PANEL DE NOTAS (OCULTO POR DEFECTO) -->
+    <div id="notes-panel" class="panel-open">
+        <div class="notes-panel">
+            <div class="notes-header">
+                <span class="notes-title">📝 Notas Generales del Cultivo</span>
+            </div>
+            <textarea id="general-notes" class="notes-textarea" placeholder="Escribe aquí observaciones generales, tareas pendientes, recordatorios..." oninput="guardarNotasGenerales()"></textarea>
+            <div class="notes-status" id="notes-save-status">Sin cambios</div>
+        </div>
+    </div>
+
+    <!-- PANEL DE VEGETA (OCULTO POR DEFECTO) -->
+    <div id="vegeta-panel" class="panel-open">
+        <div id="vegeta-container"></div>
+    </div>
+
+    <div class="main-container">
+        <!-- SALA A -->
+        <div class="grid-sala">
+            <div class="sala-title">Sala A</div>
+            <div id="card-A1"></div>
+            <div id="card-A2"></div>
+            <div id="card-A3"></div>
+        </div>
+
+        <!-- SALA B -->
+        <div class="grid-sala">
+            <div class="sala-title">Sala B</div>
+            <div id="card-B1"></div>
+            <div id="card-B2"></div>
+            <div id="card-B3"></div>
+        </div>
+
+        <!-- SALA C -->
+        <div class="grid-sala">
+            <div class="sala-title">Sala C</div>
+            <div id="card-C1"></div>
+            <div id="card-C2"></div>
+            <div id="card-C3"></div>
+        </div>
+    </div>
+
+    <div class="sync-status" id="sync-status">Sincronizando con base de datos...</div>
+
+    <!-- Modal de Notas de Mesa -->
+    <div id="note-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title" id="modal-mesa-title">Notas de Mesa</span>
+                <button class="close-btn" onclick="cerrarModal()">&times;</button>
+            </div>
+            <textarea id="mesa-note-text" class="modal-textarea" placeholder="Escribe observaciones específicas sobre esta mesa (variedad, podas, plagas, riegos)..."></textarea>
+            <div class="modal-actions">
+                <button class="save-note-btn" onclick="guardarNotaMesa()">Guardar Nota</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Reporte -->
+    <div id="reporte-modal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <span class="modal-title">📋 Reporte de Estado del Cultivo</span>
+                <button class="close-btn" onclick="cerrarModalReporte()">&times;</button>
+            </div>
+            <div style="max-height: 350px; overflow-y: auto;">
+                <table class="reporte-table">
+                    <thead>
+                        <tr>
+                            <th>Mesa</th>
+                            <th>Días / Sem</th>
+                            <th>Objetivo</th>
+                            <th>Faltan</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reporte-table-body">
+                        <!-- Contenido dinámico -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // Configuración de Firebase Realtime Database
+        const firebaseConfig = {
+            databaseURL: "https://cultivo-c8bbf-default-rtdb.firebaseio.com/"
+        };
+
+        const mesas = ['A1', 'A2', 'A3', 'B1', 'B2', 'B3', 'C1', 'C2', 'C3'];
+        let db = null;
+        let dbRef = null;
+        let mesaSeleccionadaParaNota = null;
+        let saveTimeout = null;
+
+        // Base de datos de recetas de Sales por litro
+        const recetasSales = [
+            { nombre: "Vegetativo", core: 0.8, grow: 1.3, bloom: 0.0, desc: "Crecimiento" },
+            { nombre: "Flora Sem 1-3", core: 1.1, grow: 0.0, bloom: 1.7, desc: "Floración inicial" },
+            { nombre: "Flora Sem 4-6", core: 1.2, grow: 0.0, bloom: 1.9, desc: "Engorde medio" },
+            { nombre: "Flora Sem 7+", core: 1.3, grow: 0.0, bloom: 2.1, desc: "Engorde final" },
+            { nombre: "Lavado / Flush", core: 0.0, grow: 0.0, bloom: 0.0, desc: "Sólo agua / Cleanse" }
+        ];
+
+        // Estado local por defecto
+        let cultivoData = {
+            generalNotes: ''
+        };
+        mesas.forEach(m => {
+            cultivoData[m] = { fecha: '', objetivo: 8, notas: '' };
+        });
+        cultivoData['Vegeta'] = { fecha: '', objetivo: 4, notas: '' };
+
+        // Helper SHA-256 para validación de claves
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        // --- SISTEMA DE AUTENTICACIÓN ---
+        const AUTH_STORAGE_KEY = 'cultivo_auth_user';
+
+        function checkAuth() {
+            const session = localStorage.getItem(AUTH_STORAGE_KEY);
+            if (!session) {
+                abrirLogin();
+                return false;
+            }
+            try {
+                const parsed = JSON.parse(session);
+                if (parsed && parsed.user) {
+                    mostrarUsuario(parsed.user);
+                    return true;
+                }
+            } catch (e) {
+                console.error("Error parseando sesión", e);
+            }
+            abrirLogin();
+            return false;
+        }
+
+        function abrirLogin() {
+            document.getElementById('login-modal').style.display = 'flex';
+            document.getElementById('login-user').focus();
+        }
+
+        function cerrarLogin() {
+            document.getElementById('login-modal').style.display = 'none';
+        }
+
+        window.cerrarSesion = function() {
+            localStorage.removeItem(AUTH_STORAGE_KEY);
+            location.reload();
+        };
+
+        function mostrarUsuario(username) {
+            const el = document.getElementById('current-user-display');
+            if (el) el.innerText = username;
+        }
+
+        window.procesarLogin = async function() {
+          const userInput = document.getElementById('login-user').value.trim();
+          const pass = document.getElementById('login-pass').value;
+          const errEl = document.getElementById('login-error');
+          errEl.style.display = 'none';
+          if (!userInput || !pass) { errEl.innerText = 'Completar usuario y contraseña'; errEl.style.display = 'block'; return; }
+          
+          const passHash = await sha256(pass);
+
+          // Autenticación directa contra Firebase Realtime Database en cultivoOficina/usuarios
+          const conectado = await iniciarFirebase();
+          if (!conectado) {
+            errEl.innerText = 'Error de conexión con Firebase';
+            errEl.style.display = 'block';
+            return;
+          }
+
+          try {
+            const userRef = ref(db, 'cultivoOficina/usuarios/' + userInput);
+            const snapshot = await get(userRef);
+
+            if (snapshot.exists()) {
+              const storedHash = snapshot.val();
+              if (storedHash === passHash) {
+                localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ user: userInput, ts: Date.now() }));
+                cerrarLogin();
+                afterLogin();
+              } else {
+                errEl.innerText = 'Contraseña incorrecta';
+                errEl.style.display = 'block';
+              }
+            } else {
+              errEl.innerText = 'Usuario no encontrado';
+              errEl.style.display = 'block';
+            }
+          } catch (e) {
+            console.error("Error al autenticar", e);
+            errEl.innerText = 'Error al verificar credenciales';
+            errEl.style.display = 'block';
+          }
+        };
+
+        function afterLogin() {
+            const session = JSON.parse(localStorage.getItem(AUTH_STORAGE_KEY));
+            mostrarUsuario(session.user);
+            initApp();
+        }
+
+        // Toggle para abrir o cerrar paneles de accesos rápidos
+        window.togglePanel = function(panelId) {
+            const panel = document.getElementById(panelId);
+            if (!panel) return;
+            const isVisible = panel.classList.contains('visible');
+            
+            // Cerrar otros si queremos mantener orden (opcional)
+            document.querySelectorAll('.panel-open').forEach(p => {
+                if (p.id !== panelId) p.classList.remove('visible');
+            });
+
+            if (isVisible) {
+                panel.classList.remove('visible');
+            } else {
+                panel.classList.add('visible');
+                if (panelId === 'sales-panel') calcularSales();
+            }
+        };
+
+        // Generar la tarjeta de Vegeta
+        function generarTarjetaVegeta() {
+            const container = document.getElementById('vegeta-container');
+            if (!container) return;
+
+            container.innerHTML = `
+                <div class="card vegeta-card" id="card-inner-Vegeta">
+                    <div class="card-header">
+                        <span class="mesa-name" style="color: #81c784;">🥦 Mesa Vegeta</span>
+                        <span id="badge-Vegeta" class="status-badge"></span>
+                    </div>
+                    
+                    <div class="timer-container">
+                        <div class="timer-dias" id="dias-Vegeta">-</div>
+                        <div class="timer-semanas" id="semanas-Vegeta">Sin fecha</div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="progress-Vegeta" style="background-color: #81c784;"></div>
+                        </div>
+                    </div>
+
+                    <div class="inputs-container">
+                        <div>
+                            <label>Fecha de inicio:</label>
+                            <input type="date" id="fecha-Vegeta" onchange="actualizarDato('Vegeta', 'fecha', this.value)">
+                        </div>
+                        <div>
+                            <label>Semanas objetivo:</label>
+                            <select id="obj-Vegeta" onchange="actualizarDato('Vegeta', 'objetivo', this.value)">
+                                <option value="2">2 Semanas</option>
+                                <option value="3">3 Semanas</option>
+                                <option value="4" selected>4 Semanas</option>
+                                <option value="5">5 Semanas</option>
+                                <option value="6">6 Semanas</option>
+                                <option value="8">8 Semanas</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button class="btn-notas" id="btn-nota-Vegeta" onclick="abrirModalNota('Vegeta')">
+                        📝 <span>Notas</span>
+                    </button>
+
+                    <button class="btn-corte" onclick="resetMesa('Vegeta')">🔄 Reiniciar ciclo</button>
+                </div>
+            `;
+        }
+
+        // Generar la tabla de sales Athena en base a los litros
+        window.calcularSales = function() {
+            const inputLitros = document.getElementById('litros-sales');
+            const tbody = document.getElementById('sales-table-body');
+            if (!inputLitros || !tbody) return;
+
+            let litros = parseFloat(inputLitros.value);
+            if (isNaN(litros) || litros <= 0) litros = 1;
+
+            tbody.innerHTML = recetasSales.map(r => {
+                const c = (r.core * litros).toFixed(1);
+                const g = (r.grow * litros).toFixed(1);
+                const b = (r.bloom * litros).toFixed(1);
+
+                return `
+                    <tr>
+                        <td>
+                            <strong>${r.nombre}</strong>
+                            <span class="calidad">${r.desc}</span>
+                        </td>
+                        <td class="gramos">${c > 0 ? c + ' g' : '-'}</td>
+                        <td class="gramos">${g > 0 ? g + ' g' : '-'}</td>
+                        <td class="gramos">${b > 0 ? b + ' g' : '-'}</td>
+                    </tr>
+                `;
+            }).join('');
+        };
+
+        // Generar estructura HTML para las 9 mesas de floración
+        function generarTarjetas() {
+            mesas.forEach(mesa => {
+                const container = document.getElementById(`card-${mesa}`);
+                container.innerHTML = `
+                    <div class="card" id="card-inner-${mesa}">
+                        <div class="card-header">
+                            <span class="mesa-name">${mesa}</span>
+                            <span id="badge-${mesa}" class="status-badge"></span>
+                        </div>
+                        
+                        <div class="timer-container">
+                            <div class="timer-dias" id="dias-${mesa}">-</div>
+                            <div class="timer-semanas" id="semanas-${mesa}">Sin fecha</div>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar" id="progress-${mesa}"></div>
+                            </div>
+                        </div>
+
+                        <div class="inputs-container">
+                            <div>
+                                <label>Puesta a 12/12:</label>
+                                <input type="date" id="fecha-${mesa}" onchange="actualizarDato('${mesa}', 'fecha', this.value)">
+                            </div>
+                            <div>
+                                <label>Obj. Semanas:</label>
+                                <select id="obj-${mesa}" onchange="actualizarDato('${mesa}', 'objetivo', this.value)">
+                                    <option value="7">7 Semanas</option>
+                                    <option value="8" selected>8 Semanas</option>
+                                    <option value="9">9 Semanas</option>
+                                    <option value="10">10 Semanas</option>
+                                    <option value="11">11 Semanas</option>
+                                    <option value="12">12 Semanas</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button class="btn-notas" id="btn-nota-${mesa}" onclick="abrirModalNota('${mesa}')">
+                            📝 <span>Notas</span>
+                        </button>
+
+                        <button class="btn-corte" onclick="resetMesa('${mesa}')">✂️ Reset Corte</button>
+                    </div>
+                `;
+            });
+        }
+
+        // Inicializar Firebase
+        async function iniciarFirebase() {
+            if (db) return true;
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getDatabase(app);
+                dbRef = ref(db, 'cultivoOficina');
+                return true;
+            } catch (error) {
+                console.error("Error al conectar con Firebase:", error);
+                document.getElementById('sync-status').innerText = '❌ Error de conexión';
+                return false;
+            }
+        }
+
+        function escucharCambios() {
+            onValue(dbRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    // Sincronizar datos de mesas
+                    [...mesas, 'Vegeta'].forEach(m => {
+                        if (data[m]) {
+                            cultivoData[m] = {
+                                fecha: data[m].fecha || '',
+                                objetivo: parseInt(data[m].objetivo) || (m === 'Vegeta' ? 4 : 8),
+                                notas: data[m].notas || ''
+                            };
+                        }
+                    });
+
+                    // Sincronizar notas generales
+                    cultivoData.generalNotes = data.generalNotes || '';
+                    const notesTextarea = document.getElementById('general-notes');
+                    if (notesTextarea && document.activeElement !== notesTextarea) {
+                        notesTextarea.value = cultivoData.generalNotes;
+                    }
+
+                    renderizarTodo();
+                    document.getElementById('sync-status').innerText = '🟢 Sincronizado en tiempo real';
+                } else {
+                    guardarEnFirebase();
+                }
+            });
+        }
+
+        // Guardar notas generales con debounce
+        window.guardarNotasGenerales = function() {
+            const val = document.getElementById('general-notes').value;
+            cultivoData.generalNotes = val;
+            
+            const status = document.getElementById('notes-save-status');
+            status.innerText = 'Guardando...';
+
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                guardarEnFirebase();
+                status.innerText = 'Guardado';
+                setTimeout(() => { status.innerText = 'Sin cambios'; }, 2000);
+            }, 800);
+        };
+
+        // Modal de notas por mesa
+        window.abrirModalNota = function(mesa) {
+            mesaSeleccionadaParaNota = mesa;
+            const titulo = mesa === 'Vegeta' ? 'Notas de Mesa Vegeta' : `Notas de Mesa ${mesa}`;
+            document.getElementById('modal-mesa-title').innerText = titulo;
+            document.getElementById('mesa-note-text').value = cultivoData[mesa]?.notas || '';
+            document.getElementById('note-modal').style.display = 'flex';
+        };
+
+        window.cerrarModal = function() {
+            document.getElementById('note-modal').style.display = 'none';
+            mesaSeleccionadaParaNota = null;
+        };
+
+        window.guardarNotaMesa = function() {
+            if (mesaSeleccionadaParaNota) {
+                const nota = document.getElementById('mesa-note-text').value;
+                cultivoData[mesaSeleccionadaParaNota].notas = nota;
+                guardarEnFirebase();
+                renderizarTodo();
+                cerrarModal();
+            }
+        };
+
+        // Modal de Reporte
+        window.abrirModalReporte = function() {
+            const tbody = document.getElementById('reporte-table-body');
+            tbody.innerHTML = '';
+
+            const hoy = new Date();
+            hoy.setHours(0,0,0,0);
+
+            const todasLasMesas = [...mesas, 'Vegeta'];
+
+            todasLasMesas.forEach(m => {
+                const data = cultivoData[m];
+                let diasStr = '-';
+                let faltanStr = '-';
+                let estadoStr = 'Sin fecha';
+                let estadoColor = '#888';
+
+                if (data && data.fecha) {
+                    const partes = data.fecha.split('-');
+                    const fechaInicio = new Date(partes[0], partes[1] - 1, partes[2]);
+                    const diffTime = hoy - fechaInicio;
+                    const diasTranscurridos = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+                    if (diasTranscurridos >= 0) {
+                        const semanas = Math.floor(diasTranscurridos / 7);
+                        const diasRestantes = diasTranscurridos % 7;
+                        diasStr = `${diasTranscurridos}d (${semanas}s ${diasRestantes}d)`;
+
+                        const diasTotalesObjetivo = data.objetivo * 7;
+                        const faltanDias = diasTotalesObjetivo - diasTranscurridos;
+
+                        if (faltanDias > 0) {
+                            faltanStr = `${faltanDias} días`;
+                            estadoStr = m === 'Vegeta' ? 'Vegetando' : 'En flora';
+                            estadoColor = m === 'Vegeta' ? '#81c784' : 'var(--accent)';
+                        } else if (faltanDias === 0) {
+                            faltanStr = '0 días';
+                            estadoStr = '¡CORTE HOY!';
+                            estadoColor = 'var(--alert)';
+                        } else {
+                            faltanStr = `Pasada +${Math.abs(faltanDias)}d`;
+                            estadoStr = 'PASADA';
+                            estadoColor = 'var(--alert)';
+                        }
+                    }
+                }
+
+                const nombreMesa = m === 'Vegeta' ? '🥦 Vegeta' : m;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-weight: bold;">${nombreMesa}</td>
+                    <td>${diasStr}</td>
+                    <td>${data ? data.objetivo : 8} sem</td>
+                    <td>${faltanStr}</td>
+                    <td style="color: ${estadoColor}; font-weight: bold;">${estadoStr}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('reporte-modal').style.display = 'flex';
+        };
+
+        window.cerrarModalReporte = function() {
+            document.getElementById('reporte-modal').style.display = 'none';
+        };
+
+        // Renderizado visual y cálculos
+        function renderizarTodo() {
+            const hoy = new Date();
+            hoy.setHours(0,0,0,0);
+
+            const todasLasMesas = [...mesas, 'Vegeta'];
+
+            todasLasMesas.forEach(mesa => {
+                const data = cultivoData[mesa];
+                const inputFecha = document.getElementById(`fecha-${mesa}`);
+                const selectObj = document.getElementById(`obj-${mesa}`);
+                const diasEl = document.getElementById(`dias-${mesa}`);
+                const semanasEl = document.getElementById(`semanas-${mesa}`);
+                const badgeEl = document.getElementById(`badge-${mesa}`);
+                const progressEl = document.getElementById(`progress-${mesa}`);
+                const btnNota = document.getElementById(`btn-nota-${mesa}`);
+
+                if (!inputFecha) return;
+
+                inputFecha.value = data.fecha;
+                selectObj.value = data.objetivo;
+
+                // Indicador visual de notas
+                if (data.notas && data.notas.trim() !== '') {
+                    btnNota.classList.add('has-notes');
+                    btnNota.querySelector('span').innerText = 'Ver Nota (1)';
+                } else {
+                    btnNota.classList.remove('has-notes');
+                    btnNota.querySelector('span').innerText = 'Notas';
+                }
+
+                if (data.fecha) {
+                    const partes = data.fecha.split('-');
+                    const fechaInicio = new Date(partes[0], partes[1] - 1, partes[2]);
+                    const diffTime = hoy - fechaInicio;
+                    const diasTranscurridos = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+                    if (diasTranscurridos < 0) {
+                        diasEl.innerText = "0 días";
+                        semanasEl.innerText = "Fecha futura";
+                        badgeEl.innerText = "";
+                        progressEl.style.width = "0%";
+                    } else {
+                        const semanas = Math.floor(diasTranscurridos / 7);
+                        const diasRestantes = diasTranscurridos % 7;
+                        
+                        diasEl.innerText = `${diasTranscurridos} días`;
+                        semanasEl.innerText = `Sem ${semanas + 1} (${semanas}s + ${diasRestantes}d)`;
+
+                        const diasTotalesObjetivo = data.objetivo * 7;
+                        const porcentaje = Math.min(Math.round((diasTranscurridos / diasTotalesObjetivo) * 100), 100);
+                        progressEl.style.width = `${porcentaje}%`;
+
+                        // Estado de corte y colores
+                        if (diasTranscurridos >= diasTotalesObjetivo) {
+                            badgeEl.innerText = "¡LISTA!";
+                            badgeEl.style.color = "var(--alert)";
+                            diasEl.style.color = "var(--alert)";
+                            progressEl.style.backgroundColor = "var(--alert)";
+                        } else if (diasTotalesObjetivo - diasTranscurridos <= 7) {
+                            badgeEl.innerText = "LAVADO";
+                            badgeEl.style.color = "#ff9800";
+                            diasEl.style.color = "#ff9800";
+                            progressEl.style.backgroundColor = "#ff9800";
+                        } else {
+                            badgeEl.innerText = mesa === 'Vegeta' ? "VEGETANDO" : "EN FLORA";
+                            badgeEl.style.color = mesa === 'Vegeta' ? "#81c784" : "var(--accent)";
+                            diasEl.style.color = mesa === 'Vegeta' ? "#81c784" : "var(--accent)";
+                            progressEl.style.backgroundColor = mesa === 'Vegeta' ? "#81c784" : "var(--accent)";
+                        }
+                    }
+                } else {
+                    diasEl.innerText = "-";
+                    semanasEl.innerText = "Sin fecha";
+                    badgeEl.innerText = "INACTIVA";
+                    badgeEl.style.color = "#666";
+                    diasEl.style.color = "var(--text-color)";
+                    progressEl.style.width = "0%";
+                }
+            });
+        }
+
+        // Actualizar datos
+        window.actualizarDato = function(mesa, campo, valor) {
+            if (campo === 'objetivo') valor = parseInt(valor);
+            cultivoData[mesa][campo] = valor;
+            renderizarTodo();
+            guardarEnFirebase();
+        };
+
+        // Reiniciar mesa (corte)
+        window.resetMesa = function(mesa) {
+            const nombreMesa = mesa === 'Vegeta' ? 'Mesa Vegeta' : `Mesa ${mesa}`;
+            if (confirm(`¿Confirmar reseteo para ${nombreMesa}?`)) {
+                cultivoData[mesa].fecha = '';
+                cultivoData[mesa].notas = '';
+                renderizarTodo();
+                guardarEnFirebase();
+            }
+        };
+
+        function guardarEnFirebase() {
+            document.getElementById('sync-status').innerText = 'Guardando cambios...';
+
+            if (dbRef) {
+                set(dbRef, cultivoData)
+                    .then(() => {
+                        document.getElementById('sync-status').innerText = '🟢 Sincronizado en tiempo real';
+                    })
+                    .catch((error) => {
+                        console.error("Error al guardar:", error);
+                        document.getElementById('sync-status').innerText = '⚠️ Error al guardar cambios';
+                    });
+            }
+        }
+
+        // Inicialización de la aplicación
+        async function initApp() {
+            generarTarjetas();
+            generarTarjetaVegeta();
+            calcularSales();
+            
+            const conectado = await iniciarFirebase();
+            if (conectado) {
+                escucharCambios();
+            } else {
+                renderizarTodo();
+            }
+        }
+
+        // Cerrar modales tocando afuera
+        window.onclick = function(event) {
+            const modalNota = document.getElementById('note-modal');
+            const modalReporte = document.getElementById('reporte-modal');
+            if (event.target === modalNota) cerrarModal();
+            if (event.target === modalReporte) cerrarModalReporte();
+        };
+
+        // Iniciar flujo verificando autenticación
+        if (checkAuth()) {
+            initApp();
+        }
+    </script>
+</body>
+</html>
